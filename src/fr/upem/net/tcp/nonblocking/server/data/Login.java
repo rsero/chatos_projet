@@ -9,19 +9,19 @@ import java.nio.ByteBuffer;
 import java.util.Objects;
 
 public class Login implements Data {
-    private final LoginReader loginReader = new LoginReader();
+    private static final LoginReader loginReader = new LoginReader();
     private final String name;
     public Login(String name){
         this.name= Objects.requireNonNull(name);
     }
     @Override
-    public static void processIn(ByteBuffer bbin, ServerChatos serverChatos, Context context) {
+    public void processIn(ByteBuffer bbin, ServerChatos serverChatos, Context context) {
         for (;;) {
             Reader.ProcessStatus status = loginReader.process(bbin);
             switch (status) {
                 case DONE:
                     Login data = loginReader.get();
-                    //server.broadcast(data);
+                    serverChatos.broadcast(data);
                     //mr.reset();
                     break;
                 case REFILL:
@@ -40,5 +40,9 @@ public class Login implements Data {
         //bbout.put(UTF8.encode(msg.getLogin()));
         //bbout.putInt(UTF8.encode(msg.getMsg()).remaining());
         //bbout.put(UTF8.encode(msg.getMsg()));
+    }
+
+    private void broadcast(Message msg) {
+
     }
 }
