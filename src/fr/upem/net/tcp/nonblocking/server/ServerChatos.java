@@ -12,7 +12,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class ServerChatos {
-    private final HashMap<String, SelectionKey> clients = new HashMap<>();
+    private final HashMap<String, Context> clients = new HashMap<>();
     private final ServerSocketChannel serverSocketChannel;
     private final Selector selector;
     private static Logger logger = Logger.getLogger(ServerChatos.class.getName());
@@ -23,6 +23,12 @@ public class ServerChatos {
         selector = Selector.open();
     }
 
+    public boolean addClient(String login, Context context){
+        if(clients.putIfAbsent(login, context) == null){
+            return false;
+        }
+        return true;
+    }
 
     public void launch() throws IOException {
         serverSocketChannel.configureBlocking(false);

@@ -1,17 +1,22 @@
 package fr.upem.net.tcp.nonblocking.server;
 
+import fr.upem.net.tcp.nonblocking.server.data.Data;
+import fr.upem.net.tcp.nonblocking.server.data.Login;
 import fr.upem.net.tcp.nonblocking.server.reader.Reader;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
+import java.util.LinkedList;
+import java.util.Queue;
 
 public class Context {
     private static int BUFFER_SIZE = 1024;
     private final ServerChatos server;
     private final SelectionKey key;
     private final SocketChannel sc;
+    private final Queue<Data> queue = new LinkedList<>();
     private boolean closed = false;
     private final ByteBuffer bbin = ByteBuffer.allocate(BUFFER_SIZE);
     private final ByteBuffer bbout = ByteBuffer.allocate(BUFFER_SIZE);
@@ -61,32 +66,29 @@ public class Context {
     }
 
     private void processIn() {
-//        for(;;) {
-//            //Reader.ProcessStatus status = mr.process(bbin);
-//            switch(status) {
-//                case DONE:
-//                    //Message msg = mr.get();
-//                    //server.broadcast(msg);
-//                    //mr.reset();
-//                    break;
-//                case REFILL:
-//                    return;
-//                case ERROR:
-//                    silentlyClose();
-//                    return;
-//            }
-//        }
+        for(;;){
+            bbin.flip();
+            if(bbin.hasRemaining()){
+
+            }
+            var opCode = bbin.get();
+            switch(opCode){
+                case 0:
+                    Login.processIn(bbin, server, this);
+            }
+        }
     }
 
     private void processOut() {
-//        while (!queue.isEmpty()) {
-//            var msg = queue.remove();
-//            bbout.putInt(UTF8.encode(msg.getLogin()).remaining());
-//            bbout.put(UTF8.encode(msg.getLogin()));
-//            bbout.putInt(UTF8.encode(msg.getMsg()).remaining());
-//            bbout.put(UTF8.encode(msg.getMsg()));
-//        }
+        while (!queue.isEmpty()) {
+            var data = queue.remove();
+            data.processOut(bbout);
+        }
     }
 
-
+    private void queueMessage(Data data) {
+        queue.add(data);
+        processOut();
+        updateInterestOps();
+    }
 }
