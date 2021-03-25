@@ -15,4 +15,9 @@ public class Message implements Data{
     public void processOut(ByteBuffer bbout) {
 
     }
+
+    @Override
+    public void broadcast(Context server) {
+
+    }
 }

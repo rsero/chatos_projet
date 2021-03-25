@@ -1,11 +1,5 @@
 package fr.upem.net.tcp.nonblocking.server;
 
-<<<<<<< HEAD
-public class ServerChatos {
-
-
-}
-=======
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.InetSocketAddress;
@@ -93,4 +87,3 @@ public class ServerChatos {
     }
 
 }
->>>>>>> cca73f42352ecab76185d8414fc7e7322af463de

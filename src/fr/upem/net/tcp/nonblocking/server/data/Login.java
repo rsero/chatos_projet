@@ -5,33 +5,40 @@ import fr.upem.net.tcp.nonblocking.server.ServerChatos;
 import fr.upem.net.tcp.nonblocking.server.reader.LoginReader;
 import fr.upem.net.tcp.nonblocking.server.reader.Reader;
 
+import javax.naming.Context;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
 public class Login implements Data {
     private static final LoginReader loginReader = new LoginReader();
     private final String name;
+
     public Login(String name){
         this.name= Objects.requireNonNull(name);
     }
-    @Override
-    public void processIn(ByteBuffer bbin, ServerChatos serverChatos, Context context) {
-        for (;;) {
-            Reader.ProcessStatus status = loginReader.process(bbin);
-            switch (status) {
-                case DONE:
-                    Login data = loginReader.get();
-                    serverChatos.broadcast(data);
-                    //mr.reset();
-                    break;
-                case REFILL:
-                    return;
-                case ERROR:
-                    //silentlyClose();
-                    return;
-            }
-        }
+
+    public String getLogin(){
+        return name;
     }
+
+    //@Override
+    //public void processIn(ByteBuffer bbin, ServerChatos serverChatos, Context context) {
+//        for (;;) {
+//            Reader.ProcessStatus status = loginReader.process(bbin);
+//            switch (status) {
+//                case DONE:
+//                    Login data = loginReader.get();
+//                    //serverChatos.broadcast(data);
+                    //mr.reset();
+//                    break;
+//                case REFILL:
+//                    return;
+//                case ERROR:
+                    //silentlyClose();
+//                    return;
+//            }
+//        }
+    //}
 
     @Override
     public void processOut(ByteBuffer bbout) {
@@ -42,7 +49,11 @@ public class Login implements Data {
         //bbout.put(UTF8.encode(msg.getMsg()));
     }
 
-    private void broadcast(Message msg) {
-
+    @Override
+    public void broadcast(Context context, Data login) {
+        //var ctx = (Context) key.attachment();
+        if (context==null)
+            return;
+        context.queueMessage(this);
     }
 }
