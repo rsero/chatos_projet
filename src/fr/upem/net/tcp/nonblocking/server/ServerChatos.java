@@ -98,15 +98,15 @@ public class ServerChatos {
     }
 
     public static void main(String[] args) throws NumberFormatException, IOException {
-        if (args.length!=1){
-            usage();
-            return;
-        }
+//        if (args.length!=1){
+//            usage();
+//            return;
+//        }
         new ServerChatos().launch();
     }
 
-    private static void usage(){
-        System.out.println("Usage : ServerChatos port");
-    }
+//    private static void usage(){
+//        System.out.println("Usage : ServerChatos port");
+//    }
 
 }

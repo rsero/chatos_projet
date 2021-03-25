@@ -20,15 +20,24 @@ public class Login implements Data {
 
     @Override
     public boolean processOut(ByteBuffer bbout, Context context, ServerChatos server) {
-    	if(bbout.remaining() > 1) {
+    	if(bbout.hasRemaining()) {
     		return false;
     	}
     	if(server.addClient(name, context)) {
+    		System.out.println("On accepte le nom");
     		bbout.put((byte) 1);
     	}
     	else {
+    		System.out.println("On refuse le nom");
     		bbout.put((byte) 2);
     	}
     	return true;
     }
+
+	@Override
+	public String toString() {
+		return "Login [name=" + name + "]";
+	}
+    
+    
 }

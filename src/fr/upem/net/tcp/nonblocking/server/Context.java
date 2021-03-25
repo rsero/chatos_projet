@@ -88,6 +88,7 @@ public class Context {
             switch (status) {
                 case DONE:
                     var data = (Data) reader.get();
+                    System.out.println(data.toString());
                     server.broadcast(data);
                     reader.reset();
                     break;

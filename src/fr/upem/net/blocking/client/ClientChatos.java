@@ -8,12 +8,14 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.Scanner;
+import java.util.logging.Logger;
 
 public class ClientChatos {
 
     private static final int BUFFER_SIZE = 1024;
     private static final Charset UTF8 = StandardCharsets.UTF_8;
-    private static String login;
+    private static String login = "";
+    static private Logger logger = Logger.getLogger(ClientChatos.class.getName());
 
     public static String input(Scanner scan) {
         String str = "";
@@ -45,8 +47,11 @@ public class ClientChatos {
         var req = ByteBuffer.allocate(BUFFER_SIZE);
         var loginbuff = UTF8.encode(log);
         var len = loginbuff.remaining();
-        if(BUFFER_SIZE < len + Integer.BYTES + 1)
+        System.out.println("On traite ta demande");
+        if(BUFFER_SIZE < len + Integer.BYTES + 1) {
+        	System.out.println("Buffer trop petit");
             return Optional.empty();
+        }
         req.put((byte) 0);
         req.putInt(len);
         req.put(loginbuff);
@@ -55,14 +60,20 @@ public class ClientChatos {
         sc.write(req);
 
         var rep = ByteBuffer.allocate(Byte.BYTES);
-        if(!readFully(sc,rep))
+        System.out.println("Je rentre dans le readFully");
+        if(!readFully(sc,rep)) {
+        	System.out.println("Read fully cassé");
             return Optional.empty();
+        }
+        System.out.println("Je sors du readFully");
         rep.flip();
         var answer = rep.get();
         if(answer==(byte) 1){
             login = log;
+            System.out.println("Tu as été ajouté");
             return Optional.of(log);
         }
+        System.out.println("Tu n'as pas été ajouté");
         return Optional.empty();
     }
 
@@ -80,7 +91,7 @@ public class ClientChatos {
         InetSocketAddress server = new InetSocketAddress(args[0], Integer.valueOf(args[1]));
         try (SocketChannel sc = SocketChannel.open(server);Scanner scan = new Scanner(System.in)) {
             Optional<String> l = Optional.empty();
-            if(login.isEmpty()){
+            if(login.equals("")){
                 var log = input(scan);
                 l = requestLogin(sc,log);
             } else {
