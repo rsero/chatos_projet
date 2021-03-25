@@ -1,18 +1,17 @@
 package fr.upem.net.tcp.nonblocking.server.data;
 
-import fr.upem.net.tcp.nonblocking.server.Context;
-import fr.upem.net.tcp.nonblocking.server.ServerChatos;
 
 import java.nio.ByteBuffer;
 
+import fr.upem.net.tcp.nonblocking.server.Context;
+import fr.upem.net.tcp.nonblocking.server.ServerChatos;
+
 public class Message implements Data{
-    @Override
-    public void processIn(ByteBuffer bbin, ServerChatos serverChatos, Context context) {
 
+	@Override
+    public boolean processOut(ByteBuffer bbout, Context context, ServerChatos server) {
+		return false;
     }
 
-    @Override
-    public void processOut(ByteBuffer bbout) {
 
-    }
 }

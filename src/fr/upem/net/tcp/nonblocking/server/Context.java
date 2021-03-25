@@ -1,8 +1,9 @@
 package fr.upem.net.tcp.nonblocking.server;
 
 import fr.upem.net.tcp.nonblocking.server.data.Data;
-import fr.upem.net.tcp.nonblocking.server.data.Login;
+import fr.upem.net.tcp.nonblocking.server.reader.LoginReader;
 import fr.upem.net.tcp.nonblocking.server.reader.Reader;
+import fr.upem.net.tcp.nonblocking.server.reader.StringReader;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -53,7 +54,13 @@ public class Context {
         if (sc.read(bbin) == -1) {
             closed = true;
         }
-        processIn();
+
+        bbin.flip();
+        if(bbin.hasRemaining()){
+
+        }
+        var opCode = bbin.get();
+        processIn(opCode);
         updateInterestOps();
     }
 
@@ -65,28 +72,44 @@ public class Context {
         updateInterestOps();
     }
 
-    private void processIn() {
-        for(;;){
-            bbin.flip();
-            if(bbin.hasRemaining()){
+    private void processIn(Byte opCode) {
+        switch(opCode) {
+            case 0:
+                read(new LoginReader());
+                //login.processIn(bbin, server, this);
+//            case 1:
+//                read(new StringReader());
+        }
+    }
 
-            }
-            var opCode = bbin.get();
-            switch(opCode){
-                case 0:
-                    Login.processIn(bbin, server, this);
+    private void read(Reader<?> reader){
+        for (;;) {
+            Reader.ProcessStatus status = reader.process(bbin);
+            switch (status) {
+                case DONE:
+                    var data = (Data) reader.get();
+                    server.broadcast(data);
+                    reader.reset();
+                    break;
+                case REFILL:
+                    return;
+                case ERROR:
+                    silentlyClose();
+                    return;
             }
         }
     }
 
     private void processOut() {
         while (!queue.isEmpty()) {
-            var data = queue.remove();
-            data.processOut(bbout);
+            var data = queue.peek();
+            if(data.processOut(bbout, this, server)) {
+            	queue.remove();
+            }
         }
     }
 
-    private void queueMessage(Data data) {
+    public void queueMessage(Data data) {
         queue.add(data);
         processOut();
         updateInterestOps();

@@ -11,6 +11,8 @@ import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import fr.upem.net.tcp.nonblocking.server.data.Data;
+
 public class ServerChatos {
     private final HashMap<String, Context> clients = new HashMap<>();
     private final ServerSocketChannel serverSocketChannel;
@@ -83,6 +85,15 @@ public class ServerChatos {
             sc.close();
         } catch (IOException e) {
             // ignore exception
+        }
+    }
+    
+    public void broadcast(Data data) {
+    	for (SelectionKey key : selector.keys()){
+            var ctx = (Context) key.attachment();
+            if (ctx==null)
+                continue;
+            ctx.queueMessage(data);
         }
     }
 

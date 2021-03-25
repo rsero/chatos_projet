@@ -15,7 +15,7 @@ public class ServerConsole {
         loginReader.process(bbin);
         var login = loginReader.get();
 
-        if(serverChatos.addClient(login, context)){
+        if(serverChatos.addClient(login.getLogin(), context)){
             logger.info("Client ajouté avec succès");
         }
         else {
