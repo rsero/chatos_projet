@@ -1,16 +1,13 @@
 package fr.upem.net.tcp.nonblocking.server.data;
 
-import fr.upem.net.tcp.nonblocking.server.Context;
-import fr.upem.net.tcp.nonblocking.server.ServerChatos;
-import fr.upem.net.tcp.nonblocking.server.reader.LoginReader;
-import fr.upem.net.tcp.nonblocking.server.reader.Reader;
-
-import javax.naming.Context;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
+import fr.upem.net.tcp.nonblocking.server.Context;
+import fr.upem.net.tcp.nonblocking.server.ServerChatos;
+
 public class Login implements Data {
-    private static final LoginReader loginReader = new LoginReader();
+    //private static final LoginReader loginReader = new LoginReader();
     private final String name;
 
     public Login(String name){
@@ -21,39 +18,17 @@ public class Login implements Data {
         return name;
     }
 
-    //@Override
-    //public void processIn(ByteBuffer bbin, ServerChatos serverChatos, Context context) {
-//        for (;;) {
-//            Reader.ProcessStatus status = loginReader.process(bbin);
-//            switch (status) {
-//                case DONE:
-//                    Login data = loginReader.get();
-//                    //serverChatos.broadcast(data);
-                    //mr.reset();
-//                    break;
-//                case REFILL:
-//                    return;
-//                case ERROR:
-                    //silentlyClose();
-//                    return;
-//            }
-//        }
-    //}
-
     @Override
-    public void processOut(ByteBuffer bbout) {
-
-        //bbout.putInt(UTF8.encode(msg.getLogin()).remaining());
-        //bbout.put(UTF8.encode(msg.getLogin()));
-        //bbout.putInt(UTF8.encode(msg.getMsg()).remaining());
-        //bbout.put(UTF8.encode(msg.getMsg()));
-    }
-
-    @Override
-    public void broadcast(Context context, Data login) {
-        //var ctx = (Context) key.attachment();
-        if (context==null)
-            return;
-        context.queueMessage(this);
+    public boolean processOut(ByteBuffer bbout, Context context, ServerChatos server) {
+    	if(bbout.remaining() > 1) {
+    		return false;
+    	}
+    	if(server.addClient(name, context)) {
+    		bbout.put((byte) 1);
+    	}
+    	else {
+    		bbout.put((byte) 2);
+    	}
+    	return true;
     }
 }

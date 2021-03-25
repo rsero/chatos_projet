@@ -77,24 +77,24 @@ public class Context {
             case 0:
                 read(new LoginReader());
                 //login.processIn(bbin, server, this);
-            case 1:
-                read(new StringReader());
+//            case 1:
+//                read(new StringReader());
         }
     }
 
-    private void read(Reader reader){
+    private void read(Reader<?> reader){
         for (;;) {
             Reader.ProcessStatus status = reader.process(bbin);
             switch (status) {
                 case DONE:
                     var data = (Data) reader.get();
-                    //data.broadcast(this);
+                    server.broadcast(data);
                     reader.reset();
                     break;
                 case REFILL:
                     return;
                 case ERROR:
-                    //silentlyClose();
+                    silentlyClose();
                     return;
             }
         }
@@ -102,12 +102,14 @@ public class Context {
 
     private void processOut() {
         while (!queue.isEmpty()) {
-            var data = queue.remove();
-            data.processOut(bbout);
+            var data = queue.peek();
+            if(data.processOut(bbout, this, server)) {
+            	queue.remove();
+            }
         }
     }
 
-    private void queueMessage(Data data) {
+    public void queueMessage(Data data) {
         queue.add(data);
         processOut();
         updateInterestOps();
