@@ -3,11 +3,10 @@ package fr.upem.net.tcp.nonblocking.server;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.InetSocketAddress;
-import java.nio.channels.Channel;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.*;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -36,6 +35,7 @@ public class ServerChatos {
         serverSocketChannel.configureBlocking(false);
         serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
         while (!Thread.interrupted()) {
+            printKeys();
             System.out.println("Starting select");
             try {
                 selector.select(this::treatKey);
@@ -47,11 +47,13 @@ public class ServerChatos {
     }
 
     private void treatKey(SelectionKey key) {
+        printSelectedKey(key);
         try {
             if (key.isValid() && key.isAcceptable()) {
                 doAccept(key);
             }
         } catch (IOException ioe) {
+
             // lambda call in select requires to tunnel IOException
             throw new UncheckedIOException(ioe);
         }
@@ -90,15 +92,11 @@ public class ServerChatos {
     
     public void broadcast(Data data) {
     	for (SelectionKey key : selector.keys()){
-    		System.out.println("je coince");
             if (key.attachment()==null)
                 continue;
             var ctx = (Context) key.attachment();
-            System.out.println("debut queue");
             ctx.queueMessage(data);
-            System.out.println("fin queue");
         }
-    	System.out.println("j'ai finiq");
     }
 
     public static void main(String[] args) throws NumberFormatException, IOException {
@@ -112,5 +110,70 @@ public class ServerChatos {
 //    private static void usage(){
 //        System.out.println("Usage : ServerChatos port");
 //    }
+private String interestOpsToString(SelectionKey key) {
+    if (!key.isValid()) {
+        return "CANCELLED";
+    }
+    int interestOps = key.interestOps();
+    ArrayList<String> list = new ArrayList<>();
+    if ((interestOps & SelectionKey.OP_ACCEPT) != 0)
+        list.add("OP_ACCEPT");
+    if ((interestOps & SelectionKey.OP_READ) != 0)
+        list.add("OP_READ");
+    if ((interestOps & SelectionKey.OP_WRITE) != 0)
+        list.add("OP_WRITE");
+    return String.join("|", list);
+}
+
+    public void printKeys() {
+        Set<SelectionKey> selectionKeySet = selector.keys();
+        if (selectionKeySet.isEmpty()) {
+            System.out.println("The selector contains no key : this should not happen!");
+            return;
+        }
+        System.out.println("The selector contains:");
+        for (SelectionKey key : selectionKeySet) {
+            SelectableChannel channel = key.channel();
+            if (channel instanceof ServerSocketChannel) {
+                System.out.println("\tKey for ServerSocketChannel : " + interestOpsToString(key));
+            } else {
+                SocketChannel sc = (SocketChannel) channel;
+                System.out.println("\tKey for Client " + remoteAddressToString(sc) + " : " + interestOpsToString(key));
+            }
+        }
+    }
+
+    private String remoteAddressToString(SocketChannel sc) {
+        try {
+            return sc.getRemoteAddress().toString();
+        } catch (IOException e) {
+            return "???";
+        }
+    }
+
+    public void printSelectedKey(SelectionKey key) {
+        SelectableChannel channel = key.channel();
+        if (channel instanceof ServerSocketChannel) {
+            System.out.println("\tServerSocketChannel can perform : " + possibleActionsToString(key));
+        } else {
+            SocketChannel sc = (SocketChannel) channel;
+            System.out.println(
+                    "\tClient " + remoteAddressToString(sc) + " can perform : " + possibleActionsToString(key));
+        }
+    }
+
+    private String possibleActionsToString(SelectionKey key) {
+        if (!key.isValid()) {
+            return "CANCELLED";
+        }
+        ArrayList<String> list = new ArrayList<>();
+        if (key.isAcceptable())
+            list.add("ACCEPT");
+        if (key.isReadable())
+            list.add("READ");
+        if (key.isWritable())
+            list.add("WRITE");
+        return String.join(" and ", list);
+    }
 
 }

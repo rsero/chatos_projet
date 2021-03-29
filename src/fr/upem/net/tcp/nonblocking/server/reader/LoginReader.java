@@ -20,13 +20,11 @@ public class LoginReader implements Reader<Login> {
         switch (processlogin) {
             case DONE:
                 var log = stringReader.get();
-                System.out.println("log >>><<< " + log + "\n");
                 login = new Login(log);
                 stringReader.reset();
                 state = State.DONE;
                 break;
             case REFILL:
-                System.out.println("REFILL du loginreader");
                 return ProcessStatus.REFILL;
             case ERROR:
                 state= State.ERROR;

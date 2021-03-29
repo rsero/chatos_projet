@@ -17,23 +17,19 @@ public class InstructionReader implements Reader<Data> {
 
 	@Override
 	public ProcessStatus process(ByteBuffer bb) {
-		System.out.println("Processin Instructionreader\n");
 		if (state == State.DONE || state == State.ERROR) {
 			throw new IllegalStateException();
 		}
-
 		if (state == State.WAITING_OPCODE) {
 			bb.flip();
 			opCode = bb.get();
 			bb.compact();
-			System.out.println("OpCode >>>>>>>>>>>>>>>>>>> " + opCode + "\n");
 			if (opCode == 3) {
 				reader = new LoginReader();
 			}
 			state = State.WAITING_DATA;
 		}
 		if (state == State.WAITING_DATA) {
-
 			var stateProcess = reader.process(bb);
 			if (stateProcess == ProcessStatus.REFILL) {
 				return ProcessStatus.REFILL;
@@ -43,13 +39,11 @@ public class InstructionReader implements Reader<Data> {
 			}
 			if (opCode == 3) {
 				value = (Data) reader.get();
-				System.out.println("logloglog >> "  + value+ "\n");
 			}
-
 			state = State.DONE;
 			return ProcessStatus.DONE;
 		}
-		return ProcessStatus.REFILL;
+		return ProcessStatus.DONE;
 	}
 
 	@Override

@@ -20,20 +20,13 @@ public class Login implements Data {
 
     @Override
     public boolean processOut(ByteBuffer bbout, Context context, ServerChatos server) {
-    	
-    	System.out.println("bbout size " + bbout.remaining() + "\n");
     	if(!bbout.hasRemaining()) {
-    		System.out.println("C'est sur");
     		return false;
     	}
-    	System.out.println("on passe quand meme la de temps en temps");
     	if(server.addClient(name, context)) {
-    		System.out.println("On accepte le nom");
     		bbout.put((byte) 1);
-    		System.out.println("c'est cool");
     	}
     	else {
-    		System.out.println("On refuse le nom");
     		bbout.put((byte) 2);
     	}
     	return true;
