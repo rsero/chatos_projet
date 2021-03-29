@@ -22,6 +22,9 @@ public class InstructionReader implements Reader<Data> {
 		}
 		if (state == State.WAITING_OPCODE) {
 			bb.flip();
+			if(bb.remaining()<1){
+				return ProcessStatus.REFILL;
+			}
 			opCode = bb.get();
 			bb.compact();
 			if (opCode == 3) {
@@ -43,7 +46,7 @@ public class InstructionReader implements Reader<Data> {
 			state = State.DONE;
 			return ProcessStatus.DONE;
 		}
-		return ProcessStatus.DONE;
+		return ProcessStatus.REFILL;
 	}
 
 	@Override
