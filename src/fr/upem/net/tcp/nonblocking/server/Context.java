@@ -141,13 +141,14 @@ public class Context {
     }
 
     private void processOut() {
+    	bbout.compact();
         while (!queue.isEmpty()) {
             var data = queue.peek();
-            System.out.println("debut process out 1");
+            //System.out.println("debut process out 1");
             if(data.processOut(bbout, this, server)) {
             	queue.remove();
             }
-            System.out.println("fin process out 1");
+            //System.out.println("fin process out 1");
         }
     }
 

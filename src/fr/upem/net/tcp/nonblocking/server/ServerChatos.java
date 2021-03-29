@@ -27,9 +27,9 @@ public class ServerChatos {
 
     public boolean addClient(String login, Context context){
         if(clients.putIfAbsent(login, context) == null){
-            return false;
+            return true;
         }
-        return true;
+        return false;
     }
 
     public void launch() throws IOException {

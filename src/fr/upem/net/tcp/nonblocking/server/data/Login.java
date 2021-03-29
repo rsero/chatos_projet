@@ -25,6 +25,7 @@ public class Login implements Data {
     		System.out.println("C'est sur");
     		return false;
     	}
+    	System.out.println("on passe quand meme la de temps en temps");
     	if(server.addClient(name, context)) {
     		System.out.println("On accepte le nom");
     		bbout.put((byte) 1);
