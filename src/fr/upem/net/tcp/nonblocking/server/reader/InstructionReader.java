@@ -27,7 +27,7 @@ public class InstructionReader implements Reader<Data> {
 			}
 			opCode = bb.get();
 			bb.compact();
-			if (opCode == 3) {
+			if (opCode == 0) {
 				reader = new LoginReader();
 			}
 			state = State.WAITING_DATA;
@@ -40,7 +40,7 @@ public class InstructionReader implements Reader<Data> {
 				state = State.ERROR;
 				return ProcessStatus.ERROR;
 			}
-			if (opCode == 3) {
+			if (opCode == 0) {
 				value = (Data) reader.get();
 			}
 			state = State.DONE;
