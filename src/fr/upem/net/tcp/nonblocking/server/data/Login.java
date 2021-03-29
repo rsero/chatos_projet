@@ -20,7 +20,9 @@ public class Login implements Data {
 
     @Override
     public boolean processOut(ByteBuffer bbout, Context context, ServerChatos server) {
+    	
     	if(bbout.hasRemaining()) {
+    		System.out.println("C'est sur");
     		return false;
     	}
     	if(server.addClient(name, context)) {

@@ -90,11 +90,15 @@ public class ServerChatos {
     
     public void broadcast(Data data) {
     	for (SelectionKey key : selector.keys()){
-            var ctx = (Context) key.attachment();
-            if (ctx==null)
+    		System.out.println("je coince");
+            if (key.attachment()==null)
                 continue;
+            var ctx = (Context) key.attachment();
+            System.out.println("debut queue");
             ctx.queueMessage(data);
+            System.out.println("fin queue");
         }
+    	System.out.println("j'ai finiq");
     }
 
     public static void main(String[] args) throws NumberFormatException, IOException {

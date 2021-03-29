@@ -20,9 +20,10 @@ public class ClientChatos {
     public static String input(Scanner scan) {
         String str = "";
         while (scan.hasNextLine()) {
-            if(str.equals(""))
-                break;
+//            if(str.equals(""))
+//                break;
             str = scan.nextLine();
+            return str;
         }
         return str;
     }
@@ -46,17 +47,28 @@ public class ClientChatos {
     private static Optional<String> requestLogin(SocketChannel sc, String log) throws IOException {
         var req = ByteBuffer.allocate(BUFFER_SIZE);
         var loginbuff = UTF8.encode(log);
-        var len = loginbuff.remaining();
+        int len = loginbuff.remaining();
+        System.out.println("len >>>>" + len);
+        System.out.println("log >>>>" + log);
         System.out.println("On traite ta demande");
         if(BUFFER_SIZE < len + Integer.BYTES + 1) {
         	System.out.println("Buffer trop petit");
             return Optional.empty();
         }
-        req.put((byte) 0);
+
+        req.put((byte) 3);
         req.putInt(len);
         req.put(loginbuff);
 
         req.flip();
+//        System.out.println("Byte >> " + req.get() + "\nlen >> " + req.getInt() + "\nmessage >>" + UTF8.decode(req) + "\n");
+//        req.clear();
+//        req.put((byte) 0);
+//        req.putInt(len);
+//        req.put(loginbuff);
+//
+//        req.flip();
+        
         sc.write(req);
 
         var rep = ByteBuffer.allocate(Byte.BYTES);
@@ -65,7 +77,7 @@ public class ClientChatos {
         	System.out.println("Read fully cassé");
             return Optional.empty();
         }
-        System.out.println("Je sors du readFully");
+        System.out.println("Je sors du readFullys");
         rep.flip();
         var answer = rep.get();
         if(answer==(byte) 1){
