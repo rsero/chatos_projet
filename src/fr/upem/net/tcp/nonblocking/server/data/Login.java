@@ -21,7 +21,8 @@ public class Login implements Data {
     @Override
     public boolean processOut(ByteBuffer bbout, Context context, ServerChatos server) {
     	
-    	if(bbout.hasRemaining()) {
+    	System.out.println("bbout size " + bbout.remaining() + "\n");
+    	if(!bbout.hasRemaining()) {
     		System.out.println("C'est sur");
     		return false;
     	}
@@ -29,6 +30,7 @@ public class Login implements Data {
     	if(server.addClient(name, context)) {
     		System.out.println("On accepte le nom");
     		bbout.put((byte) 1);
+    		System.out.println("c'est cool");
     	}
     	else {
     		System.out.println("On refuse le nom");

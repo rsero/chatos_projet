@@ -141,7 +141,7 @@ public class Context {
     }
 
     private void processOut() {
-    	bbout.compact();
+    	//bbout.flip();
         while (!queue.isEmpty()) {
             var data = queue.peek();
             //System.out.println("debut process out 1");
