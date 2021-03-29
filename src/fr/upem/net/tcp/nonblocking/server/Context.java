@@ -38,7 +38,7 @@ public class Context {
         }
         if (newInterestOps == 0) {
             silentlyClose();
-//            return;
+            return;
         }
         key.interestOps(newInterestOps);
     }
