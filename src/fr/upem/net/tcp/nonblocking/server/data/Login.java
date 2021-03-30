@@ -15,6 +15,7 @@ public class Login implements Data {
 	private static final Charset UTF8 = Charset.forName("UTF8");
 	private static int BUFFER_SIZE = 34;
     private final String name;
+    private Byte byteReceive;
 
     public Login(String name){
         this.name= Objects.requireNonNull(name);
@@ -65,14 +66,18 @@ public class Login implements Data {
 		req.put(loginbuff);
 		req.flip();
 		return Optional.of(req);
-//		sc.write(req);
-//		var rep = ByteBuffer.allocate(Byte.BYTES);
-//		if (!readFully(sc, rep)) {
-//			return;
-//		}
-//		rep.flip();
-//		var answer = rep.get();
-//		if (answer == (byte) 1) {
+	}
+
+	@Override
+	public void decode() {
+		// TODO Auto-generated method stub
+		if (byteReceive == (byte) 1) {
+			System.out.println("Connexion accepté");
+			//mettre à jour le login
+		}
+		else if(byteReceive == (byte) 2) {
+			System.out.println("Login deja existant");
+		}
 //			login = log;
 //			return;
 //		}

@@ -83,6 +83,12 @@ public class MessageGlobal implements Data{
 //		System.out.println("message >>>> " + message);
 	}
 
+	@Override
+	public void decode() {
+		// TODO Auto-generated method stub
+		System.out.println(login + " : " + msg);
+	}
+
 
 
 }

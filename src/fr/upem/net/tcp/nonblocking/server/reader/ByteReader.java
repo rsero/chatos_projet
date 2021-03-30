@@ -2,24 +2,24 @@ package fr.upem.net.tcp.nonblocking.server.reader;
 
 import java.nio.ByteBuffer;
 
-public class IntReader implements Reader<Integer> {
+import fr.upem.net.tcp.nonblocking.server.data.OpCode;
+
+public class ByteReader implements Reader<OpCode> {
 
     private enum State {
         DONE, WAITING, ERROR
     };
 
     private State state = State.WAITING;
-    private final ByteBuffer internalbb = ByteBuffer.allocate(Integer.BYTES); // write-mode
-    private int value;
+    private final ByteBuffer internalbb = ByteBuffer.allocate(Byte.BYTES); // write-mode
+    private OpCode value;
 
     @Override
     public ProcessStatus process(ByteBuffer bb) {
         if (state == State.DONE || state == State.ERROR) {
             throw new IllegalStateException();
         }
-    
         bb.flip();
-        System.out.println("Refill car " + bb.remaining());
         try {
             if (bb.remaining() <= internalbb.remaining()) {
                 internalbb.put(bb);
@@ -32,18 +32,19 @@ public class IntReader implements Reader<Integer> {
         } finally {
             bb.compact();
         }
-        if (internalbb.hasRemaining()) {
-        	System.out.println("Refill car " + internalbb.remaining());
-            return ProcessStatus.REFILL;
-        }
-        state = State.DONE;
+
+		if(internalbb.remaining()<1){
+			return ProcessStatus.REFILL;
+		}
+
+		state = State.DONE;
         internalbb.flip();
-        value = internalbb.getInt();
+        value = new OpCode(internalbb.get());
         return ProcessStatus.DONE;
     }
 
     @Override
-    public Integer get() {
+    public OpCode get() {
         if (state != State.DONE) {
             throw new IllegalStateException();
         }

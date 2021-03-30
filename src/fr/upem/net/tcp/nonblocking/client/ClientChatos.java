@@ -19,7 +19,7 @@ import java.util.logging.Logger;
 import fr.upem.net.tcp.nonblocking.server.data.Data;
 import fr.upem.net.tcp.nonblocking.server.data.Login;
 import fr.upem.net.tcp.nonblocking.server.data.MessageGlobal;
-import fr.upem.net.tcp.nonblocking.server.reader.GlobalMessageReader;
+import fr.upem.net.tcp.nonblocking.server.reader.InstructionReader;
 import fr.upem.net.tcp.nonblocking.server.reader.Reader;
 
 public class ClientChatos {
@@ -31,7 +31,7 @@ public class ClientChatos {
         final private ByteBuffer bbin = ByteBuffer.allocate(BUFFER_SIZE);
         final private ByteBuffer bbout = ByteBuffer.allocate(BUFFER_SIZE);
         final private Queue<ByteBuffer> queue = new LinkedList<>(); // buffers read-mode
-        private Reader<?> reader;
+        private InstructionReader reader;
         private boolean closed = false;
 
         private Context(SelectionKey key){
@@ -48,12 +48,14 @@ public class ClientChatos {
          */
         private void processIn() {
         	for(;;){
+        		System.out.println("je suis jamais dans done");
          	   Reader.ProcessStatus status = reader.process(bbin);
          	   switch (status){
          	      case DONE:
          	          Data value = reader.get();
-         	          value.toString();
-         	         reader.reset();
+         	          System.out.println("je décode");
+         	          value.decode();
+         	          reader.reset();
          	          break;
          	      case REFILL:
          	          return;
@@ -132,7 +134,9 @@ public class ClientChatos {
          * @throws IOException
          */
         private void doRead() throws IOException {
-            if (sc.read(bbin)==-1) {
+            System.out.println("process in");
+        	if (sc.read(bbin)==-1) {
+        		System.out.println("read raté");
                 closed=true;
             }
             processIn();
@@ -177,7 +181,7 @@ public class ClientChatos {
     private static final Charset UTF8 = Charset.forName("UTF8");
     private Context uniqueContext;
 
-    public ClientChatos(String login, InetSocketAddress serverAddress) throws IOException {
+    public ClientChatos(InetSocketAddress serverAddress) throws IOException {
         this.serverAddress = serverAddress;
         this.login = new Login();
         this.sc = SocketChannel.open();
@@ -228,7 +232,9 @@ public class ClientChatos {
 	            command = commandQueue.remove();
 	            Optional<ByteBuffer> bb;
 	            if (login.isNotConnect()) {
+	            	System.out.println("tentative de connexion");
 					bb = login.encodeLogin(sc, command);
+					System.out.println("tentive de connexion fin");
 				} else {
 					// autres requêtes à faire
 					System.out.println("je passe la");
@@ -292,15 +298,15 @@ public class ClientChatos {
 
 
     public static void main(String[] args) throws NumberFormatException, IOException {
-        if (args.length!=3){
+        if (args.length!=2){
             usage();
             return;
         }
-        new ClientChatos(args[0],new InetSocketAddress(args[1],Integer.parseInt(args[2]))).launch();
+        new ClientChatos(new InetSocketAddress(args[0],Integer.parseInt(args[1]))).launch();
     }
 
     private static void usage(){
-        System.out.println("Usage : ClientChat login hostname port");
+        System.out.println("Usage : ClientChat hostname port");
     }
 }
 
