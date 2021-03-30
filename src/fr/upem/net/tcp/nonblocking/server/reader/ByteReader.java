@@ -11,18 +11,15 @@ public class ByteReader implements Reader<OpCode> {
     };
 
     private State state = State.WAITING;
-    private final ByteBuffer internalbb = ByteBuffer.allocate(Byte.BYTES); // write-mode
     private OpCode value;
 
     @Override
     public ProcessStatus process(ByteBuffer bb) {
         if (state == State.DONE || state == State.ERROR) {
-            System.out.println("state: " + state);
             throw new IllegalStateException();
         }
-        //bb.flip();
+        bb.flip();
         try {
-        	System.out.println("bbremaining >> " + bb.remaining());
             if (bb.remaining() >= 1) {
                 value = new OpCode(bb.get());
                 state = State.DONE;
@@ -46,6 +43,5 @@ public class ByteReader implements Reader<OpCode> {
     @Override
     public void reset() {
         state = State.WAITING;
-        internalbb.clear();
     }
 }

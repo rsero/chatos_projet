@@ -59,14 +59,10 @@ public class ServerChatos {
         }
         try {
             if (key.isValid() && key.isWritable()) {
-            	System.out.println("debut write");
                 ((Context) key.attachment()).doWrite();
-                System.out.println("fin write");
             }
             if (key.isValid() && key.isReadable()) {
-            	System.out.println("debut read");
                 ((Context) key.attachment()).doRead();
-                System.out.println("fin read");
             }
         } catch (IOException e) {
             logger.log(Level.INFO, "Connection closed with client due to IOException", e);

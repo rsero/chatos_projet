@@ -49,7 +49,7 @@ public class MessageGlobal implements Data{
     	return true;
     }
 	
-	public Optional<ByteBuffer> encodeGlobalMessage(SocketChannel sc, String msg) throws IOException {
+	public ByteBuffer encodeGlobalMessage(SocketChannel sc, String msg) throws IOException {
 		var req = ByteBuffer.allocate(BUFFER_SIZE);
 		var loginbuff = UTF8.encode(login.getLogin());
 		var msgbuff = UTF8.encode(msg);
@@ -57,30 +57,11 @@ public class MessageGlobal implements Data{
 		int msglen = msgbuff.remaining();
 
 		if (BUFFER_SIZE < loginlen + msglen + 2 * Integer.BYTES + 1) {
-			System.out.println("empty1");
-			return Optional.empty();
+			return null;
 		}
 		req.put((byte) 3).putInt(loginlen).put(loginbuff).putInt(msglen).put(msgbuff);
 		req.flip();
-		sc.write(req);
-		return Optional.of(req);
-//		var rep = ByteBuffer.allocate(Integer.BYTES + msglen);
-//		if (!readFully(sc, rep)) {
-//			System.out.println("empty2");
-//			return;
-//		}
-//		rep.flip();
-//		if(rep.remaining() < Integer.BYTES) {
-//			System.out.println("empty3");
-//			return;
-//		}
-//		var answer = rep.getInt();
-//		if(rep.remaining() < answer) {
-//			System.out.println("empty4");
-//			return;
-//		}
-//		var message = UTF8.decode(rep);
-//		System.out.println("message >>>> " + message);
+		return req;
 	}
 
 	@Override

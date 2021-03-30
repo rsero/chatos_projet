@@ -15,20 +15,15 @@ public class LoginReader implements Reader<Login> {
     private Login login;
     
     public Reader.ProcessStatus process(ByteBuffer bb) {
-        
-    	System.out.println("je serais au moins venu la1");
         var processlogin = stringReader.process(bb);
-        System.out.println("je serais au moins venu la2");
         switch (processlogin) {
             case DONE:
                 var log = stringReader.get();
-                System.out.println(">>> log recu " + log);
                 login = new Login(log);
                 stringReader.reset();
                 state = State.DONE;
                 break;
             case REFILL:
-            	System.out.println("logir reader refill");
                 return ProcessStatus.REFILL;
             case ERROR:
                 state= State.ERROR;

@@ -11,7 +11,6 @@ import fr.upem.net.tcp.nonblocking.server.Context;
 import fr.upem.net.tcp.nonblocking.server.ServerChatos;
 
 public class Login implements Data {
-    //private static final LoginReader loginReader = new LoginReader();
 	private static final Charset UTF8 = Charset.forName("UTF8");
 	private static int BUFFER_SIZE = 34;
     private final String name;
@@ -54,18 +53,18 @@ public class Login implements Data {
 		return name;
 	}
     
-	public Optional<ByteBuffer> encodeLogin(SocketChannel sc, String log) throws IOException {
+	public ByteBuffer encodeLogin(SocketChannel sc, String log) throws IOException {
 		var req = ByteBuffer.allocate(BUFFER_SIZE);
 		var loginbuff = UTF8.encode(log);
 		int len = loginbuff.remaining();
 		if (BUFFER_SIZE < len + Integer.BYTES + 1) {
-			return Optional.empty();
+			return null;
 		}
 		req.put((byte) 5);
 		req.putInt(len);
 		req.put(loginbuff);
-		req.flip();
-		return Optional.of(req);
+		//req.flip();
+		return req;
 	}
 
 	@Override
@@ -78,8 +77,7 @@ public class Login implements Data {
 		else if(byteReceive == (byte) 2) {
 			System.out.println("Login deja existant");
 		}
-//			login = log;
-//			return;
-//		}
+//		login = log;
+//		return;
 	}
 }

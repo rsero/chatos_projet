@@ -47,16 +47,11 @@ public class ClientChatos {
          *
          */
         private void processIn() {
-        	//bbin.flip();
         	for(;;){
-        		System.out.println("je suis jamais dans done");
-         	    Reader.ProcessStatus status = reader.process(bbin);
-         	    System.out.println("je suis jamais dans done2");
-        	   
-         	   switch (status){
+        	    Reader.ProcessStatus status = reader.process(bbin);
+         	    switch (status){
          	      case DONE:
          	          Data value = reader.get();
-         	          System.out.println("je décode");
          	          value.decode();
          	          reader.reset();
          	          break;
@@ -137,9 +132,8 @@ public class ClientChatos {
          * @throws IOException
          */
         private void doRead() throws IOException {
-            System.out.println("process in");
         	if (sc.read(bbin)==-1) {
-        		System.out.println("read raté");
+                System.out.println("read raté");
                 closed=true;
             }
             processIn();
@@ -170,7 +164,7 @@ public class ClientChatos {
         }
     }
 
-    static private int BUFFER_SIZE = 10_000;
+    static private int BUFFER_SIZE = 1024;
     static private Logger logger = Logger.getLogger(ClientChatos.class.getName());
 
 
@@ -230,28 +224,22 @@ public class ClientChatos {
 
     private void processCommands() throws IOException{
     	synchronized (commandQueue) {
-    		System.out.println("processCommand");
     		while (!commandQueue.isEmpty()) {
-    			System.out.println("j'ai un element");
 	            String command;
 	            command = commandQueue.remove();
-	            Optional<ByteBuffer> bb;
+	            ByteBuffer bb;
 	            if (login.isNotConnect()) {
-	            	System.out.println("tentative de connexion : " + command);
 					bb = login.encodeLogin(sc, command);
-					System.out.println("tentive de connexion fin");
 				} else {
 					// autres requêtes à faire
-					System.out.println("je passe la");
 					bb = messageGlobal.encodeGlobalMessage(sc, command);
-					System.out.println("je passe la aussi");
 				}
-	            if (!bb.isPresent()) {
+	            if (bb == null) {
 					System.err.println("Connection with server lost.");
 					return;
 				}
 	            //uniqueContext.queueMessage(bb.get().flip());
-	            uniqueContext.queueMessage(bb.get());
+	            uniqueContext.queueMessage(bb.flip());
     		}
         }
     }
@@ -262,9 +250,7 @@ public class ClientChatos {
         uniqueContext = new Context(key);
         key.attach(uniqueContext);
         sc.connect(serverAddress);
-
         console.start();
-
         while(!Thread.interrupted()) {
             try {
                 selector.select(this::treatKey);
@@ -281,14 +267,10 @@ public class ClientChatos {
                 uniqueContext.doConnect();
             }
             if (key.isValid() && key.isWritable()) {
-            	System.out.println("debut write");
                 uniqueContext.doWrite();
-                System.out.println("fin write");
             }
             if (key.isValid() && key.isReadable()) {
-            	System.out.println("debut read");
                 uniqueContext.doRead();
-                System.out.println("fin read");
             }
         } catch(IOException ioe) {
             // lambda call in select requires to tunnel IOException

@@ -29,30 +29,17 @@ public class Context {
     }
     private void updateInterestOps() {
         int newInterestOps = 0;
-        System.out.println("etape4");
-
         if (!closed && bbin.hasRemaining()) {
             newInterestOps = newInterestOps | SelectionKey.OP_READ;
         }
-        System.out.println("etape5");
-
         if (bbout.position() > 0) {
             newInterestOps = newInterestOps | SelectionKey.OP_WRITE;
         }
-        
-        System.out.println("etape6");
-
         if (newInterestOps == 0) {
             silentlyClose();
             return;
         }
-        
-        System.out.println("etape7 : " + newInterestOps);
-
         key.interestOps(newInterestOps);
-        
-        System.out.println("etape8");
-
     }
 
     private void silentlyClose() {
@@ -64,15 +51,11 @@ public class Context {
     }
 
     public void doRead() throws IOException {
-        System.out.println("etape0");
         if (sc.read(bbin) == -1) {
             closed = true;
         }
-        System.out.println("etape1");
         processIn();
-        System.out.println("etape2");
         updateInterestOps();
-        System.out.println("etape3");
     }
 
     public void doWrite() throws IOException {
@@ -84,16 +67,11 @@ public class Context {
     }
 
     private void processIn() {
-    	System.out.println("je suis dans ");
-    	//
-    	bbin.flip();
     	for(;;) {
 	        Reader.ProcessStatus status = reader.process(bbin);
-	        System.out.println("Je suis plus dedans");
 	        switch (status) {
 	            case DONE:
 	                var data = (Data) reader.get();
-	                System.out.println("Data >>" + data);
 	                server.broadcast(data);
 	                reader.reset();
 	                break;
@@ -107,7 +85,6 @@ public class Context {
     }
 
     private void processOut() {
-    	//bbout.flip();
         while (!queue.isEmpty()) {
             var data = queue.peek();
             if(data.processOut(bbout, this, server)) {

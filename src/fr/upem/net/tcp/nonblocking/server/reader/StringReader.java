@@ -82,7 +82,7 @@ public class StringReader implements Reader<String> {
 	}
 
 }
-//
+
 //package fr.upem.net.tcp.nonblocking.server.reader;
 //
 //import java.nio.ByteBuffer;
@@ -160,4 +160,3 @@ public class StringReader implements Reader<String> {
 //        internalbb.clear();
 //    }
 //}
-//

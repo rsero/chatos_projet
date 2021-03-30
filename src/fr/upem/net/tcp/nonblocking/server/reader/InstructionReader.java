@@ -1,6 +1,7 @@
 package fr.upem.net.tcp.nonblocking.server.reader;
 
 import java.nio.ByteBuffer;
+import java.util.concurrent.SynchronousQueue;
 
 import fr.upem.net.tcp.nonblocking.server.data.Data;
 import fr.upem.net.tcp.nonblocking.server.data.OpCode;
@@ -37,25 +38,6 @@ public class InstructionReader implements Reader<Data> {
 			break;
 		}
 	}
-
-	private void definedValue() {
-		switch (opCode.getByte()) {
-		case 5:
-			value = (Data) reader.get();
-			break;
-		case 1:
-			value = (Data) reader.get();
-			break;
-		case 2:
-			value = (Data) reader.get();
-			break;
-		case 3:
-			value = (Data) reader.get();
-			break;
-		default:
-			break;
-		}
-	}
 	
 	@Override
 	public ProcessStatus process(ByteBuffer bb) {
@@ -64,20 +46,14 @@ public class InstructionReader implements Reader<Data> {
 		}
 		if (state == State.WAITING_OPCODE) {
 			var byteReader = new ByteReader();
-			//bb.flip();
-			byteReader.process(bb);
-//			
-//			bb.flip();
-//			if(bb.remaining()<1){
-//				return ProcessStatus.REFILL;
-//			}
-//			opCode = new OpCode(bb.get());
+			var stat = byteReader.process(bb);
+			if(stat!=ProcessStatus.DONE){
+				return stat;
+			}
 			opCode = byteReader.get();
-//			bb.compact();
 			definedReader(opCode, byteReader); 
 		}
 		if (state == State.WAITING_DATA) {
-			System.out.println("je serais au moins venu la");
 			var stateProcess = reader.process(bb);
 			if (stateProcess == ProcessStatus.REFILL) {
 				return ProcessStatus.REFILL;
@@ -86,10 +62,9 @@ public class InstructionReader implements Reader<Data> {
 				return ProcessStatus.ERROR;
 			}
 			state = State.DONE;
-			//return ProcessStatus.DONE;
 		}
 		if(state == State.DONE) {
-			definedValue();
+			value = (Data) reader.get();
 			return ProcessStatus.DONE;
 		}
 		return ProcessStatus.REFILL;
