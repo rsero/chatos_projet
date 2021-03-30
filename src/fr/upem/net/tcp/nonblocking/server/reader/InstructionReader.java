@@ -14,7 +14,33 @@ public class InstructionReader implements Reader<Data> {
 	private Data value;
 	private Byte opCode;
 	private Reader<?> reader;
+	
+	private void definedReader(Byte opcode) {
+		switch (opcode) {
+		case 0:
+			reader = new LoginReader();
+			break;
+		case 3:
+			reader = new GlobalMessageReader();
+			break;
+		default:
+			break;
+		}
+	}
 
+	private void definedValue() {
+		switch (opCode) {
+		case 0:
+			value = (Data) reader.get();
+			break;
+		case 3:
+			value = (Data) reader.get();
+			break;
+		default:
+			break;
+		}
+	}
+	
 	@Override
 	public ProcessStatus process(ByteBuffer bb) {
 		if (state == State.DONE || state == State.ERROR) {
@@ -27,9 +53,8 @@ public class InstructionReader implements Reader<Data> {
 			}
 			opCode = bb.get();
 			bb.compact();
-			if (opCode == 0) {
-				reader = new LoginReader();
-			}
+			definedReader(opCode);
+			
 			state = State.WAITING_DATA;
 		}
 		if (state == State.WAITING_DATA) {
@@ -40,9 +65,7 @@ public class InstructionReader implements Reader<Data> {
 				state = State.ERROR;
 				return ProcessStatus.ERROR;
 			}
-			if (opCode == 0) {
-				value = (Data) reader.get();
-			}
+			definedValue();
 			state = State.DONE;
 			return ProcessStatus.DONE;
 		}
