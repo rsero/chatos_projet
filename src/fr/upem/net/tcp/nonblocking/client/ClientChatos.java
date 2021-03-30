@@ -31,7 +31,7 @@ public class ClientChatos {
         final private ByteBuffer bbin = ByteBuffer.allocate(BUFFER_SIZE);
         final private ByteBuffer bbout = ByteBuffer.allocate(BUFFER_SIZE);
         final private Queue<ByteBuffer> queue = new LinkedList<>(); // buffers read-mode
-        private InstructionReader reader;
+        private InstructionReader reader = new InstructionReader();
         private boolean closed = false;
 
         private Context(SelectionKey key){
@@ -47,9 +47,12 @@ public class ClientChatos {
          *
          */
         private void processIn() {
+        	//bbin.flip();
         	for(;;){
         		System.out.println("je suis jamais dans done");
-         	   Reader.ProcessStatus status = reader.process(bbin);
+         	    Reader.ProcessStatus status = reader.process(bbin);
+         	    System.out.println("je suis jamais dans done2");
+        	   
          	   switch (status){
          	      case DONE:
          	          Data value = reader.get();
@@ -227,12 +230,14 @@ public class ClientChatos {
 
     private void processCommands() throws IOException{
     	synchronized (commandQueue) {
+    		System.out.println("processCommand");
     		while (!commandQueue.isEmpty()) {
+    			System.out.println("j'ai un element");
 	            String command;
 	            command = commandQueue.remove();
 	            Optional<ByteBuffer> bb;
 	            if (login.isNotConnect()) {
-	            	System.out.println("tentative de connexion");
+	            	System.out.println("tentative de connexion : " + command);
 					bb = login.encodeLogin(sc, command);
 					System.out.println("tentive de connexion fin");
 				} else {
@@ -245,7 +250,8 @@ public class ClientChatos {
 					System.err.println("Connection with server lost.");
 					return;
 				}
-	            uniqueContext.queueMessage(bb.get().flip());
+	            //uniqueContext.queueMessage(bb.get().flip());
+	            uniqueContext.queueMessage(bb.get());
     		}
         }
     }
@@ -275,10 +281,14 @@ public class ClientChatos {
                 uniqueContext.doConnect();
             }
             if (key.isValid() && key.isWritable()) {
+            	System.out.println("debut write");
                 uniqueContext.doWrite();
+                System.out.println("fin write");
             }
             if (key.isValid() && key.isReadable()) {
+            	System.out.println("debut read");
                 uniqueContext.doRead();
+                System.out.println("fin read");
             }
         } catch(IOException ioe) {
             // lambda call in select requires to tunnel IOException

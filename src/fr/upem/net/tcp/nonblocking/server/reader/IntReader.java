@@ -19,7 +19,7 @@ public class IntReader implements Reader<Integer> {
         }
     
         bb.flip();
-        System.out.println("Refill car " + bb.remaining());
+        System.out.println("int Refill car " + bb.remaining());
         try {
             if (bb.remaining() <= internalbb.remaining()) {
                 internalbb.put(bb);

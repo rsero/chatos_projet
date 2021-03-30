@@ -61,7 +61,7 @@ public class Login implements Data {
 		if (BUFFER_SIZE < len + Integer.BYTES + 1) {
 			return Optional.empty();
 		}
-		req.put((byte) 0);
+		req.put((byte) 5);
 		req.putInt(len);
 		req.put(loginbuff);
 		req.flip();

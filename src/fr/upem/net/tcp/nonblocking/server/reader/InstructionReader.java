@@ -17,7 +17,7 @@ public class InstructionReader implements Reader<Data> {
 	
 	private void definedReader(OpCode opcode, ByteReader byteReader) {
 		switch (opcode.getByte()) {
-		case 0:
+		case 5:
 			reader = new LoginReader();
 			state = State.WAITING_DATA;
 			break;
@@ -40,7 +40,7 @@ public class InstructionReader implements Reader<Data> {
 
 	private void definedValue() {
 		switch (opCode.getByte()) {
-		case 0:
+		case 5:
 			value = (Data) reader.get();
 			break;
 		case 1:
@@ -64,17 +64,20 @@ public class InstructionReader implements Reader<Data> {
 		}
 		if (state == State.WAITING_OPCODE) {
 			var byteReader = new ByteReader();
+			//bb.flip();
+			byteReader.process(bb);
 //			
 //			bb.flip();
 //			if(bb.remaining()<1){
 //				return ProcessStatus.REFILL;
 //			}
-//			opCode = bb.get();
+//			opCode = new OpCode(bb.get());
 			opCode = byteReader.get();
-			bb.compact();
+//			bb.compact();
 			definedReader(opCode, byteReader); 
 		}
 		if (state == State.WAITING_DATA) {
+			System.out.println("je serais au moins venu la");
 			var stateProcess = reader.process(bb);
 			if (stateProcess == ProcessStatus.REFILL) {
 				return ProcessStatus.REFILL;

@@ -17,35 +17,27 @@ public class ByteReader implements Reader<OpCode> {
     @Override
     public ProcessStatus process(ByteBuffer bb) {
         if (state == State.DONE || state == State.ERROR) {
+            System.out.println("state: " + state);
             throw new IllegalStateException();
         }
-        bb.flip();
+        //bb.flip();
         try {
-            if (bb.remaining() <= internalbb.remaining()) {
-                internalbb.put(bb);
-            } else {
-                var oldLimit = bb.limit();
-                bb.limit(internalbb.remaining());
-                internalbb.put(bb);
-                bb.limit(oldLimit);
+        	System.out.println("bbremaining >> " + bb.remaining());
+            if (bb.remaining() >= 1) {
+                value = new OpCode(bb.get());
+                state = State.DONE;
+                return ProcessStatus.DONE;
             }
+            return ProcessStatus.REFILL;
         } finally {
             bb.compact();
         }
-
-		if(internalbb.remaining()<1){
-			return ProcessStatus.REFILL;
-		}
-
-		state = State.DONE;
-        internalbb.flip();
-        value = new OpCode(internalbb.get());
-        return ProcessStatus.DONE;
     }
 
     @Override
     public OpCode get() {
         if (state != State.DONE) {
+            System.out.println(state);
             throw new IllegalStateException();
         }
         return value;
