@@ -32,7 +32,6 @@ public class Context {
         if (!closed && bbin.hasRemaining()) {
             newInterestOps = newInterestOps | SelectionKey.OP_READ;
         }
-
         if (bbout.position() > 0) {
             newInterestOps = newInterestOps | SelectionKey.OP_WRITE;
         }
@@ -68,19 +67,21 @@ public class Context {
     }
 
     private void processIn() {
-        	Reader.ProcessStatus status = reader.process(bbin);
-            switch (status) {
-                case DONE:
-                    var data = (Data) reader.get();
-                    server.broadcast(data);
-                    reader.reset();
-                    break;
-                case REFILL:
-                    return;
-                case ERROR:
-                    silentlyClose();
-                    return;
-            }
+    	for(;;) {
+	        Reader.ProcessStatus status = reader.process(bbin);
+	        switch (status) {
+	            case DONE:
+	                var data = (Data) reader.get();
+	                server.broadcast(data);
+	                reader.reset();
+	                break;
+	            case REFILL:
+	                return;
+	            case ERROR:
+	                silentlyClose();
+	                return;
+	        }
+    	}
     }
 
     private void processOut() {

@@ -15,7 +15,6 @@ public class LoginReader implements Reader<Login> {
     private Login login;
     
     public Reader.ProcessStatus process(ByteBuffer bb) {
-        
         var processlogin = stringReader.process(bb);
         switch (processlogin) {
             case DONE:

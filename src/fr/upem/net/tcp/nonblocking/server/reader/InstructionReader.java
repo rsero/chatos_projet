@@ -1,9 +1,10 @@
 package fr.upem.net.tcp.nonblocking.server.reader;
 
 import java.nio.ByteBuffer;
+import java.util.concurrent.SynchronousQueue;
 
 import fr.upem.net.tcp.nonblocking.server.data.Data;
-import fr.upem.net.tcp.nonblocking.server.data.Login;
+import fr.upem.net.tcp.nonblocking.server.data.OpCode;
 
 public class InstructionReader implements Reader<Data> {
 	private enum State {
@@ -12,25 +13,45 @@ public class InstructionReader implements Reader<Data> {
 
 	private State state = State.WAITING_OPCODE;
 	private Data value;
-	private Byte opCode;
+	private OpCode opCode;
 	private Reader<?> reader;
-
+	
+	private void definedReader(OpCode opcode, ByteReader byteReader) {
+		switch (opcode.getByte()) {
+		case 5:
+			reader = new LoginReader();
+			state = State.WAITING_DATA;
+			break;
+		case 1:
+			reader = byteReader;
+			state = State.DONE;
+			break;
+		case 2:
+			reader = byteReader;
+			state = State.DONE;
+			break;
+		case 3:
+			reader = new GlobalMessageReader();
+			state = State.WAITING_DATA;
+			break;
+		default:
+			break;
+		}
+	}
+	
 	@Override
 	public ProcessStatus process(ByteBuffer bb) {
 		if (state == State.DONE || state == State.ERROR) {
 			throw new IllegalStateException();
 		}
 		if (state == State.WAITING_OPCODE) {
-			bb.flip();
-			if(bb.remaining()<1){
-				return ProcessStatus.REFILL;
+			var byteReader = new ByteReader();
+			var stat = byteReader.process(bb);
+			if(stat!=ProcessStatus.DONE){
+				return stat;
 			}
-			opCode = bb.get();
-			bb.compact();
-			if (opCode == 0) {
-				reader = new LoginReader();
-			}
-			state = State.WAITING_DATA;
+			opCode = byteReader.get();
+			definedReader(opCode, byteReader); 
 		}
 		if (state == State.WAITING_DATA) {
 			var stateProcess = reader.process(bb);
@@ -40,10 +61,10 @@ public class InstructionReader implements Reader<Data> {
 				state = State.ERROR;
 				return ProcessStatus.ERROR;
 			}
-			if (opCode == 0) {
-				value = (Data) reader.get();
-			}
 			state = State.DONE;
+		}
+		if(state == State.DONE) {
+			value = (Data) reader.get();
 			return ProcessStatus.DONE;
 		}
 		return ProcessStatus.REFILL;
