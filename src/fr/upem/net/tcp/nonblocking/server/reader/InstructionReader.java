@@ -1,7 +1,6 @@
 package fr.upem.net.tcp.nonblocking.server.reader;
 
 import java.nio.ByteBuffer;
-import java.util.concurrent.SynchronousQueue;
 
 import fr.upem.net.tcp.nonblocking.server.data.Data;
 import fr.upem.net.tcp.nonblocking.server.data.OpCode;

@@ -90,13 +90,8 @@ public class ServerChatos {
         }
     }
     
-    public void broadcast(Data data) {
-    	for (SelectionKey key : selector.keys()){
-            if (key.attachment()==null)
-                continue;
-            var ctx = (Context) key.attachment();
-            ctx.queueMessage(data);
-        }
+    public void broadcast(Data data, Context context) {
+    	data.broadcast(selector, context);
     }
 
     public static void main(String[] args) throws NumberFormatException, IOException {
@@ -110,20 +105,20 @@ public class ServerChatos {
 //    private static void usage(){
 //        System.out.println("Usage : ServerChatos port");
 //    }
-private String interestOpsToString(SelectionKey key) {
-    if (!key.isValid()) {
-        return "CANCELLED";
-    }
-    int interestOps = key.interestOps();
-    ArrayList<String> list = new ArrayList<>();
-    if ((interestOps & SelectionKey.OP_ACCEPT) != 0)
-        list.add("OP_ACCEPT");
-    if ((interestOps & SelectionKey.OP_READ) != 0)
-        list.add("OP_READ");
-    if ((interestOps & SelectionKey.OP_WRITE) != 0)
-        list.add("OP_WRITE");
-    return String.join("|", list);
-}
+	private String interestOpsToString(SelectionKey key) {
+	    if (!key.isValid()) {
+	        return "CANCELLED";
+	    }
+	    int interestOps = key.interestOps();
+	    ArrayList<String> list = new ArrayList<>();
+	    if ((interestOps & SelectionKey.OP_ACCEPT) != 0)
+	        list.add("OP_ACCEPT");
+	    if ((interestOps & SelectionKey.OP_READ) != 0)
+	        list.add("OP_READ");
+	    if ((interestOps & SelectionKey.OP_WRITE) != 0)
+	        list.add("OP_WRITE");
+	    return String.join("|", list);
+	}
 
     public void printKeys() {
         Set<SelectionKey> selectionKeySet = selector.keys();

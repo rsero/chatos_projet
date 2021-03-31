@@ -72,7 +72,7 @@ public class Context {
 	        switch (status) {
 	            case DONE:
 	                var data = (Data) reader.get();
-	                server.broadcast(data);
+	                server.broadcast(data, this);
 	                reader.reset();
 	                break;
 	            case REFILL:

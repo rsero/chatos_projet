@@ -1,12 +1,13 @@
 package fr.upem.net.tcp.nonblocking.server.data;
 
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
-import java.util.Optional;
 
+import fr.upem.net.tcp.nonblocking.client.ClientChatos;
 import fr.upem.net.tcp.nonblocking.server.Context;
 import fr.upem.net.tcp.nonblocking.server.ServerChatos;
 
@@ -65,9 +66,20 @@ public class MessageGlobal implements Data{
 	}
 
 	@Override
-	public void decode() {
-		// TODO Auto-generated method stub
+	public void decode(ClientChatos server) {
 		System.out.println(login + " : " + msg);
+	}
+
+	@Override
+	public void broadcast(Selector selector, Context context) {
+		// TODO Auto-generated method stub
+    	for (SelectionKey key : selector.keys()){
+            if (key.attachment()==null)
+                continue;
+            var ctx = (Context) key.attachment();
+            ctx.queueMessage(this);
+        }
+
 	}
 
 
