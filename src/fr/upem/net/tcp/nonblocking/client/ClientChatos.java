@@ -10,7 +10,6 @@ import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.util.LinkedList;
-import java.util.Optional;
 import java.util.Queue;
 import java.util.Scanner;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -46,13 +45,13 @@ public class ClientChatos {
          * to process and after the call
          *
          */
-        private void processIn() {
+        private void processIn(ClientChatos client) {
         	for(;;){
         	    Reader.ProcessStatus status = reader.process(bbin);
          	    switch (status){
          	      case DONE:
          	          Data value = reader.get();
-         	          value.decode();
+         	          value.decode(client);
          	          reader.reset();
          	          break;
          	      case REFILL:
@@ -131,12 +130,12 @@ public class ClientChatos {
          *
          * @throws IOException
          */
-        private void doRead() throws IOException {
+        private void doRead(ClientChatos client) throws IOException {
         	if (sc.read(bbin)==-1) {
                 System.out.println("read raté");
                 closed=true;
             }
-            processIn();
+            processIn(client);
             updateInterestOps();
         }
 
@@ -172,6 +171,7 @@ public class ClientChatos {
     private final Selector selector;
     private final InetSocketAddress serverAddress;
     private Login login;
+    private String loginDemandé;
     private MessageGlobal messageGlobal;
     private final Thread console;
     private final ArrayBlockingQueue<String> commandQueue = new ArrayBlockingQueue<>(10);
@@ -214,9 +214,7 @@ public class ClientChatos {
             selector.wakeup();
         }
     }
-	
-
-	
+		
     /**
      * Processes the command from commandQueue
      * @throws IOException 
@@ -229,9 +227,11 @@ public class ClientChatos {
 	            command = commandQueue.remove();
 	            ByteBuffer bb;
 	            if (login.isNotConnect()) {
+	            	loginDemandé = command;
 					bb = login.encodeLogin(sc, command);
 				} else {
 					// autres requêtes à faire
+					messageGlobal = new MessageGlobal(login, command);
 					bb = messageGlobal.encodeGlobalMessage(sc, command);
 				}
 	            if (bb == null) {
@@ -270,7 +270,7 @@ public class ClientChatos {
                 uniqueContext.doWrite();
             }
             if (key.isValid() && key.isReadable()) {
-                uniqueContext.doRead();
+                uniqueContext.doRead(this);
             }
         } catch(IOException ioe) {
             // lambda call in select requires to tunnel IOException
@@ -299,6 +299,10 @@ public class ClientChatos {
 
     private static void usage(){
         System.out.println("Usage : ClientChat hostname port");
+    }
+    
+    public void updateLogin() {
+    	login = new Login(loginDemandé);
     }
 }
 

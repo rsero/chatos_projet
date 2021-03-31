@@ -2,11 +2,13 @@ package fr.upem.net.tcp.nonblocking.server.data;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.util.Objects;
-import java.util.Optional;
 
+import fr.upem.net.tcp.nonblocking.client.ClientChatos;
 import fr.upem.net.tcp.nonblocking.server.Context;
 import fr.upem.net.tcp.nonblocking.server.ServerChatos;
 
@@ -68,10 +70,10 @@ public class Login implements Data {
 	}
 
 	@Override
-	public void decode() {
+	public void decode(ClientChatos server) {
 		// TODO Auto-generated method stub
 		if (byteReceive == (byte) 1) {
-			System.out.println("Connexion accepté");
+			System.out.println("Connexion acceptée");
 			//mettre à jour le login
 		}
 		else if(byteReceive == (byte) 2) {
@@ -79,5 +81,10 @@ public class Login implements Data {
 		}
 //		login = log;
 //		return;
+	}
+
+	@Override
+	public void broadcast(Selector selector, Context context) {
+		context.queueMessage(this);
 	}
 }
