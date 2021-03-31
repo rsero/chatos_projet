@@ -57,11 +57,12 @@ public class MessageGlobal implements Data{
 		int loginlen = loginbuff.remaining();
 		int msglen = msgbuff.remaining();
 
-		if (BUFFER_SIZE < loginlen + msglen + 2 * Integer.BYTES + 1) {
+		if (BUFFER_SIZE < loginlen + msglen + 2 * Integer.BYTES) {
 			return null;
 		}
 		req.put((byte) 3).putInt(loginlen).put(loginbuff).putInt(msglen).put(msgbuff);
-		req.flip();
+		System.out.println("Message global");
+		//req.flip();
 		return req;
 	}
 

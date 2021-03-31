@@ -175,7 +175,6 @@ public class ClientChatos {
     private MessageGlobal messageGlobal;
     private final Thread console;
     private final ArrayBlockingQueue<String> commandQueue = new ArrayBlockingQueue<>(10);
-    private static final Charset UTF8 = Charset.forName("UTF8");
     private Context uniqueContext;
 
     public ClientChatos(InetSocketAddress serverAddress) throws IOException {

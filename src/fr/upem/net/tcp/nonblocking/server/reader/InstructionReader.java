@@ -17,7 +17,8 @@ public class InstructionReader implements Reader<Data> {
 	
 	private void definedReader(OpCode opcode, ByteReader byteReader) {
 		switch (opcode.getByte()) {
-		case 5:
+		case 0:
+			System.out.println("on a un login reader");
 			reader = new LoginReader();
 			state = State.WAITING_DATA;
 			break;
@@ -30,6 +31,7 @@ public class InstructionReader implements Reader<Data> {
 			state = State.DONE;
 			break;
 		case 3:
+			System.out.println("on a un global message reader");
 			reader = new GlobalMessageReader();
 			state = State.WAITING_DATA;
 			break;

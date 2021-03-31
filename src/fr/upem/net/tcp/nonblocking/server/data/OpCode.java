@@ -1,7 +1,6 @@
 package fr.upem.net.tcp.nonblocking.server.data;
 
 import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 
 import fr.upem.net.tcp.nonblocking.client.ClientChatos;
