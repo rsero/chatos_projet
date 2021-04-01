@@ -11,6 +11,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import fr.upem.net.tcp.nonblocking.server.data.Data;
+import fr.upem.net.tcp.nonblocking.server.data.Login;
 
 public class ServerChatos {
     private final HashMap<String, Context> clients = new HashMap<>();
@@ -170,5 +171,9 @@ public class ServerChatos {
             list.add("WRITE");
         return String.join(" and ", list);
     }
+
+	public Context findContext(Login login) {
+		return clients.get(login.getLogin());
+	}
 
 }

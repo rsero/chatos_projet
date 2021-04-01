@@ -35,6 +35,9 @@ public class InstructionReader implements Reader<Data> {
 			reader = new GlobalMessageReader();
 			state = State.WAITING_DATA;
 			break;
+		case 4:
+			reader = new PrivateMessageReader();
+			state = State.WAITING_DATA;
 		default:
 			break;
 		}
