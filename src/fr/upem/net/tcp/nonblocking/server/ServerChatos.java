@@ -3,18 +3,26 @@ package fr.upem.net.tcp.nonblocking.server;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.InetSocketAddress;
-import java.nio.channels.*;
+import java.nio.channels.Channel;
+import java.nio.channels.SelectableChannel;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Random;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import fr.upem.net.tcp.nonblocking.server.data.AcceptRequest;
 import fr.upem.net.tcp.nonblocking.server.data.Data;
 import fr.upem.net.tcp.nonblocking.server.data.Login;
 
 public class ServerChatos {
     private final HashMap<String, Context> clients = new HashMap<>();
+    private final HashMap<Long, AcceptRequest> privateConnexion = new HashMap<>();
     private final ServerSocketChannel serverSocketChannel;
     private final Selector selector;
     private static Logger logger = Logger.getLogger(ServerChatos.class.getName());
@@ -174,6 +182,16 @@ public class ServerChatos {
 
 	public Context findContext(Login login) {
 		return clients.get(login.getLogin());
+	}
+
+	public long definedConnectId(AcceptRequest acceptRequest) {
+		Random rand = new Random();
+		while(true) {
+			var value = rand.nextLong();
+			if(privateConnexion.putIfAbsent(value, acceptRequest) == null) {
+				return value;
+			}
+		}
 	}
 
 }

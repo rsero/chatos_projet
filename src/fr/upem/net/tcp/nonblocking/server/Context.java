@@ -1,5 +1,6 @@
 package fr.upem.net.tcp.nonblocking.server;
 
+import fr.upem.net.tcp.nonblocking.server.data.AcceptRequest;
 import fr.upem.net.tcp.nonblocking.server.data.Data;
 import fr.upem.net.tcp.nonblocking.server.data.Login;
 import fr.upem.net.tcp.nonblocking.server.reader.InstructionReader;
@@ -104,4 +105,9 @@ public class Context {
     public Context findContextClient(Login login) {
     	return server.findContext(login);
     }
+
+	public long definedConnectId(AcceptRequest acceptRequest) {
+		// TODO Auto-generated method stub
+		return server.definedConnectId(acceptRequest);
+	}
 }

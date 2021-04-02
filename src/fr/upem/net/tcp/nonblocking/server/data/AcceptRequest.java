@@ -10,39 +10,33 @@ import fr.upem.net.tcp.nonblocking.client.ClientChatos;
 import fr.upem.net.tcp.nonblocking.server.Context;
 import fr.upem.net.tcp.nonblocking.server.ServerChatos;
 
-public class AcceptRequest implements Data{
+public class AcceptRequest extends RequestOperation{
 
 	private static final Charset UTF8 = Charset.forName("UTF-8");
-	private final Login loginRequester;
-    private final Login loginTarget;
     private long connect_id;
 	
-    
-    
     public AcceptRequest(Login loginRequester, Login loginTarget, long connect_id) {
-    	this.loginRequester = loginRequester;
-		this.loginTarget = loginTarget;
+    	super(loginRequester, loginTarget);
     	this.connect_id = Objects.requireNonNull(connect_id);
     }
     
+    public AcceptRequest(Login loginRequester, Login loginTarget) {
+    	super(loginRequester, loginTarget);
+    }
+    
     public String toString() {
-        return loginTarget + " accept the connection with you";
+        return loginTarget() + " accept the connection with you";
     }
     
     @Override
 	public boolean processOut(ByteBuffer bbout, Context context, ServerChatos server) throws IOException {
-    	//connect_id = server.definedConnectId();
-    	var bb = encode(bbout);
-    	if (bb==null) {
-    		return false;
-    	}
-    	return true;
+    	return processOut(encode(bbout));
 	}
     
     private ByteBuffer encode(ByteBuffer req) throws IOException {
     	req.clear();
-        var senderbuff = UTF8.encode(loginRequester.getLogin());
-        var targetbuff = UTF8.encode(loginTarget.getLogin());
+        var senderbuff = UTF8.encode(loginRequester());
+        var targetbuff = UTF8.encode(loginTarget());
         int senderlen =senderbuff.remaining();
         int targetlen =targetbuff.remaining();
         if(req.remaining() < senderlen + targetlen + 2 * Integer.BYTES + Long.BYTES + 1) {
@@ -54,14 +48,15 @@ public class AcceptRequest implements Data{
 
 	@Override
 	public void decode(ClientChatos client) {
-		System.out.println("Connection " + loginRequester + " : " + loginTarget + " is established with id : "+ connect_id);
+		System.out.println("Connection " + loginRequester() + " : " + loginTarget() + " is established with id : "+ connect_id);
 	}
 
 	@Override
 	public void broadcast(Selector selector, Context context) throws IOException {
-		var ctx = context.findContextClient(loginRequester);
+		connect_id = context.definedConnectId(this);
+		var ctx = findContextRequester(context);
         ctx.queueMessage(this);
-        ctx = context.findContextClient(loginTarget);
+        ctx = findContextTarget(context);
         ctx.queueMessage(this);
 	}
 }

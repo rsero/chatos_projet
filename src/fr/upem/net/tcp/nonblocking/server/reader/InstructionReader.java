@@ -40,14 +40,15 @@ public class InstructionReader implements Reader<Data> {
 			state = State.WAITING_DATA;
 			break;
 		case 6://Private connexion accepted
-//			reader = new PrivateRequestReader();
-//			state = State.WAITING_DATA;
+			reader = new PrivateRequestReader((byte) 6);
+			state = State.WAITING_DATA;
 			break;
 		case 7://Private connexion refused
 			reader = new PrivateRequestReader((byte) 7);
 			state = State.WAITING_DATA;
 			break;
 		case 8://Accept connection and give connect_id
+			System.out.println("j'appelel waccept request reader");
 			reader = new AcceptRequestReader();
 			state = State.WAITING_DATA;
 			break;

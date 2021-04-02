@@ -70,6 +70,8 @@ public class PrivateRequestReader implements Reader<RequestOperation> {
         }
         if(opCode == 5)
         	return new PrivateRequest(requesterLogin, targetLogin);
+        if(opCode == 6)
+        	return new AcceptRequest(requesterLogin, targetLogin);
         if(opCode == 7)
         	return new RefuseRequest(requesterLogin, targetLogin);
         throw new IllegalStateException();
