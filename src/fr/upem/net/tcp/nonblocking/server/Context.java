@@ -1,6 +1,7 @@
 package fr.upem.net.tcp.nonblocking.server;
 
 import fr.upem.net.tcp.nonblocking.server.data.Data;
+import fr.upem.net.tcp.nonblocking.server.data.Login;
 import fr.upem.net.tcp.nonblocking.server.reader.InstructionReader;
 import fr.upem.net.tcp.nonblocking.server.reader.Reader;
 
@@ -27,6 +28,7 @@ public class Context {
         this.key=key;
         this.sc = (SocketChannel) key.channel();
     }
+    
     private void updateInterestOps() {
         int newInterestOps = 0;
         if (!closed && bbin.hasRemaining()) {
@@ -97,5 +99,9 @@ public class Context {
         queue.add(data);
         processOut();
         updateInterestOps();
+    }
+    
+    public Context findContextClient(Login login) {
+    	return server.findContext(login);
     }
 }

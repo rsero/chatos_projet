@@ -2,7 +2,6 @@ package fr.upem.net.tcp.nonblocking.server.data;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
@@ -62,7 +61,7 @@ public class Login implements Data {
 		if (BUFFER_SIZE < len + Integer.BYTES + 1) {
 			return null;
 		}
-		req.put((byte) 5);
+		req.put((byte) 0);
 		req.putInt(len);
 		req.put(loginbuff);
 		//req.flip();
