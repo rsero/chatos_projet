@@ -68,7 +68,7 @@ public class Context {
         updateInterestOps();
     }
 
-    private void processIn() {
+    private void processIn() throws IOException {
     	for(;;) {
 	        Reader.ProcessStatus status = reader.process(bbin);
 	        switch (status) {
@@ -86,7 +86,7 @@ public class Context {
     	}
     }
 
-    private void processOut() {
+    private void processOut() throws IOException {
         while (!queue.isEmpty()) {
             var data = queue.peek();
             if(data.processOut(bbout, this, server)) {
@@ -95,7 +95,7 @@ public class Context {
         }
     }
 
-    public void queueMessage(Data data) {
+    public void queueMessage(Data data) throws IOException {
         queue.add(data);
         processOut();
         updateInterestOps();

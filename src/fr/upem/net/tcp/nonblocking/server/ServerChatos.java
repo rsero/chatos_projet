@@ -91,7 +91,7 @@ public class ServerChatos {
         }
     }
     
-    public void broadcast(Data data, Context context) {
+    public void broadcast(Data data, Context context) throws IOException {
     	data.broadcast(selector, context);
     }
 
