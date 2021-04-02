@@ -38,7 +38,7 @@ public abstract class RequestOperation implements Data{
     }
     
     public Login getLoginTarget() {
-    	return loginRequester;
+    	return loginTarget;
     }
 	
     public String loginRequester() {
