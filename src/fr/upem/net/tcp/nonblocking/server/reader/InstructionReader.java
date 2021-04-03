@@ -14,30 +14,43 @@ public class InstructionReader implements Reader<Data> {
 	private Data value;
 	private OpCode opCode;
 	private Reader<?> reader;
+	private final ByteReader byteReader = new ByteReader();
 	
 	private void definedReader(OpCode opcode, ByteReader byteReader) {
 		switch (opcode.getByte()) {
-		case 0:
-			System.out.println("on a un login reader");
+		case 0://Identification
 			reader = new LoginReader();
 			state = State.WAITING_DATA;
 			break;
-		case 1:
+		case 1://Identification accepted
+		case 2://identification refused
 			reader = byteReader;
 			state = State.DONE;
 			break;
-		case 2:
-			reader = byteReader;
-			state = State.DONE;
-			break;
-		case 3:
-			System.out.println("on a un global message reader");
+		case 3://Global message
 			reader = new GlobalMessageReader();
 			state = State.WAITING_DATA;
 			break;
-		case 4:
+		case 4://Private message
 			reader = new PrivateMessageReader();
 			state = State.WAITING_DATA;
+			break;
+		case 5://Private request
+			reader = new PrivateRequestReader((byte) 5);
+			state = State.WAITING_DATA;
+			break;
+		case 6://Private connexion accepted
+			reader = new PrivateRequestReader((byte) 6);
+			state = State.WAITING_DATA;
+			break;
+		case 7://Private connexion refused
+			reader = new PrivateRequestReader((byte) 7);
+			state = State.WAITING_DATA;
+			break;
+		case 8://Accept connection and give connect_id
+			reader = new AcceptRequestReader();
+			state = State.WAITING_DATA;
+			break;
 		default:
 			break;
 		}
@@ -49,7 +62,6 @@ public class InstructionReader implements Reader<Data> {
 			throw new IllegalStateException();
 		}
 		if (state == State.WAITING_OPCODE) {
-			var byteReader = new ByteReader();
 			var stat = byteReader.process(bb);
 			if(stat!=ProcessStatus.DONE){
 				return stat;
@@ -85,6 +97,7 @@ public class InstructionReader implements Reader<Data> {
 	@Override
 	public void reset() {
 		reader.reset();
+		byteReader.reset();
 		state = State.WAITING_OPCODE;
 		opCode = null;
 	}

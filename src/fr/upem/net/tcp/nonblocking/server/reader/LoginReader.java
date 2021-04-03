@@ -31,9 +31,6 @@ public class LoginReader implements Reader<Login> {
 			state = State.ERROR;
 			return ProcessStatus.ERROR;
 		}
-		if (state == State.WAITING_STR) {
-			System.out.println("waiting_str");
-		}
 		return ProcessStatus.DONE;
 	}
 

@@ -1,5 +1,6 @@
 package fr.upem.net.tcp.nonblocking.server.data;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.Selector;
 
@@ -10,8 +11,6 @@ import fr.upem.net.tcp.nonblocking.server.ServerChatos;
 public class OpCode implements Data{
 	
 	private final Byte opCode;
-	
-	
 
 	public OpCode(byte opCode) {
 		this.opCode = opCode;
@@ -27,21 +26,29 @@ public class OpCode implements Data{
 	}
 
 	@Override
-	public void decode(ClientChatos server) {
-		if(opCode == 1) {
-			server.updateLogin();
-			System.out.println("Client ajouté");
-		}
-		else if(opCode == 2) {
-			System.out.println("Login déja existant");
-		}
-		else {
-			System.out.println("Opération impossible à exécuter");
+	public void decode(ClientChatos client) {
+		switch (opCode) {
+		case 1:
+			client.updateLogin();
+			System.out.println("Identification accepted");
+			break;
+		case 2:
+			System.out.println("Login already taken");
+			break;
+		case 6:
+			System.out.println("Private connection was accepted");
+			break;
+		case 7:
+			System.out.println("Private connection was refused");
+			break;
+		default:
+			System.out.println("Operation does not exist");
+			break;
 		}
 	}
 
 	@Override
-	public void broadcast(Selector selector, Context context) {
+	public void broadcast(Selector selector, Context context) throws IOException {
 		context.queueMessage(this);
 	}
 

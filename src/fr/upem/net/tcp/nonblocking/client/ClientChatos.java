@@ -8,6 +8,7 @@ import java.nio.channels.Channel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Optional;
 import java.util.Queue;
@@ -19,6 +20,7 @@ import fr.upem.net.tcp.nonblocking.server.data.Data;
 import fr.upem.net.tcp.nonblocking.server.data.Login;
 import fr.upem.net.tcp.nonblocking.server.data.MessageGlobal;
 import fr.upem.net.tcp.nonblocking.server.data.PrivateMessage;
+import fr.upem.net.tcp.nonblocking.server.data.PrivateRequest;
 import fr.upem.net.tcp.nonblocking.server.reader.InstructionReader;
 import fr.upem.net.tcp.nonblocking.server.reader.Reader;
 
@@ -176,7 +178,9 @@ public class ClientChatos {
     private MessageGlobal messageGlobal;
     private final Thread console;
     private final ArrayBlockingQueue<String> commandQueue = new ArrayBlockingQueue<>(10);
+    private final HashMap<Login, PrivateRequest> hashPrivateRequest = new HashMap<>();
     private Context uniqueContext;
+    private final Object lock = new Object();
 
     public ClientChatos(InetSocketAddress serverAddress) throws IOException {
         this.serverAddress = serverAddress;
@@ -206,8 +210,6 @@ public class ClientChatos {
      * @param msg
      * @throws InterruptedException
      */
-
-
     private void sendCommand(String msg) throws InterruptedException {
     	synchronized (msg) {
             commandQueue.add(msg);
@@ -219,79 +221,60 @@ public class ClientChatos {
      * Processes the command from commandQueue
      * @throws IOException 
      */
-
     private void processCommands() throws IOException{
         synchronized (commandQueue) {
             while (!commandQueue.isEmpty()) {
                 var command = commandQueue.remove();
                 Optional<ByteBuffer> bb = parseInput(command);
                 if (!bb.isPresent()) {
-                    System.out.println("Quelque chose ne va pas. (chaine vide, client pas encore identifié...)");
+                    System.out.println("Something went wrong.");
                     return;
                 }
                 uniqueContext.queueMessage(bb.get().flip());
             }
         }
     }
-//    private void processCommands() throws IOException{
-//    	synchronized (commandQueue) {
-//    		while (!commandQueue.isEmpty()) {
-//	            String command;
-//	            command = commandQueue.remove();
-//	            ByteBuffer bb;
-//	            if (login.isNotConnect()) {
-//	            	loginDemandé = command;
-//					bb = login.encodeLogin(sc, command);
-//				} else {
-//					// autres requêtes à faire
-//					messageGlobal = new MessageGlobal(login, command);
-//					bb = messageGlobal.encodeGlobalMessage(sc, command);
-//				}
-//	            if (bb == null) {
-//					System.err.println("Connection with server lost.");
-//					return;
-//				}
-//	            //uniqueContext.queueMessage(bb.get().flip());
-//	            uniqueContext.queueMessage(bb.flip());
-//    		}
-//        }
-//    }
 
     public Optional<ByteBuffer> parseInput(String input) throws IOException {
         Optional<ByteBuffer> bb;
-//        if (input.startsWith("#")) {
-//            var keyword = input.replaceFirst("#", "");
-//            if (!isConnected) {
-//                login = new Login(keyword);
-//                updateConnected();
-//                bb = Optional.of(login.encodeLogin(sc));
-//                System.out.println("this is a Login");
-//            } else {
-//                bb = Optional.empty();
-//                System.out.println("Tu es déja connecté avec un Login");
-//            }
-        if (login.isNotConnect()) {
-        	loginDemandé = input;
-			bb = Optional.of(login.encodeLogin(sc, input));
-        } else {
-        	if (input.startsWith("@")){ // message privé
-	            var keyword = input.replaceFirst("@", "");
-	            var elements = keyword.split(" ",2);
-	            var target = new Login(elements[0]);
-	            var msg = elements[1];
-	            var msgprivé = new PrivateMessage(login, target, msg);
-	            System.out.println("on est dans le message privé!!!");
-	            bb = Optional.of(msgprivé.encodePrivateMessage(sc));
-	        } else if (input.startsWith("/")) { // connexion privée
-	            bb = Optional.empty();
-	        } else { // message global
-	            //if (isConnected) {
-	                var messageGlobal = new MessageGlobal(login, input);
-	                bb = Optional.of(messageGlobal.encodeGlobalMessage(sc, input));
-	            //} else {
-//	                bb = Optional.empty();
-//	                System.out.println("Tu n'es pas connecté");
-//	            }
+        
+        synchronized (lock) {
+        	var req = ByteBuffer.allocate(BUFFER_SIZE);
+	        if (login.isNotConnected()) {
+	        	loginDemandé = input;
+				bb = Optional.of(login.encodeLogin(input));
+	        } else {
+	        	if (input.startsWith("@")){ // message privé
+		            var keyword = input.replaceFirst("@", "");
+		            var elements = keyword.split(" ",2);
+		            var msg = elements[1];
+		            var msgprive = new PrivateMessage(login, new Login(elements[0]), msg);
+		            bb = Optional.of(msgprive.encode(req));
+		        }else if(input.startsWith("/y ") && !hashPrivateRequest.isEmpty()){
+		        	var elements = input.split(" ",2);
+		        	var privateRequest = hashPrivateRequest.get(new Login(elements[1]));
+		        	System.out.println("Private connection with " + elements[1] + " accepted");
+		        	bb = Optional.of(privateRequest.encodeAcceptPrivateRequest(req));
+		        }else if(input.startsWith("/n ") && !hashPrivateRequest.isEmpty()){
+		        	var elements = input.split(" ",2);
+		        	var privateRequest = hashPrivateRequest.remove(new Login(elements[1]));
+		        	System.out.println("Private connection refused");
+		        	bb = Optional.of(privateRequest.encodeRefusePrivateRequest(req));
+		        }else if (input.startsWith("/")) { // connexion privée
+		        	var keyword = input.replaceFirst("/", "");
+		            var elements = keyword.split(" ",2);
+		            //var file = elements[1];
+		            var privateRequest = new PrivateRequest(login, new Login(elements[0]));
+		            bb = Optional.of(privateRequest.encodeAskPrivateRequest(req));
+		        } else { // message global
+		            //if (isConnected) {
+		                var messageGlobal = new MessageGlobal(login, input);
+		                bb = Optional.of(messageGlobal.encode(req));
+		            //} else {
+	//	                bb = Optional.empty();
+	//	                System.out.println("Tu n'es pas connecté");
+	//	            }
+		        }
 	        }
         }
         return bb;
@@ -359,7 +342,14 @@ public class ClientChatos {
     }
     
     public boolean isConnected(){ 
-    	return !login.isNotConnect(); 
+    	return !login.isNotConnected();
     }
+
+	public void addSetPrivateRequest(PrivateRequest privateRequest) {
+		synchronized (lock) {
+			hashPrivateRequest.put(privateRequest.getLoginRequester(), privateRequest);
+		}
+		
+	}
 }
 

@@ -2,9 +2,7 @@ package fr.upem.net.tcp.nonblocking.server.data;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
-import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 
 
@@ -30,22 +28,16 @@ public class PrivateMessage implements Data {
     }
 
     @Override
-    public boolean processOut(ByteBuffer bbout, Context context, ServerChatos server) {
-        var senderbuff = UTF8.encode(loginSender.getLogin());
-        var targetbuff = UTF8.encode(loginTarget.getLogin());
-        var msgbuff = UTF8.encode(msg);
-        int senderlen =senderbuff.remaining();
-        int targetlen =targetbuff.remaining();
-        int msglen = msgbuff.remaining();
-        if(bbout.remaining() < senderlen + targetlen + msglen + 3 * Integer.BYTES + 1) {
-            return false;
-        }
-        bbout.put((byte) 4).putInt(senderlen).put(senderbuff).putInt(targetlen).put(targetbuff).putInt(msglen).put(msgbuff);
-        return true;
+    public boolean processOut(ByteBuffer bbout, Context context, ServerChatos server) throws IOException {
+    	var bb = encode(bbout);
+    	if (bb==null) {
+    		return false;
+    	}
+    	return true;
     }
 
-    public ByteBuffer encodePrivateMessage(SocketChannel sc) throws IOException {
-        var req = ByteBuffer.allocate(BUFFER_SIZE);
+    public ByteBuffer encode(ByteBuffer req) throws IOException {
+        req.clear();
         var senderbuff = UTF8.encode(loginSender.getLogin());
         var targetbuff = UTF8.encode(loginTarget.getLogin());
         var msgbuff = UTF8.encode(msg);
@@ -61,20 +53,12 @@ public class PrivateMessage implements Data {
 
     @Override
     public void decode(ClientChatos client) {
-        //if(client.getLogin().equals(loginTarget))
         System.out.println(loginSender + " : " + msg);
     }
 
     @Override
-    public void broadcast(Selector selector, Context context) {
-//        for (SelectionKey key : selector.keys()){
-//            if (key.attachment()==null)
-//                continue;
-//            var ctx = (Context) key.attachment();
+    public void broadcast(Selector selector, Context context) throws IOException {
     		var ctx = context.findContextClient(loginTarget);
             ctx.queueMessage(this);
-        //}
-
-
     }
 }

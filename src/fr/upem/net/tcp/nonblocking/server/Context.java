@@ -1,5 +1,6 @@
 package fr.upem.net.tcp.nonblocking.server;
 
+import fr.upem.net.tcp.nonblocking.server.data.AcceptRequest;
 import fr.upem.net.tcp.nonblocking.server.data.Data;
 import fr.upem.net.tcp.nonblocking.server.data.Login;
 import fr.upem.net.tcp.nonblocking.server.reader.InstructionReader;
@@ -68,7 +69,7 @@ public class Context {
         updateInterestOps();
     }
 
-    private void processIn() {
+    private void processIn() throws IOException {
     	for(;;) {
 	        Reader.ProcessStatus status = reader.process(bbin);
 	        switch (status) {
@@ -86,7 +87,7 @@ public class Context {
     	}
     }
 
-    private void processOut() {
+    private void processOut() throws IOException {
         while (!queue.isEmpty()) {
             var data = queue.peek();
             if(data.processOut(bbout, this, server)) {
@@ -95,7 +96,7 @@ public class Context {
         }
     }
 
-    public void queueMessage(Data data) {
+    public void queueMessage(Data data) throws IOException {
         queue.add(data);
         processOut();
         updateInterestOps();
@@ -104,4 +105,8 @@ public class Context {
     public Context findContextClient(Login login) {
     	return server.findContext(login);
     }
+
+	public long definedConnectId(AcceptRequest acceptRequest) {
+		return server.definedConnectId(acceptRequest);
+	}
 }

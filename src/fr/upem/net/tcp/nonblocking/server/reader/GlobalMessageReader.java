@@ -13,8 +13,7 @@ public class GlobalMessageReader implements Reader<MessageGlobal> {
 	private State state = State.WAITING_LOGIN;
 	private String msg;
 	private Login login;
-	private final StringReader loginReader = new StringReader();
-	private final StringReader messageReader = new StringReader();
+	private final StringReader stringReader = new StringReader();
 
 	@Override
 	public ProcessStatus process(ByteBuffer bb) {
@@ -22,10 +21,11 @@ public class GlobalMessageReader implements Reader<MessageGlobal> {
 			throw new IllegalStateException();
 		}
 		if (state == State.WAITING_LOGIN) {
-			var processlogin = loginReader.process(bb);
-			switch (processlogin) {
+			var processLogin = stringReader.process(bb);
+			switch (processLogin) {
 			case DONE:
-				login = new Login(loginReader.get());
+				login = new Login(stringReader.get());
+				stringReader.reset();
 				state = State.WAITING_MSG;
 				break;
 			case REFILL:
@@ -35,18 +35,14 @@ public class GlobalMessageReader implements Reader<MessageGlobal> {
 				return ProcessStatus.ERROR;
 			}
 		}
-
 		if (state == State.WAITING_MSG) {
-			//bb.flip();
-			var processmsg = messageReader.process(bb);
-			switch (processmsg) {
+			var processMsg = stringReader.process(bb);
+			switch (processMsg) {
 			case DONE:
-				msg = messageReader.get();
-				System.out.println("mssg >>" + msg);
+				msg = stringReader.get();
 				state = State.DONE;
 				break;
 			case REFILL:
-				System.out.println("RREffil");
 				return ProcessStatus.REFILL;
 			case ERROR:
 				state = State.ERROR;
@@ -67,8 +63,7 @@ public class GlobalMessageReader implements Reader<MessageGlobal> {
 	@Override
 	public void reset() {
 		state = State.WAITING_LOGIN;
-		loginReader.reset();
-		messageReader.reset();
+		stringReader.reset();
 	}
 
 }
