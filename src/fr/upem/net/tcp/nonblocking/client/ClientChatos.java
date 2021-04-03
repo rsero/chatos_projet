@@ -227,7 +227,6 @@ public class ClientChatos {
                 var command = commandQueue.remove();
                 Optional<ByteBuffer> bb = parseInput(command);
                 if (!bb.isPresent()) {
-                    System.out.println("Something went wrong.");
                     return;
                 }
                 uniqueContext.queueMessage(bb.get().flip());
@@ -237,43 +236,55 @@ public class ClientChatos {
 
     public Optional<ByteBuffer> parseInput(String input) throws IOException {
         Optional<ByteBuffer> bb;
-        
         synchronized (lock) {
         	var req = ByteBuffer.allocate(BUFFER_SIZE);
-	        if (login.isNotConnected()) {
+            if (input.isEmpty() || input.startsWith(" ")) {
+                System.out.println("Usage : no empty messages");
+                return Optional.empty();
+            }
+            if (login.isNotConnected()) {
 	        	loginDemandé = input;
 				bb = Optional.of(login.encodeLogin(input));
 	        } else {
-	        	if (input.startsWith("@")){ // message privé
-		            var keyword = input.replaceFirst("@", "");
-		            var elements = keyword.split(" ",2);
-		            var msg = elements[1];
-		            var msgprive = new PrivateMessage(login, new Login(elements[0]), msg);
-		            bb = Optional.of(msgprive.encode(req));
-		        }else if(input.startsWith("/y ") && !hashPrivateRequest.isEmpty()){
-		        	var elements = input.split(" ",2);
-		        	var privateRequest = hashPrivateRequest.get(new Login(elements[1]));
-		        	System.out.println("Private connection with " + elements[1] + " accepted");
-		        	bb = Optional.of(privateRequest.encodeAcceptPrivateRequest(req));
-		        }else if(input.startsWith("/n ") && !hashPrivateRequest.isEmpty()){
-		        	var elements = input.split(" ",2);
-		        	var privateRequest = hashPrivateRequest.remove(new Login(elements[1]));
-		        	System.out.println("Private connection refused");
-		        	bb = Optional.of(privateRequest.encodeRefusePrivateRequest(req));
-		        }else if (input.startsWith("/")) { // connexion privée
-		        	var keyword = input.replaceFirst("/", "");
-		            var elements = keyword.split(" ",2);
-		            //var file = elements[1];
-		            var privateRequest = new PrivateRequest(login, new Login(elements[0]));
-		            bb = Optional.of(privateRequest.encodeAskPrivateRequest(req));
-		        } else { // message global
-		            //if (isConnected) {
+                var elements = input.split(" ", 2);
+                var prefix = elements[0].charAt(0);
+                var content = elements[0].substring(1);
+                var data = elements.length == 1 ? "" : elements[1];
+                switch (prefix){
+                    case '@' : // message privé
+		                var msgprive = new PrivateMessage(login, new Login(content), data);
+		                bb = Optional.of(msgprive.encode(req));
+		                break;
+                    case'/'  : // connexion privée
+                        if(content.equals("y")&&hashPrivateRequest.containsKey(data)){
+                            if(data.isEmpty()){
+                                System.out.println("Usage : /y login");
+                                bb = Optional.empty();
+                                break;
+                            }
+		        	        var privateRequest = hashPrivateRequest.get(new Login(data));
+		        	        System.out.println("Private connection with " + data + " accepted");
+		        	        bb = Optional.of(privateRequest.encodeAcceptPrivateRequest(req));
+		        	        break;
+		                }else if(content.equals("n") && hashPrivateRequest.containsKey(data)) {
+                            if(data.isEmpty()){
+                                System.out.println("Usage : /n login");
+                                bb = Optional.empty();
+                                break;
+                            }
+                            var privateRequest = hashPrivateRequest.remove(new Login(data));
+                            System.out.println("Private connection refused");
+                            bb = Optional.of(privateRequest.encodeRefusePrivateRequest(req));
+                            break;
+                        }else{
+                            var privateRequest = new PrivateRequest(login, new Login(content));
+                            bb = Optional.of(privateRequest.encodeAskPrivateRequest(req));
+                            //var file = elements[1];
+                            break;
+                        }
+                    default: // message global
 		                var messageGlobal = new MessageGlobal(login, input);
 		                bb = Optional.of(messageGlobal.encode(req));
-		            //} else {
-	//	                bb = Optional.empty();
-	//	                System.out.println("Tu n'es pas connecté");
-	//	            }
 		        }
 	        }
         }
@@ -353,3 +364,5 @@ public class ClientChatos {
 	}
 }
 
+// si il y a déja un id pour une connexion privée entre deux clients, on en propose un autre si 2ème demande ?
+// espaces acceptés dans le login ?
