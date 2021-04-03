@@ -9,7 +9,6 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Optional;
 import java.util.Queue;
@@ -228,7 +227,7 @@ public class ClientChatos {
                 var command = commandQueue.remove();
                 Optional<ByteBuffer> bb = parseInput(command);
                 if (!bb.isPresent()) {
-                    System.out.println("Quelque chose ne va pas. (chaine vide, client pas encore identifié...)");
+                    System.out.println("Something went wrong.");
                     return;
                 }
                 uniqueContext.queueMessage(bb.get().flip());
@@ -241,7 +240,7 @@ public class ClientChatos {
         
         synchronized (lock) {
         	var req = ByteBuffer.allocate(BUFFER_SIZE);
-	        if (login.isNotConnect()) {
+	        if (login.isNotConnected()) {
 	        	loginDemandé = input;
 				bb = Optional.of(login.encodeLogin(input));
 	        } else {
@@ -250,17 +249,16 @@ public class ClientChatos {
 		            var elements = keyword.split(" ",2);
 		            var msg = elements[1];
 		            var msgprive = new PrivateMessage(login, new Login(elements[0]), msg);
-		            System.out.println("on est dans le message privé!!!");
 		            bb = Optional.of(msgprive.encode(req));
 		        }else if(input.startsWith("/y ") && !hashPrivateRequest.isEmpty()){
 		        	var elements = input.split(" ",2);
 		        	var privateRequest = hashPrivateRequest.get(new Login(elements[1]));
-		        	System.out.println("Connexion privée avec " + elements[1] + " acceptée");
+		        	System.out.println("Private connection with " + elements[1] + " accepted");
 		        	bb = Optional.of(privateRequest.encodeAcceptPrivateRequest(req));
 		        }else if(input.startsWith("/n ") && !hashPrivateRequest.isEmpty()){
 		        	var elements = input.split(" ",2);
 		        	var privateRequest = hashPrivateRequest.remove(new Login(elements[1]));
-		        	System.out.println("Connexion privée refusée");
+		        	System.out.println("Private connection refused");
 		        	bb = Optional.of(privateRequest.encodeRefusePrivateRequest(req));
 		        }else if (input.startsWith("/")) { // connexion privée
 		        	var keyword = input.replaceFirst("/", "");
@@ -344,7 +342,7 @@ public class ClientChatos {
     }
     
     public boolean isConnected(){ 
-    	return !login.isNotConnect(); 
+    	return !login.isNotConnected();
     }
 
 	public void addSetPrivateRequest(PrivateRequest privateRequest) {

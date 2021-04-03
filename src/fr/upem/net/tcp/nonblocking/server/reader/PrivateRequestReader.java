@@ -19,8 +19,6 @@ public class PrivateRequestReader implements Reader<RequestOperation> {
     private final LoginReader loginReader = new LoginReader();
     private final Byte opCode;
     
-    
-    
     public PrivateRequestReader(Byte opCode) {
 		this.opCode = opCode;
 	}
@@ -31,8 +29,8 @@ public class PrivateRequestReader implements Reader<RequestOperation> {
             throw new IllegalStateException();
         }
         if (state == State.WAITING_REQUESTER_LOGIN) {
-            var processlogin = loginReader.process(bb);
-            switch (processlogin) {
+            var processLogin = loginReader.process(bb);
+            switch (processLogin) {
                 case DONE:
                     requesterLogin = loginReader.get();
                     loginReader.reset();
@@ -46,8 +44,8 @@ public class PrivateRequestReader implements Reader<RequestOperation> {
             }
         }
         if (state == State.WAITING_TARGET_LOGIN) {
-            var processlogin = loginReader.process(bb);
-            switch (processlogin) {
+            var processLogin = loginReader.process(bb);
+            switch (processLogin) {
                 case DONE:
                     targetLogin = loginReader.get();
                     loginReader.reset();
@@ -68,14 +66,16 @@ public class PrivateRequestReader implements Reader<RequestOperation> {
         if (state != State.DONE) {
             throw new IllegalStateException();
         }
-        if(opCode == 5)
-        	return new PrivateRequest(requesterLogin, targetLogin);
-        if(opCode == 6)
-        	return new AcceptRequest(requesterLogin, targetLogin);
-        if(opCode == 7)
-        	return new RefuseRequest(requesterLogin, targetLogin);
-        throw new IllegalStateException();
-       	
+        switch (opCode){
+            case 5:
+                return new PrivateRequest(requesterLogin, targetLogin);
+            case 6:
+                return new AcceptRequest(requesterLogin, targetLogin);
+            case 7:
+                return new RefuseRequest(requesterLogin, targetLogin);
+            default:
+                throw new IllegalStateException();
+        }
     }
 
     @Override

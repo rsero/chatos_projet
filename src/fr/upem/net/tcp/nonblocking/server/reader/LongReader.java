@@ -17,7 +17,6 @@ public class LongReader implements Reader<Long> {
         if (state == State.DONE || state == State.ERROR) {
             throw new IllegalStateException();
         }
-
         bb.flip();
         try {
             if (bb.remaining() <= internalbb.remaining()) {

@@ -14,11 +14,11 @@ public class InstructionReader implements Reader<Data> {
 	private Data value;
 	private OpCode opCode;
 	private Reader<?> reader;
+	private final ByteReader byteReader = new ByteReader();
 	
 	private void definedReader(OpCode opcode, ByteReader byteReader) {
 		switch (opcode.getByte()) {
 		case 0://Identification
-			System.out.println("on a un login reader");
 			reader = new LoginReader();
 			state = State.WAITING_DATA;
 			break;
@@ -48,7 +48,6 @@ public class InstructionReader implements Reader<Data> {
 			state = State.WAITING_DATA;
 			break;
 		case 8://Accept connection and give connect_id
-			System.out.println("j'appelel waccept request reader");
 			reader = new AcceptRequestReader();
 			state = State.WAITING_DATA;
 			break;
@@ -63,7 +62,6 @@ public class InstructionReader implements Reader<Data> {
 			throw new IllegalStateException();
 		}
 		if (state == State.WAITING_OPCODE) {
-			var byteReader = new ByteReader();
 			var stat = byteReader.process(bb);
 			if(stat!=ProcessStatus.DONE){
 				return stat;
@@ -99,6 +97,7 @@ public class InstructionReader implements Reader<Data> {
 	@Override
 	public void reset() {
 		reader.reset();
+		byteReader.reset();
 		state = State.WAITING_OPCODE;
 		opCode = null;
 	}

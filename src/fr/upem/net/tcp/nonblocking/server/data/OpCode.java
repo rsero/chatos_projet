@@ -11,8 +11,6 @@ import fr.upem.net.tcp.nonblocking.server.ServerChatos;
 public class OpCode implements Data{
 	
 	private final Byte opCode;
-	
-	
 
 	public OpCode(byte opCode) {
 		this.opCode = opCode;
@@ -35,17 +33,16 @@ public class OpCode implements Data{
 			System.out.println("Identification accepted");
 			break;
 		case 2:
-			System.out.println("Login déja existant");
+			System.out.println("Login already taken");
 			break;
 		case 6:
-			
 			System.out.println("Private connection was accepted");
 			break;
 		case 7:
 			System.out.println("Private connection was refused");
 			break;
 		default:
-			System.out.println("Opération impossible à exécuter");
+			System.out.println("Operation does not exist");
 			break;
 		}
 	}

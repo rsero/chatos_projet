@@ -3,7 +3,6 @@ package fr.upem.net.tcp.nonblocking.server.data;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.Selector;
-import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.util.Objects;
 
@@ -17,12 +16,10 @@ public class Login implements Data {
 	private final String name;
 	private Byte byteReceive;
 
+	public Login() { this.name = ""; }
+
 	public Login(String name) {
 		this.name = Objects.requireNonNull(name);
-	}
-
-	public Login() {
-		name = "";
 	}
 
 	public String getLogin() {
@@ -41,7 +38,7 @@ public class Login implements Data {
 		return name.equals(other.getLogin());
 	}
 
-	public boolean isNotConnect() {
+	public boolean isNotConnected() {
 		if (name.equals(""))
 			return true;
 		return false;
@@ -79,16 +76,13 @@ public class Login implements Data {
 	}
 
 	@Override
-	public void decode(ClientChatos server) {
-		// TODO Auto-generated method stub
+	public void decode(ClientChatos client) {
 		if (byteReceive == (byte) 1) {
-			System.out.println("Connexion acceptée");
+			System.out.println("Connection accepted");
 			// mettre à jour le login
 		} else if (byteReceive == (byte) 2) {
-			System.out.println("Login deja existant");
+			System.out.println("Login already taken");
 		}
-//		login = log;
-//		return;
 	}
 
 	@Override

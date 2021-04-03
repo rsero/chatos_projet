@@ -25,7 +25,7 @@ public class AcceptRequest extends RequestOperation{
     }
     
     public String toString() {
-        return loginTarget() + " accept the connection with you";
+        return loginTarget() + " accepted the connection with you";
     }
     
     @Override

@@ -20,7 +20,9 @@ public class PrivateRequest extends RequestOperation {
     }
 
     public String toString() {
-        return loginRequester() + " wants to establish a private connection with you";
+        return loginRequester() + " wants to establish a private connection with you \n" +
+                "\"/y "+ loginRequester() +"\" to accept \n" +
+                "\"/n "+ loginRequester() +"\" to refuse";
     }
 
     private ByteBuffer encode(ByteBuffer req) throws IOException {

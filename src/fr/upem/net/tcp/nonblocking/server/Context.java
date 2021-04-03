@@ -107,7 +107,6 @@ public class Context {
     }
 
 	public long definedConnectId(AcceptRequest acceptRequest) {
-		// TODO Auto-generated method stub
 		return server.definedConnectId(acceptRequest);
 	}
 }

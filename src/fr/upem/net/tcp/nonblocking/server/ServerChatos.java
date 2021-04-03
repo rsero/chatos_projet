@@ -103,6 +103,20 @@ public class ServerChatos {
     	data.broadcast(selector, context);
     }
 
+    public Context findContext(Login login) {
+        return clients.get(login.getLogin());
+    }
+
+    public long definedConnectId(AcceptRequest acceptRequest) {
+        Random rand = new Random();
+        while(true) {
+            var value = rand.nextLong();
+            if(privateConnexion.putIfAbsent(value, acceptRequest) == null) {
+                return value;
+            }
+        }
+    }
+
     public static void main(String[] args) throws NumberFormatException, IOException {
 //        if (args.length!=1){
 //            usage();
@@ -179,19 +193,5 @@ public class ServerChatos {
             list.add("WRITE");
         return String.join(" and ", list);
     }
-
-	public Context findContext(Login login) {
-		return clients.get(login.getLogin());
-	}
-
-	public long definedConnectId(AcceptRequest acceptRequest) {
-		Random rand = new Random();
-		while(true) {
-			var value = rand.nextLong();
-			if(privateConnexion.putIfAbsent(value, acceptRequest) == null) {
-				return value;
-			}
-		}
-	}
 
 }

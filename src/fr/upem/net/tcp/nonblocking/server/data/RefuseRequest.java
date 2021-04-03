@@ -20,7 +20,7 @@ public class RefuseRequest extends RequestOperation {
     }
 
     public String toString() {
-        return loginTarget() + " refuse the connection with you";
+        return loginTarget() + " refused the connection with you";
     }
 
     private ByteBuffer encode(ByteBuffer req) throws IOException {

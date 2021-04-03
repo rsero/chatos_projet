@@ -3,32 +3,26 @@ package fr.upem.net.tcp.nonblocking.server.reader;
 import java.nio.ByteBuffer;
 
 import fr.upem.net.tcp.nonblocking.server.data.AcceptRequest;
-import fr.upem.net.tcp.nonblocking.server.data.Login;
 import fr.upem.net.tcp.nonblocking.server.data.PrivateRequest;
-import fr.upem.net.tcp.nonblocking.server.data.RequestOperation;
 
 public class AcceptRequestReader implements Reader<AcceptRequest>{
 
     private enum State {
-        DONE, WAITING_PRIVATEREQUEST, WAITING_ID, ERROR
+        DONE, WAITING_PRIVATE_REQUEST, WAITING_ID, ERROR
     };
 
-    private State state = State.WAITING_PRIVATEREQUEST;
+    private State state = State.WAITING_PRIVATE_REQUEST;
     private PrivateRequest privateRequest;
     private Long connect_id;
     private final PrivateRequestReader privateRequestReader = new PrivateRequestReader((byte) 5);
     private final LongReader longReader = new LongReader();
-        
-//    public AcceptRequestReader(Long connect_id) {
-//		this.connect_id = connect_id;
-//	}
 
 	@Override
     public ProcessStatus process(ByteBuffer bb) {
         if (state == State.DONE || state == State.ERROR) {
             throw new IllegalStateException();
         }
-        if (state == State.WAITING_PRIVATEREQUEST) {
+        if (state == State.WAITING_PRIVATE_REQUEST) {
             var processPrivateRequest = privateRequestReader.process(bb);
             switch (processPrivateRequest) {
                 case DONE:
@@ -71,7 +65,7 @@ public class AcceptRequestReader implements Reader<AcceptRequest>{
 
     @Override
     public void reset() {
-        state = State.WAITING_PRIVATEREQUEST;
+        state = State.WAITING_PRIVATE_REQUEST;
         privateRequestReader.reset();
         longReader.reset();
     }

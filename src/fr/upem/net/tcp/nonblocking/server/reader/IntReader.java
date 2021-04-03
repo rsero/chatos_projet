@@ -17,9 +17,7 @@ public class IntReader implements Reader<Integer> {
         if (state == State.DONE || state == State.ERROR) {
             throw new IllegalStateException();
         }
-    
         bb.flip();
-        System.out.println("int Refill car " + bb.remaining());
         try {
             if (bb.remaining() <= internalbb.remaining()) {
                 internalbb.put(bb);
@@ -33,7 +31,6 @@ public class IntReader implements Reader<Integer> {
             bb.compact();
         }
         if (internalbb.hasRemaining()) {
-        	System.out.println("Refill car " + internalbb.remaining());
             return ProcessStatus.REFILL;
         }
         state = State.DONE;

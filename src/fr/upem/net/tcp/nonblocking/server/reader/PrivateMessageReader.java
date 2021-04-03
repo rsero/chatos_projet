@@ -53,8 +53,8 @@ public class PrivateMessageReader implements Reader<PrivateMessage> {
             }
         }
         if(state ==State.WAITING_MSG) {
-            var processmsg = messageReader.process(bb);
-            switch(processmsg) {
+            var processMsg = messageReader.process(bb);
+            switch(processMsg) {
                 case DONE:
                     msg=messageReader.get();
                     state = State.DONE;
