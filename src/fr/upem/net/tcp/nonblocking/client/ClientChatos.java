@@ -8,8 +8,10 @@ import java.nio.channels.Channel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.Scanner;
@@ -173,17 +175,20 @@ public class ClientChatos {
     private final SocketChannel sc;
     private final Selector selector;
     private final InetSocketAddress serverAddress;
+    private final String directory;
     private Login login;
     private String loginDemandé;
     private MessageGlobal messageGlobal;
     private final Thread console;
     private final ArrayBlockingQueue<String> commandQueue = new ArrayBlockingQueue<>(10);
     private final HashMap<Login, PrivateRequest> hashPrivateRequest = new HashMap<>();
+    private final HashMap<Login, List<String>> hashLoginFile = new HashMap<>();
     private Context uniqueContext;
     private final Object lock = new Object();
 
-    public ClientChatos(InetSocketAddress serverAddress) throws IOException {
+    public ClientChatos(InetSocketAddress serverAddress, String directory) throws IOException {
         this.serverAddress = serverAddress;
+        this.directory = directory;
         this.login = new Login();
         this.sc = SocketChannel.open();
         this.selector = Selector.open();
@@ -280,9 +285,16 @@ public class ClientChatos {
                             bb = Optional.empty();
                             break;
                         }else{
-                            var privateRequest = new PrivateRequest(login, new Login(content));
+                        	if(data.isEmpty()){
+                                System.out.println("Usage : /login data");
+                                bb = Optional.empty();
+                                break;
+                            }
+                        	var targetLogin = new Login(data);
+                            var privateRequest = new PrivateRequest(login, targetLogin);
+                            hashLoginFile.putIfAbsent(targetLogin, new ArrayList<>());
+                            hashLoginFile.get(targetLogin).add(elements[1]);
                             bb = Optional.of(privateRequest.encodeAskPrivateRequest(req));
-                            //var file = elements[1];
                             break;
                         }
                     default: // message global
@@ -340,15 +352,15 @@ public class ClientChatos {
 
 
     public static void main(String[] args) throws NumberFormatException, IOException {
-        if (args.length!=2){
+        if (args.length!=3){
             usage();
             return;
         }
-        new ClientChatos(new InetSocketAddress(args[0],Integer.parseInt(args[1]))).launch();
+        new ClientChatos(new InetSocketAddress(args[0],Integer.parseInt(args[1])), args[2]).launch();
     }
 
     private static void usage(){
-        System.out.println("Usage : ClientChat hostname port");
+        System.out.println("Usage : ClientChat hostname port directory");
     }
     
     public void updateLogin() {
@@ -366,6 +378,3 @@ public class ClientChatos {
 		
 	}
 }
-
-// si il y a déja un id pour une connexion privée entre deux clients, on en propose un autre si 2ème demande ?
-// espaces acceptés dans le login ?
