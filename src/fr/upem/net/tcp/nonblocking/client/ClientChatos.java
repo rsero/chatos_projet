@@ -191,8 +191,7 @@ public class ClientChatos {
     }
 
     private void consoleRun() {
-        try {
-            var scan = new Scanner(System.in);
+        try (var scan = new Scanner(System.in)){
             while (scan.hasNextLine()) {
                 var line = scan.nextLine();
                 sendCommand(line);
@@ -256,7 +255,7 @@ public class ClientChatos {
 		                bb = Optional.of(msgprive.encode(req));
 		                break;
                     case'/'  : // connexion privée
-                        if(content.equals("y")&&hashPrivateRequest.containsKey(data)){
+                    	if(content.equals("y")&&hashPrivateRequest.containsKey(new Login(data))){
                             if(data.isEmpty()){
                                 System.out.println("Usage : /y login");
                                 bb = Optional.empty();
@@ -266,7 +265,7 @@ public class ClientChatos {
 		        	        System.out.println("Private connection with " + data + " accepted");
 		        	        bb = Optional.of(privateRequest.encodeAcceptPrivateRequest(req));
 		        	        break;
-		                }else if(content.equals("n") && hashPrivateRequest.containsKey(data)) {
+		                }else if(content.equals("n") && hashPrivateRequest.containsKey(new Login(data))) {
                             if(data.isEmpty()){
                                 System.out.println("Usage : /n login");
                                 bb = Optional.empty();
@@ -275,6 +274,10 @@ public class ClientChatos {
                             var privateRequest = hashPrivateRequest.remove(new Login(data));
                             System.out.println("Private connection refused");
                             bb = Optional.of(privateRequest.encodeRefusePrivateRequest(req));
+                            break;
+                        }else if(content.equals("y") || content.equals("n")) {//Accept une connection privée d'un client qui ne l'a pas demandé
+                        	System.out.println("This client doesn't ask the connexion");
+                            bb = Optional.empty();
                             break;
                         }else{
                             var privateRequest = new PrivateRequest(login, new Login(content));
