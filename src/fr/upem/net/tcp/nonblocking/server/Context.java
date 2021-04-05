@@ -1,17 +1,18 @@
 package fr.upem.net.tcp.nonblocking.server;
 
-import fr.upem.net.tcp.nonblocking.server.data.AcceptRequest;
-import fr.upem.net.tcp.nonblocking.server.data.Data;
-import fr.upem.net.tcp.nonblocking.server.data.Login;
-import fr.upem.net.tcp.nonblocking.server.reader.InstructionReader;
-import fr.upem.net.tcp.nonblocking.server.reader.Reader;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
+
+import fr.upem.net.tcp.nonblocking.server.data.AcceptRequest;
+import fr.upem.net.tcp.nonblocking.server.data.Data;
+import fr.upem.net.tcp.nonblocking.server.data.Login;
+import fr.upem.net.tcp.nonblocking.server.reader.InstructionReader;
+import fr.upem.net.tcp.nonblocking.server.reader.Reader;
 
 public class Context {
     private static int BUFFER_SIZE = 1024;
@@ -108,5 +109,18 @@ public class Context {
 
 	public long definedConnectId(AcceptRequest acceptRequest) {
 		return server.definedConnectId(acceptRequest);
+	}
+
+	public boolean connectionReady(Long connectId) {
+		return server.connectionReady(connectId);
+	}
+
+	public List<Context> findContext(Long connectId) {
+		return server.findContext(connectId);
+	}
+
+	public void updatePrivateConnexion(Long connectId) {
+		server.updatePrivateConnexion(connectId);
+		
 	}
 }

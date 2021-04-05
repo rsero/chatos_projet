@@ -11,6 +11,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.logging.Level;
@@ -27,9 +28,9 @@ public class ServerChatos {
     private final Selector selector;
     private static Logger logger = Logger.getLogger(ServerChatos.class.getName());
 
-    public ServerChatos() throws IOException {
+    public ServerChatos(int port) throws IOException {
         serverSocketChannel = ServerSocketChannel.open();
-        serverSocketChannel.bind(new InetSocketAddress(7777));
+        serverSocketChannel.bind(new InetSocketAddress(port));
         selector = Selector.open();
     }
 
@@ -38,6 +39,10 @@ public class ServerChatos {
             return true;
         }
         return false;
+    }
+    
+    public void updatePrivateConnexion(Long connectId){
+        privateConnexion.get(connectId).updatePrivateConnexion();
     }
 
     public void launch() throws IOException {
@@ -106,6 +111,11 @@ public class ServerChatos {
     public Context findContext(Login login) {
         return clients.get(login.getLogin());
     }
+    
+    public List<Context> findContext(Long connectId) {
+    	var privateClient = privateConnexion.get(connectId);
+        return List.of(findContext(privateClient.getLoginRequester()), findContext(privateClient.getLoginTarget()));
+    }
 
     public long definedConnectId(AcceptRequest acceptRequest) {
         Random rand = new Random();
@@ -116,13 +126,17 @@ public class ServerChatos {
             }
         }
     }
+    
+    public boolean connectionReady(Long connectId) {
+		return privateConnexion.get(connectId).connexionReady();
+	}
 
     public static void main(String[] args) throws NumberFormatException, IOException {
 //        if (args.length!=1){
 //            usage();
 //            return;
 //        }
-        new ServerChatos().launch();
+        new ServerChatos(7777).launch();
     }
 
 //    private static void usage(){
@@ -193,5 +207,6 @@ public class ServerChatos {
             list.add("WRITE");
         return String.join(" and ", list);
     }
+
 
 }

@@ -13,6 +13,8 @@ import fr.upem.net.tcp.nonblocking.server.ServerChatos;
 public class AcceptRequest extends RequestOperation{
 
 	private static final Charset UTF8 = Charset.forName("UTF-8");
+	private boolean clientOneConnect = false;
+	private boolean clientTwoConnect = false;
     private long connect_id;
 	
     public AcceptRequest(Login loginRequester, Login loginTarget, long connect_id) {
@@ -28,6 +30,18 @@ public class AcceptRequest extends RequestOperation{
         return loginTarget() + " accepted the connection with you";
     }
     
+	public void updatePrivateConnexion() {
+		if(!clientOneConnect) {
+			clientOneConnect = true;
+			return;
+		}
+		clientTwoConnect = true;
+	}
+    
+	public boolean connexionReady() {
+		return clientOneConnect && clientTwoConnect;
+	}
+	
     @Override
 	public boolean processOut(ByteBuffer bbout, Context context, ServerChatos server) throws IOException {
     	return processOut(encode(bbout));
@@ -48,6 +62,14 @@ public class AcceptRequest extends RequestOperation{
 
 	@Override
 	public void decode(ClientChatos client) {
+		Login login;
+		if(client.getLogin().equals(getLoginRequester())){
+			login = getLoginTarget();
+		}
+		else {
+			login = getLoginRequester();
+		}
+		client.addConnect_id(connect_id, login);
 		System.out.println("Connection " + loginRequester() + " : " + loginTarget() + " is established with id : "+ connect_id);
 	}
 

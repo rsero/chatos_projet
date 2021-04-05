@@ -21,6 +21,8 @@ import java.util.logging.Logger;
 import fr.upem.net.tcp.nonblocking.server.data.Data;
 import fr.upem.net.tcp.nonblocking.server.data.Login;
 import fr.upem.net.tcp.nonblocking.server.data.MessageGlobal;
+import fr.upem.net.tcp.nonblocking.server.data.PrivateConnectionClients;
+import fr.upem.net.tcp.nonblocking.server.data.PrivateLogin;
 import fr.upem.net.tcp.nonblocking.server.data.PrivateMessage;
 import fr.upem.net.tcp.nonblocking.server.data.PrivateRequest;
 import fr.upem.net.tcp.nonblocking.server.reader.InstructionReader;
@@ -178,11 +180,10 @@ public class ClientChatos {
     private final String directory;
     private Login login;
     private String loginDemandé;
-    private MessageGlobal messageGlobal;
     private final Thread console;
     private final ArrayBlockingQueue<String> commandQueue = new ArrayBlockingQueue<>(10);
     private final HashMap<Login, PrivateRequest> hashPrivateRequest = new HashMap<>();
-    private final HashMap<Login, List<String>> hashLoginFile = new HashMap<>();
+    private final HashMap<Login, PrivateConnectionClients> hashLoginFile = new HashMap<>();
     private Context uniqueContext;
     private final Object lock = new Object();
 
@@ -237,6 +238,11 @@ public class ClientChatos {
             }
         }
     }
+    
+    public void addConnect_id(Long connectId, Login loginTarget) {
+    	hashLoginFile.putIfAbsent(loginTarget, new PrivateConnectionClients());
+    	hashLoginFile.get(loginTarget).addConnectId(connectId);
+    }
 
     public Optional<ByteBuffer> parseInput(String input) throws IOException {
         Optional<ByteBuffer> bb;
@@ -280,20 +286,47 @@ public class ClientChatos {
                             System.out.println("Private connection refused");
                             bb = Optional.of(privateRequest.encodeRefusePrivateRequest(req));
                             break;
-                        }else if(content.equals("y") || content.equals("n")) {//Accept une connection privée d'un client qui ne l'a pas demandé
+                        }else if(content.equals("y") || content.equals("n")) {//Accepte une connection privée d'un client qui ne l'a pas demandé
                         	System.out.println("This client doesn't ask the connexion");
                             bb = Optional.empty();
                             break;
+                        }else if(content.equals("id")){
+                        	if(data.isEmpty()){
+                                System.out.println("Usage : /id connect_id");
+                                bb = Optional.empty();
+                                break;
+                            }
+                        	try{
+                        		Long connect_id = Long.valueOf(data);
+                        		var correctId = false;
+                        		for(var value : hashLoginFile.values()) {
+                        			if(value.correctConnectId(connect_id)) {
+                        				correctId = true;
+                        				continue;
+                        			}
+                        		}
+                        		if(!correctId) {
+                        			System.out.println("Incorrect connect_id");
+                        			bb = Optional.empty();
+                        			break;
+                        		}
+                        		var privateLogin = new PrivateLogin(connect_id);
+                        		bb = Optional.of(privateLogin.encode(req));
+                        	}catch(NumberFormatException nb) {
+                        		System.out.println("Usage : /id connect_id");
+                        		bb = Optional.empty();
+                        	}
+                        	break;
                         }else{
                         	if(data.isEmpty()){
                                 System.out.println("Usage : /login data");
                                 bb = Optional.empty();
                                 break;
                             }
-                        	var targetLogin = new Login(data);
+                        	var targetLogin = new Login(content);
                             var privateRequest = new PrivateRequest(login, targetLogin);
-                            hashLoginFile.putIfAbsent(targetLogin, new ArrayList<>());
-                            hashLoginFile.get(targetLogin).add(elements[1]);
+                            hashLoginFile.putIfAbsent(targetLogin, new PrivateConnectionClients());
+                            hashLoginFile.get(targetLogin).addFileToSend(elements[1]);
                             bb = Optional.of(privateRequest.encodeAskPrivateRequest(req));
                             break;
                         }
@@ -369,6 +402,10 @@ public class ClientChatos {
     
     public boolean isConnected(){ 
     	return !login.isNotConnected();
+    }
+    
+    public Login getLogin() {
+    	return login;
     }
 
 	public void addSetPrivateRequest(PrivateRequest privateRequest) {

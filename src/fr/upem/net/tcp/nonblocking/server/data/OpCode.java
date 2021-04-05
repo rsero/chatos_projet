@@ -41,6 +41,9 @@ public class OpCode implements Data{
 		case 7:
 			System.out.println("Private connection was refused");
 			break;
+		case 10:
+			System.out.println("Connexion was established");
+			break;
 		default:
 			System.out.println("Operation does not exist");
 			break;
