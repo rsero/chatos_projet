@@ -8,8 +8,10 @@ import java.nio.channels.Channel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.Scanner;
@@ -173,17 +175,20 @@ public class ClientChatos {
     private final SocketChannel sc;
     private final Selector selector;
     private final InetSocketAddress serverAddress;
+    private final String directory;
     private Login login;
     private String loginDemandé;
     private MessageGlobal messageGlobal;
     private final Thread console;
     private final ArrayBlockingQueue<String> commandQueue = new ArrayBlockingQueue<>(10);
     private final HashMap<Login, PrivateRequest> hashPrivateRequest = new HashMap<>();
+    private final HashMap<Login, List<String>> hashLoginFile = new HashMap<>();
     private Context uniqueContext;
     private final Object lock = new Object();
 
-    public ClientChatos(InetSocketAddress serverAddress) throws IOException {
+    public ClientChatos(InetSocketAddress serverAddress, String directory) throws IOException {
         this.serverAddress = serverAddress;
+        this.directory = directory;
         this.login = new Login();
         this.sc = SocketChannel.open();
         this.selector = Selector.open();
@@ -191,8 +196,7 @@ public class ClientChatos {
     }
 
     private void consoleRun() {
-        try {
-            var scan = new Scanner(System.in);
+        try (var scan = new Scanner(System.in)){
             while (scan.hasNextLine()) {
                 var line = scan.nextLine();
                 sendCommand(line);
@@ -227,7 +231,6 @@ public class ClientChatos {
                 var command = commandQueue.remove();
                 Optional<ByteBuffer> bb = parseInput(command);
                 if (!bb.isPresent()) {
-                    System.out.println("Something went wrong.");
                     return;
                 }
                 uniqueContext.queueMessage(bb.get().flip());
@@ -237,43 +240,66 @@ public class ClientChatos {
 
     public Optional<ByteBuffer> parseInput(String input) throws IOException {
         Optional<ByteBuffer> bb;
-        
         synchronized (lock) {
         	var req = ByteBuffer.allocate(BUFFER_SIZE);
-	        if (login.isNotConnected()) {
+            if (input.isEmpty() || input.startsWith(" ")) {
+                System.out.println("Usage : no empty messages");
+                return Optional.empty();
+            }
+            if (login.isNotConnected()) {
 	        	loginDemandé = input;
 				bb = Optional.of(login.encodeLogin(input));
 	        } else {
-	        	if (input.startsWith("@")){ // message privé
-		            var keyword = input.replaceFirst("@", "");
-		            var elements = keyword.split(" ",2);
-		            var msg = elements[1];
-		            var msgprive = new PrivateMessage(login, new Login(elements[0]), msg);
-		            bb = Optional.of(msgprive.encode(req));
-		        }else if(input.startsWith("/y ") && !hashPrivateRequest.isEmpty()){
-		        	var elements = input.split(" ",2);
-		        	var privateRequest = hashPrivateRequest.get(new Login(elements[1]));
-		        	System.out.println("Private connection with " + elements[1] + " accepted");
-		        	bb = Optional.of(privateRequest.encodeAcceptPrivateRequest(req));
-		        }else if(input.startsWith("/n ") && !hashPrivateRequest.isEmpty()){
-		        	var elements = input.split(" ",2);
-		        	var privateRequest = hashPrivateRequest.remove(new Login(elements[1]));
-		        	System.out.println("Private connection refused");
-		        	bb = Optional.of(privateRequest.encodeRefusePrivateRequest(req));
-		        }else if (input.startsWith("/")) { // connexion privée
-		        	var keyword = input.replaceFirst("/", "");
-		            var elements = keyword.split(" ",2);
-		            //var file = elements[1];
-		            var privateRequest = new PrivateRequest(login, new Login(elements[0]));
-		            bb = Optional.of(privateRequest.encodeAskPrivateRequest(req));
-		        } else { // message global
-		            //if (isConnected) {
+                var elements = input.split(" ", 2);
+                var prefix = elements[0].charAt(0);
+                var content = elements[0].substring(1);
+                var data = elements.length == 1 ? "" : elements[1];
+                switch (prefix){
+                    case '@' : // message privé
+		                var msgprive = new PrivateMessage(login, new Login(content), data);
+		                bb = Optional.of(msgprive.encode(req));
+		                break;
+                    case'/'  : // connexion privée
+                    	if(content.equals("y")&&hashPrivateRequest.containsKey(new Login(data))){
+                            if(data.isEmpty()){
+                                System.out.println("Usage : /y login");
+                                bb = Optional.empty();
+                                break;
+                            }
+		        	        var privateRequest = hashPrivateRequest.get(new Login(data));
+		        	        System.out.println("Private connection with " + data + " accepted");
+		        	        bb = Optional.of(privateRequest.encodeAcceptPrivateRequest(req));
+		        	        break;
+		                }else if(content.equals("n") && hashPrivateRequest.containsKey(new Login(data))) {
+                            if(data.isEmpty()){
+                                System.out.println("Usage : /n login");
+                                bb = Optional.empty();
+                                break;
+                            }
+                            var privateRequest = hashPrivateRequest.remove(new Login(data));
+                            System.out.println("Private connection refused");
+                            bb = Optional.of(privateRequest.encodeRefusePrivateRequest(req));
+                            break;
+                        }else if(content.equals("y") || content.equals("n")) {//Accept une connection privée d'un client qui ne l'a pas demandé
+                        	System.out.println("This client doesn't ask the connexion");
+                            bb = Optional.empty();
+                            break;
+                        }else{
+                        	if(data.isEmpty()){
+                                System.out.println("Usage : /login data");
+                                bb = Optional.empty();
+                                break;
+                            }
+                        	var targetLogin = new Login(data);
+                            var privateRequest = new PrivateRequest(login, targetLogin);
+                            hashLoginFile.putIfAbsent(targetLogin, new ArrayList<>());
+                            hashLoginFile.get(targetLogin).add(elements[1]);
+                            bb = Optional.of(privateRequest.encodeAskPrivateRequest(req));
+                            break;
+                        }
+                    default: // message global
 		                var messageGlobal = new MessageGlobal(login, input);
 		                bb = Optional.of(messageGlobal.encode(req));
-		            //} else {
-	//	                bb = Optional.empty();
-	//	                System.out.println("Tu n'es pas connecté");
-	//	            }
 		        }
 	        }
         }
@@ -326,15 +352,15 @@ public class ClientChatos {
 
 
     public static void main(String[] args) throws NumberFormatException, IOException {
-        if (args.length!=2){
+        if (args.length!=3){
             usage();
             return;
         }
-        new ClientChatos(new InetSocketAddress(args[0],Integer.parseInt(args[1]))).launch();
+        new ClientChatos(new InetSocketAddress(args[0],Integer.parseInt(args[1])), args[2]).launch();
     }
 
     private static void usage(){
-        System.out.println("Usage : ClientChat hostname port");
+        System.out.println("Usage : ClientChat hostname port directory");
     }
     
     public void updateLogin() {
@@ -352,4 +378,3 @@ public class ClientChatos {
 		
 	}
 }
-
