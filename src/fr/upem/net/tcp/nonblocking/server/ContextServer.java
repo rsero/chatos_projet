@@ -73,7 +73,7 @@ public class ContextServer {
 
     private void processIn(SelectionKey key) throws IOException {
     	for(;;) {
-	        Reader.ProcessStatus status = reader.process(bbin);
+    		Reader.ProcessStatus status = reader.process(bbin);
 	        switch (status) {
 	            case DONE:
 	                var data = (Data) reader.get();

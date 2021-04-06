@@ -225,7 +225,6 @@ public class ClientChatos {
             	
             }
             if (key.isValid() && key.isReadable()) {
-            	System.out.println("J'ai des trucs à lire");
             	((ContextClient) key.attachment()).doRead(this);
             }
         } catch(IOException ioe) {

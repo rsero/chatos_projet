@@ -37,8 +37,8 @@ public class ContextClient {
      */
     private void processIn(ClientChatos client) throws IOException {
     	for(;;){
-    	    Reader.ProcessStatus status = reader.process(bbin);
-     	    switch (status){
+    		Reader.ProcessStatus status = reader.process(bbin);
+    	    switch (status){
      	      case DONE:
      	          Data value = reader.get();
      	          value.decode(client);
