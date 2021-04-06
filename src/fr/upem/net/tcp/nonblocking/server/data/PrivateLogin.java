@@ -2,6 +2,7 @@ package fr.upem.net.tcp.nonblocking.server.data;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 
 import fr.upem.net.tcp.nonblocking.client.ClientChatos;
@@ -46,18 +47,18 @@ public class PrivateLogin implements Data {
 
 	@Override
 	public void decode(ClientChatos server) {
-				
+		System.out.println("Private login : connection established");
 	}
 
 	@Override
-	public void broadcast(Selector selector, ContextServer context) throws IOException {
-		context.updatePrivateConnexion(connectId);
+	public void broadcast(Selector selector, ContextServer context, SelectionKey key) throws IOException {
+		context.updatePrivateConnexion(connectId, key);
 		System.out.println("broadcast entre");
 		if(!context.connectionReady(connectId))
 			return;
 		System.out.println("broadcast sort");
 		var contexts = context.findContext(connectId);
-        contexts.get(0).queueMessage(this);
-        contexts.get(1).queueMessage(this);
+        ((ContextServer) contexts.get(0).attachment()).queueMessage(this);
+        ((ContextServer) contexts.get(1).attachment()).queueMessage(this);
 	}
 }

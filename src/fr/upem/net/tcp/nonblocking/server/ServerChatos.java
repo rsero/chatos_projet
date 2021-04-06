@@ -16,6 +16,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import fr.upem.net.tcp.nonblocking.server.data.AcceptRequest;
 import fr.upem.net.tcp.nonblocking.server.data.Data;
@@ -41,8 +42,8 @@ public class ServerChatos {
         return false;
     }
     
-    public void updatePrivateConnexion(Long connectId){
-        privateConnexion.get(connectId).updatePrivateConnexion();
+    public void updatePrivateConnexion(Long connectId, SelectionKey keyClient){
+        privateConnexion.get(connectId).updatePrivateConnexion(keyClient);
     }
 
     public void launch() throws IOException {
@@ -76,7 +77,7 @@ public class ServerChatos {
                 ((ContextServer) key.attachment()).doWrite();
             }
             if (key.isValid() && key.isReadable()) {
-                ((ContextServer) key.attachment()).doRead();
+                ((ContextServer) key.attachment()).doRead(key);
             }
         } catch (IOException e) {
             logger.log(Level.INFO, "Connection closed with client due to IOException", e);
@@ -104,17 +105,17 @@ public class ServerChatos {
         }
     }
     
-    public void broadcast(Data data, ContextServer context) throws IOException {
-    	data.broadcast(selector, context);
+    public void broadcast(Data data, ContextServer context, SelectionKey key) throws IOException {
+    	data.broadcast(selector, context, key);
     }
 
     public ContextServer findContext(Login login) {
         return clients.get(login.getLogin());
     }
     
-    public List<ContextServer> findContext(Long connectId) {
+    public List<SelectionKey> findContext(Long connectId) {
     	var privateClient = privateConnexion.get(connectId);
-        return List.of(findContext(privateClient.getLoginRequester()), findContext(privateClient.getLoginTarget()));
+        return List.of(privateClient.getKeyRequester(), privateClient.getKeyTarget());
     }
 
     public long definedConnectId(AcceptRequest acceptRequest) {
@@ -200,6 +201,11 @@ public class ServerChatos {
             list.add("WRITE");
         return String.join(" and ", list);
     }
+
+
+    public List<ContextServer> contextPublic() {
+		return clients.values().stream().collect(Collectors.toList());
+	}
 
 
 }

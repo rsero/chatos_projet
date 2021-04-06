@@ -55,11 +55,11 @@ public class ContextServer {
         }
     }
 
-    public void doRead() throws IOException {
+    public void doRead(SelectionKey key) throws IOException {
         if (sc.read(bbin) == -1) {
             closed = true;
         }
-        processIn();
+        processIn(key);
         updateInterestOps();
     }
 
@@ -71,13 +71,13 @@ public class ContextServer {
         updateInterestOps();
     }
 
-    private void processIn() throws IOException {
+    private void processIn(SelectionKey key) throws IOException {
     	for(;;) {
 	        Reader.ProcessStatus status = reader.process(bbin);
 	        switch (status) {
 	            case DONE:
 	                var data = (Data) reader.get();
-	                server.broadcast(data, this);
+	                server.broadcast(data, this, key);
 	                reader.reset();
 	                break;
 	            case REFILL:
@@ -116,12 +116,16 @@ public class ContextServer {
 		return server.connectionReady(connectId);
 	}
 
-	public List<ContextServer> findContext(Long connectId) {
+	public List<SelectionKey> findContext(Long connectId) {
 		return server.findContext(connectId);
 	}
 
-	public void updatePrivateConnexion(Long connectId) {
-		server.updatePrivateConnexion(connectId);
+	public void updatePrivateConnexion(Long connectId, SelectionKey keyClient) {
+		server.updatePrivateConnexion(connectId, keyClient);
 		
+	}
+
+	public List<ContextServer> contextPublic() {
+		return server.contextPublic();
 	}
 }

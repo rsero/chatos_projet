@@ -2,6 +2,7 @@ package fr.upem.net.tcp.nonblocking.server.data;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.charset.Charset;
 
@@ -57,8 +58,8 @@ public class PrivateMessage implements Data {
     }
 
     @Override
-    public void broadcast(Selector selector, ContextServer context) throws IOException {
-    		var ctx = context.findContextClient(loginTarget);
-            ctx.queueMessage(this);
+    public void broadcast(Selector selector, ContextServer context, SelectionKey key) throws IOException {
+		var ctx = context.findContextClient(loginTarget);
+        ctx.queueMessage(this);
     }
 }

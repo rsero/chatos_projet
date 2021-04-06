@@ -57,11 +57,8 @@ public class MessageGlobal implements Data{
     }
 
     @Override
-    public void broadcast(Selector selector, ContextServer context) throws IOException {
-        for (SelectionKey key : selector.keys()){
-            if (key.attachment()==null)
-                continue;
-            var ctx = (ContextServer) key.attachment();
+    public void broadcast(Selector selector, ContextServer context, SelectionKey keyServer) throws IOException {
+        for (ContextServer ctx : context.contextPublic()){
             ctx.queueMessage(this);
         }
     }

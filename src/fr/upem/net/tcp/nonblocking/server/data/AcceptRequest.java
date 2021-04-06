@@ -2,6 +2,7 @@ package fr.upem.net.tcp.nonblocking.server.data;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.charset.Charset;
 import java.util.Objects;
@@ -15,6 +16,8 @@ public class AcceptRequest extends RequestOperation{
 	private static final Charset UTF8 = Charset.forName("UTF-8");
 	private boolean clientOneConnect = false;
 	private boolean clientTwoConnect = false;
+	private SelectionKey keyClientOne;
+	private SelectionKey keyClientTwo;
     private long connect_id;
 	
     public AcceptRequest(Login loginRequester, Login loginTarget, long connect_id) {
@@ -30,11 +33,13 @@ public class AcceptRequest extends RequestOperation{
         return loginTarget() + " accepted the connection with you";
     }
     
-	public void updatePrivateConnexion() {
+	public void updatePrivateConnexion(SelectionKey keyClient) {
 		if(!clientOneConnect) {
 			clientOneConnect = true;
+			keyClientOne = keyClient;
 			return;
 		}
+		keyClientTwo = keyClient;
 		clientTwoConnect = true;
 	}
     
@@ -74,11 +79,18 @@ public class AcceptRequest extends RequestOperation{
 	}
 
 	@Override
-	public void broadcast(Selector selector, ContextServer context) throws IOException {
+	public void broadcast(Selector selector, ContextServer context, SelectionKey key) throws IOException {
 		connect_id = context.definedConnectId(this);
 		var ctx = findContextRequester(context);
         ctx.queueMessage(this);
         ctx = findContextTarget(context);
         ctx.queueMessage(this);
+	}
+
+	public SelectionKey getKeyRequester() {
+		return keyClientOne;
+	}
+	public SelectionKey getKeyTarget() {
+		return keyClientTwo;
 	}
 }
