@@ -35,8 +35,8 @@ public class ClientChatos {
     private String loginDemandé;
     private final Thread console;
     private final ArrayBlockingQueue<String> commandQueue = new ArrayBlockingQueue<>(10);
-    private final HashMap<Login, PrivateRequest> hashPrivateRequest = new HashMap<>();
-    private final HashMap<Login, PrivateConnectionClients> hashLoginFile = new HashMap<>();
+    private final HashMap<Login, PrivateRequest> hashPrivateRequest = new HashMap<>();//Client qui demande la connexion privée
+    private final HashMap<Login, PrivateConnectionClients> hashLoginFile = new HashMap<>();//Client connecté a l'aide d'une connexion privée
     private ContextClient uniqueContext;
     private final Object lock = new Object();
 
@@ -81,6 +81,11 @@ public class ClientChatos {
      */
     private void processCommands() throws IOException{
         synchronized (commandQueue) {
+        	for(var privateConnection : hashLoginFile.values()) {
+        		if(privateConnection.connectionReady()) {
+        			privateConnection.sendRequest();
+        		}
+        	}
             while (!commandQueue.isEmpty()) {
                 var command = commandQueue.remove();
                 Optional<ByteBuffer> bb = parseInput(command);
@@ -93,7 +98,7 @@ public class ClientChatos {
     }
     
     public void addConnect_id(Long connectId, Login loginTarget) throws IOException {
-    	hashLoginFile.putIfAbsent(loginTarget, new PrivateConnectionClients(this));
+    	hashLoginFile.putIfAbsent(loginTarget, new PrivateConnectionClients(this, directory));
     	hashLoginFile.get(loginTarget).addConnectId(connectId);
     	hashLoginFile.get(loginTarget).launch(serverAddress, selector);
     }
@@ -184,7 +189,7 @@ public class ClientChatos {
                             }
                         	var targetLogin = new Login(content);
                             var privateRequest = new PrivateRequest(login, targetLogin);
-                            hashLoginFile.putIfAbsent(targetLogin, new PrivateConnectionClients(this));
+                            hashLoginFile.putIfAbsent(targetLogin, new PrivateConnectionClients(this, directory));
                             hashLoginFile.get(targetLogin).addFileToSend(elements[1]);
                             bb = Optional.of(privateRequest.encodeAskPrivateRequest(req));
                             break;
@@ -225,7 +230,7 @@ public class ClientChatos {
             	
             }
             if (key.isValid() && key.isReadable()) {
-            	((ContextClient) key.attachment()).doRead(this);
+            	((ContextClient) key.attachment()).doRead(this, key);
             }
         } catch(IOException ioe) {
             // lambda call in select requires to tunnel IOException
@@ -271,6 +276,14 @@ public class ClientChatos {
 	public void addSetPrivateRequest(PrivateRequest privateRequest) {
 		synchronized (lock) {
 			hashPrivateRequest.put(privateRequest.getLoginRequester(), privateRequest);
+		}
+	}
+
+	public void activePrivateConnection(SelectionKey key) {
+		for(var privateClient : hashLoginFile.values()) {
+			if(privateClient.activeConnection(key)) {
+				return;
+			}
 		}
 	}
 }

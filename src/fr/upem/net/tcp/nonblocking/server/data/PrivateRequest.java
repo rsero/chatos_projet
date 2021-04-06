@@ -40,7 +40,7 @@ public class PrivateRequest extends RequestOperation {
     }
 
     @Override
-    public void decode(ClientChatos client) {
+    public void decode(ClientChatos client, SelectionKey key) {
     	client.addSetPrivateRequest(this);
         System.out.println(this);
     }

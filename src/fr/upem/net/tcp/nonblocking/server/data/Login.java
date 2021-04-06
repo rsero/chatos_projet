@@ -77,7 +77,7 @@ public class Login implements Data {
 	}
 
 	@Override
-	public void decode(ClientChatos client) {
+	public void decode(ClientChatos client, SelectionKey key) {
 		if (byteReceive == (byte) 1) {
 			System.out.println("Connection accepted");
 			// mettre à jour le login

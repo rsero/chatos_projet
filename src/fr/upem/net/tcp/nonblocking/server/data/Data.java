@@ -11,6 +11,6 @@ import fr.upem.net.tcp.nonblocking.server.ServerChatos;
 
 public interface Data {
     public boolean processOut(ByteBuffer bbout, ContextServer context, ServerChatos server) throws IOException, IOException;
-    public void decode(ClientChatos server) throws IOException;
+    public void decode(ClientChatos server, SelectionKey key) throws IOException;
     public void broadcast(Selector selector, ContextServer context, SelectionKey key) throws IOException;
 }

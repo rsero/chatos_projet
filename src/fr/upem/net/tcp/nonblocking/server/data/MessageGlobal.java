@@ -51,7 +51,7 @@ public class MessageGlobal implements Data{
     }
 
     @Override
-    public void decode(ClientChatos client) {
+    public void decode(ClientChatos client, SelectionKey key) {
         if(client.isConnected())
             System.out.println(login + " : " + msg);
     }

@@ -46,7 +46,7 @@ public class PrivateLogin implements Data {
 	}
 
 	@Override
-	public void decode(ClientChatos server) {
+	public void decode(ClientChatos server, SelectionKey key) {
 		System.out.println("Private login : connection established");
 	}
 

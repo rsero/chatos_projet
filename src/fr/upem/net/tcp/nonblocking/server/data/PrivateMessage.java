@@ -53,7 +53,7 @@ public class PrivateMessage implements Data {
     }
 
     @Override
-    public void decode(ClientChatos client) {
+    public void decode(ClientChatos client, SelectionKey key) {
         System.out.println(loginSender + " : " + msg);
     }
 

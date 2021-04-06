@@ -27,7 +27,7 @@ public class OpCode implements Data{
 	}
 
 	@Override
-	public void decode(ClientChatos client) {
+	public void decode(ClientChatos client, SelectionKey key) {
 		switch (opCode) {
 		case 1:
 			client.updateLogin();
@@ -44,6 +44,7 @@ public class OpCode implements Data{
 			break;
 		case 10:
 			System.out.println("Connexion was established");
+			client.activePrivateConnection(key);
 			break;
 		default:
 			System.out.println("Operation does not exist");

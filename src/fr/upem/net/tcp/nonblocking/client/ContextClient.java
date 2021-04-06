@@ -35,13 +35,13 @@ public class ContextClient {
      * @throws IOException 
      *
      */
-    private void processIn(ClientChatos client) throws IOException {
+    private void processIn(ClientChatos client, SelectionKey key) throws IOException {
     	for(;;){
     		Reader.ProcessStatus status = reader.process(bbin);
     	    switch (status){
      	      case DONE:
      	          Data value = reader.get();
-     	          value.decode(client);
+     	          value.decode(client, key);
      	          reader.reset();
      	          break;
      	      case REFILL:
@@ -120,12 +120,12 @@ public class ContextClient {
      *
      * @throws IOException
      */
-    public void doRead(ClientChatos client) throws IOException {
+    public void doRead(ClientChatos client, SelectionKey key) throws IOException {
     	if (sc.read(bbin)==-1) {
             System.out.println("read raté");
             closed=true;
         }
-        processIn(client);
+        processIn(client, key);
         updateInterestOps();
     }
 

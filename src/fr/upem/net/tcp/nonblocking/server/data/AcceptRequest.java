@@ -66,7 +66,7 @@ public class AcceptRequest extends RequestOperation{
     }
 
 	@Override
-	public void decode(ClientChatos client) throws IOException {
+	public void decode(ClientChatos client, SelectionKey key) throws IOException {
 		Login login;
 		if(client.getLogin().equals(getLoginRequester())){
 			login = getLoginTarget();

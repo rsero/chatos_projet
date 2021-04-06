@@ -38,7 +38,7 @@ public class RefuseRequest extends RequestOperation {
     }
 
     @Override
-    public void decode(ClientChatos client) {
+    public void decode(ClientChatos client, SelectionKey key) {
     	System.out.println(this);
     }
 
