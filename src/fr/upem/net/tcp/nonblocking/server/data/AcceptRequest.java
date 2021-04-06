@@ -93,4 +93,16 @@ public class AcceptRequest extends RequestOperation{
 	public SelectionKey getKeyTarget() {
 		return keyClientTwo;
 	}
+
+	public boolean containsKey(SelectionKey key) {
+		return key.equals(keyClientOne) || key.equals(keyClientTwo);
+	}
+
+	public SelectionKey findKey(SelectionKey keyTarget) {
+		if(keyTarget.equals(keyClientOne))
+			return keyClientTwo;
+		if(keyTarget.equals(keyClientTwo))
+			return keyClientOne;
+		return null;
+	}
 }

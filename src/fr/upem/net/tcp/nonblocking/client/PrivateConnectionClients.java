@@ -91,6 +91,7 @@ public class PrivateConnectionClients {
 				request = "GET / HTTP/1.1\r\n"
 				        + "Host: " + getURL(directory + "/" + file) + "\r\n"
 				        + "\r\n";
+				System.out.println(request);
 				var bb = Optional.of(charsetASCII.encode(request));
 				queueMessage(bb);
 			} catch (MalformedURLException e) {
@@ -98,5 +99,9 @@ public class PrivateConnectionClients {
 			}
 			removeFileToSend(file);
 		}
+	}
+
+	public boolean containsKey(SelectionKey key) {	
+		return privateContext != null && privateContext.equals(key.attachment());
 	}
 }

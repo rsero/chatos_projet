@@ -286,4 +286,14 @@ public class ClientChatos {
 			}
 		}
 	}
+
+	public boolean isConnectionPrivate(SelectionKey key) {
+		for(var privateClient : hashLoginFile.values()) {
+			if(privateClient.containsKey(key)) {
+				if(privateClient.connectionReady())
+					return true;
+			}
+		}
+		return false;
+	}
 }

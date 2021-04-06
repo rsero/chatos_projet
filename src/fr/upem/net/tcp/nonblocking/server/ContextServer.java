@@ -4,6 +4,7 @@ import fr.upem.net.tcp.nonblocking.server.data.AcceptRequest;
 import fr.upem.net.tcp.nonblocking.server.data.Data;
 import fr.upem.net.tcp.nonblocking.server.data.Login;
 import fr.upem.net.tcp.nonblocking.server.reader.InstructionReader;
+import fr.upem.net.tcp.nonblocking.server.reader.PrivateConnexionTransmissionReader;
 import fr.upem.net.tcp.nonblocking.server.reader.Reader;
 
 import java.io.IOException;
@@ -22,6 +23,7 @@ public class ContextServer {
     private final SocketChannel sc;
     private final Queue<Data> queue = new LinkedList<>();
     private InstructionReader reader = new InstructionReader();
+    private PrivateConnexionTransmissionReader privateConnexionTransmissionReader = new PrivateConnexionTransmissionReader();
     private boolean closed = false;
     private final ByteBuffer bbin = ByteBuffer.allocate(BUFFER_SIZE);
     private final ByteBuffer bbout = ByteBuffer.allocate(BUFFER_SIZE);
@@ -73,12 +75,25 @@ public class ContextServer {
 
     private void processIn(SelectionKey key) throws IOException {
     	for(;;) {
-    		Reader.ProcessStatus status = reader.process(bbin);
+    		boolean connectionPrivate = server.isConnectionPrivate(key);
+    		Reader.ProcessStatus status;
+    		if(connectionPrivate) {
+    			status = privateConnexionTransmissionReader.process(bbin);
+    		}else {
+    			status = reader.process(bbin);
+    		}
+    		
 	        switch (status) {
 	            case DONE:
-	                var data = (Data) reader.get();
-	                server.broadcast(data, this, key);
-	                reader.reset();
+	            	Data data;
+	            	if(connectionPrivate) {
+	            		data = (Data) privateConnexionTransmissionReader.get();
+	            		privateConnexionTransmissionReader.reset();
+	            	}else {
+	            		data = (Data) reader.get();
+	            		reader.reset();
+	            	}
+	                server.broadcast(data, this, key);            
 	                break;
 	            case REFILL:
 	                return;
@@ -127,5 +142,9 @@ public class ContextServer {
 
 	public List<ContextServer> contextPublic() {
 		return server.contextPublic();
+	}
+
+	public SelectionKey findKeyTarget(SelectionKey keyTarget) {
+		return server.findKeyTarget(keyTarget);
 	}
 }

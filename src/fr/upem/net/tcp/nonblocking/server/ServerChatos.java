@@ -23,8 +23,8 @@ import fr.upem.net.tcp.nonblocking.server.data.Data;
 import fr.upem.net.tcp.nonblocking.server.data.Login;
 
 public class ServerChatos {
-    private final HashMap<String, ContextServer> clients = new HashMap<>();
-    private final HashMap<Long, AcceptRequest> privateConnexion = new HashMap<>();
+    private final HashMap<String, ContextServer> clients = new HashMap<>();//Connexion public des clients
+    private final HashMap<Long, AcceptRequest> privateConnexion = new HashMap<>();//Connexion privée des clients
     private final ServerSocketChannel serverSocketChannel;
     private final Selector selector;
     private static Logger logger = Logger.getLogger(ServerChatos.class.getName());
@@ -118,6 +118,15 @@ public class ServerChatos {
         return List.of(privateClient.getKeyRequester(), privateClient.getKeyTarget());
     }
 
+    public boolean isConnectionPrivate(SelectionKey key) {
+    	for(var privateConnection : privateConnexion.values()) {
+    		if(privateConnection.containsKey(key)) {
+    			return true;
+    		}
+    	}
+    	return false;
+    }
+    
     public long definedConnectId(AcceptRequest acceptRequest) {
         Random rand = new Random();
         while(true) {
@@ -205,6 +214,17 @@ public class ServerChatos {
 
     public List<ContextServer> contextPublic() {
 		return clients.values().stream().collect(Collectors.toList());
+	}
+    
+
+	public SelectionKey findKeyTarget(SelectionKey keyTarget) {
+		for(var privateConnection : privateConnexion.values()) {
+			SelectionKey keyFind = privateConnection.findKey(keyTarget);
+    		if(keyFind != null) {
+    			return keyFind;
+    		}
+    	}
+    	return null;
 	}
 
 

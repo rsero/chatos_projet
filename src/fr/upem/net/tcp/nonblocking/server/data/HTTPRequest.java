@@ -9,33 +9,25 @@ import fr.upem.net.tcp.nonblocking.client.ClientChatos;
 import fr.upem.net.tcp.nonblocking.server.ContextServer;
 import fr.upem.net.tcp.nonblocking.server.ServerChatos;
 
-public class PrivateConnexionTransmission implements Data  {
-	
-    private final ByteBuffer bbin;
+public class HTTPRequest implements Data {
 
-    public PrivateConnexionTransmission(ByteBuffer buffer) {
-		this.bbin = buffer;
-	}
-    
 	@Override
 	public boolean processOut(ByteBuffer bbout, ContextServer context, ServerChatos server)
 			throws IOException, IOException {
-		if(bbin.remaining() > bbout.remaining()) {
-            return false;
-        }
-		bbout.put(bbin);
-    	return true;
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 	@Override
 	public void decode(ClientChatos server, SelectionKey key) throws IOException {
+		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
 	public void broadcast(Selector selector, ContextServer context, SelectionKey key) throws IOException {
-		var keyTarget = context.findKeyTarget(key);
-		((ContextServer) keyTarget.attachment()).queueMessage(this);
+		// TODO Auto-generated method stub
+		
 	}
 
 }

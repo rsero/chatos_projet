@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.Charset;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -20,6 +21,7 @@ public class ContextClient {
     final private ByteBuffer bbout = ByteBuffer.allocate(BUFFER_SIZE);
     final private Queue<ByteBuffer> queue = new LinkedList<>(); // buffers read-mode
     private InstructionReader reader = new InstructionReader();
+    //private HTTPReader httpReader = new HTTPReader();
     private boolean closed = false;
 
     public ContextClient(SelectionKey key){
@@ -37,12 +39,28 @@ public class ContextClient {
      */
     private void processIn(ClientChatos client, SelectionKey key) throws IOException {
     	for(;;){
-    		Reader.ProcessStatus status = reader.process(bbin);
+    		Reader.ProcessStatus status;
+    		boolean isPrivateConnection = client.isConnectionPrivate(key);
+    		if(isPrivateConnection) {
+    			//status = 
+    			System.out.println("ca marche");
+    			System.out.println(">>>" + bbin);
+    			System.out.println(Charset.forName("ASCII").decode(bbin));
+    			System.out.println("ca marche");
+    			return;
+    		}else {
+    			status = reader.process(bbin);
+    		}
+    		
     	    switch (status){
      	      case DONE:
-     	          Data value = reader.get();
-     	          value.decode(client, key);
-     	          reader.reset();
+     	    	 if(isPrivateConnection) {
+     	    		 return;
+     	    	 }else {
+     	    		Data value = reader.get();
+       	            value.decode(client, key);
+       	            reader.reset();
+     	    	 }
      	          break;
      	      case REFILL:
      	          return;
