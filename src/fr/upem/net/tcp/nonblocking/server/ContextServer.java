@@ -1,20 +1,21 @@
 package fr.upem.net.tcp.nonblocking.server;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.SocketChannel;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
-
 import fr.upem.net.tcp.nonblocking.server.data.AcceptRequest;
 import fr.upem.net.tcp.nonblocking.server.data.Data;
 import fr.upem.net.tcp.nonblocking.server.data.Login;
 import fr.upem.net.tcp.nonblocking.server.reader.InstructionReader;
 import fr.upem.net.tcp.nonblocking.server.reader.Reader;
 
-public class Context {
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+
+public class ContextServer {
     private static int BUFFER_SIZE = 1024;
     private final ServerChatos server;
     private final SelectionKey key;
@@ -25,7 +26,7 @@ public class Context {
     private final ByteBuffer bbin = ByteBuffer.allocate(BUFFER_SIZE);
     private final ByteBuffer bbout = ByteBuffer.allocate(BUFFER_SIZE);
 
-    public Context(ServerChatos server, SelectionKey key) {
+    public ContextServer(ServerChatos server, SelectionKey key) {
         this.server=server;
         this.key=key;
         this.sc = (SocketChannel) key.channel();
@@ -103,7 +104,7 @@ public class Context {
         updateInterestOps();
     }
     
-    public Context findContextClient(Login login) {
+    public ContextServer findContextClient(Login login) {
     	return server.findContext(login);
     }
 
@@ -115,7 +116,7 @@ public class Context {
 		return server.connectionReady(connectId);
 	}
 
-	public List<Context> findContext(Long connectId) {
+	public List<ContextServer> findContext(Long connectId) {
 		return server.findContext(connectId);
 	}
 

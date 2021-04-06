@@ -1,5 +1,6 @@
 package fr.upem.net.tcp.nonblocking.server.reader;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import fr.upem.net.tcp.nonblocking.server.data.PrivateLogin;
@@ -38,7 +39,7 @@ public class PrivateLoginReader implements Reader<PrivateLogin> {
 	}
 
 	@Override
-	public PrivateLogin get() {
+	public PrivateLogin get() throws IOException {
 		if (state != State.DONE) {
 			throw new IllegalStateException();
 		}

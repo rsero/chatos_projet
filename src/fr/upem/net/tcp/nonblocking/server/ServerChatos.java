@@ -22,7 +22,7 @@ import fr.upem.net.tcp.nonblocking.server.data.Data;
 import fr.upem.net.tcp.nonblocking.server.data.Login;
 
 public class ServerChatos {
-    private final HashMap<String, Context> clients = new HashMap<>();
+    private final HashMap<String, ContextServer> clients = new HashMap<>();
     private final HashMap<Long, AcceptRequest> privateConnexion = new HashMap<>();
     private final ServerSocketChannel serverSocketChannel;
     private final Selector selector;
@@ -34,7 +34,7 @@ public class ServerChatos {
         selector = Selector.open();
     }
 
-    public boolean addClient(String login, Context context){
+    public boolean addClient(String login, ContextServer context){
         if(clients.putIfAbsent(login, context) == null){
             return true;
         }
@@ -73,10 +73,10 @@ public class ServerChatos {
         }
         try {
             if (key.isValid() && key.isWritable()) {
-                ((Context) key.attachment()).doWrite();
+                ((ContextServer) key.attachment()).doWrite();
             }
             if (key.isValid() && key.isReadable()) {
-                ((Context) key.attachment()).doRead();
+                ((ContextServer) key.attachment()).doRead();
             }
         } catch (IOException e) {
             logger.log(Level.INFO, "Connection closed with client due to IOException", e);
@@ -92,7 +92,7 @@ public class ServerChatos {
         }
         client.configureBlocking(false);
         var clientKey = client.register(selector, SelectionKey.OP_READ);
-        clientKey.attach(new Context(this, clientKey));
+        clientKey.attach(new ContextServer(this, clientKey));
     }
 
     private void silentlyClose(SelectionKey key) {
@@ -104,15 +104,15 @@ public class ServerChatos {
         }
     }
     
-    public void broadcast(Data data, Context context) throws IOException {
+    public void broadcast(Data data, ContextServer context) throws IOException {
     	data.broadcast(selector, context);
     }
 
-    public Context findContext(Login login) {
+    public ContextServer findContext(Login login) {
         return clients.get(login.getLogin());
     }
     
-    public List<Context> findContext(Long connectId) {
+    public List<ContextServer> findContext(Long connectId) {
     	var privateClient = privateConnexion.get(connectId);
         return List.of(findContext(privateClient.getLoginRequester()), findContext(privateClient.getLoginTarget()));
     }
@@ -132,16 +132,9 @@ public class ServerChatos {
 	}
 
     public static void main(String[] args) throws NumberFormatException, IOException {
-//        if (args.length!=1){
-//            usage();
-//            return;
-//        }
         new ServerChatos(7777).launch();
     }
 
-//    private static void usage(){
-//        System.out.println("Usage : ServerChatos port");
-//    }
 	private String interestOpsToString(SelectionKey key) {
 	    if (!key.isValid()) {
 	        return "CANCELLED";

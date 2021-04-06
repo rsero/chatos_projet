@@ -5,14 +5,14 @@ import java.nio.ByteBuffer;
 import java.nio.channels.Selector;
 
 import fr.upem.net.tcp.nonblocking.client.ClientChatos;
-import fr.upem.net.tcp.nonblocking.server.Context;
+import fr.upem.net.tcp.nonblocking.server.ContextServer;
 import fr.upem.net.tcp.nonblocking.server.ServerChatos;
 
 public class PrivateLogin implements Data {
 
 	private final Long connectId;
 	
-	public PrivateLogin(Long connectId) {
+	public PrivateLogin(Long connectId) throws IOException {
 		this.connectId = connectId;
 	}
 	
@@ -35,8 +35,9 @@ public class PrivateLogin implements Data {
     }
 
 	@Override
-	public boolean processOut(ByteBuffer bbout, Context context, ServerChatos server) throws IOException {
+	public boolean processOut(ByteBuffer bbout, ContextServer context, ServerChatos server) throws IOException {
 		var bb = encodeResponse(bbout);
+		
     	if (bb==null) {
     		return false;
     	}    	
@@ -49,13 +50,14 @@ public class PrivateLogin implements Data {
 	}
 
 	@Override
-	public void broadcast(Selector selector, Context context) throws IOException {
+	public void broadcast(Selector selector, ContextServer context) throws IOException {
 		context.updatePrivateConnexion(connectId);
+		System.out.println("broadcast entre");
 		if(!context.connectionReady(connectId))
 			return;
+		System.out.println("broadcast sort");
 		var contexts = context.findContext(connectId);
         contexts.get(0).queueMessage(this);
         contexts.get(1).queueMessage(this);
 	}
-
 }

@@ -7,7 +7,7 @@ import java.nio.charset.Charset;
 
 
 import fr.upem.net.tcp.nonblocking.client.ClientChatos;
-import fr.upem.net.tcp.nonblocking.server.Context;
+import fr.upem.net.tcp.nonblocking.server.ContextServer;
 import fr.upem.net.tcp.nonblocking.server.ServerChatos;
 
 public class PrivateMessage implements Data {
@@ -28,7 +28,7 @@ public class PrivateMessage implements Data {
     }
 
     @Override
-    public boolean processOut(ByteBuffer bbout, Context context, ServerChatos server) throws IOException {
+    public boolean processOut(ByteBuffer bbout, ContextServer context, ServerChatos server) throws IOException {
     	var bb = encode(bbout);
     	if (bb==null) {
     		return false;
@@ -57,7 +57,7 @@ public class PrivateMessage implements Data {
     }
 
     @Override
-    public void broadcast(Selector selector, Context context) throws IOException {
+    public void broadcast(Selector selector, ContextServer context) throws IOException {
     		var ctx = context.findContextClient(loginTarget);
             ctx.queueMessage(this);
     }

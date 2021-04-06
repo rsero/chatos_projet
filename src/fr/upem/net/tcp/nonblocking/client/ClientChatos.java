@@ -5,174 +5,27 @@ import java.io.UncheckedIOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channel;
+import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Optional;
-import java.util.Queue;
 import java.util.Scanner;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Logger;
 
-import fr.upem.net.tcp.nonblocking.server.data.Data;
 import fr.upem.net.tcp.nonblocking.server.data.Login;
 import fr.upem.net.tcp.nonblocking.server.data.MessageGlobal;
-import fr.upem.net.tcp.nonblocking.server.data.PrivateConnectionClients;
 import fr.upem.net.tcp.nonblocking.server.data.PrivateLogin;
 import fr.upem.net.tcp.nonblocking.server.data.PrivateMessage;
 import fr.upem.net.tcp.nonblocking.server.data.PrivateRequest;
-import fr.upem.net.tcp.nonblocking.server.reader.InstructionReader;
-import fr.upem.net.tcp.nonblocking.server.reader.Reader;
 
 public class ClientChatos {
 
-    static private class Context {
-
-        final private SelectionKey key;
-        final private SocketChannel sc;
-        final private ByteBuffer bbin = ByteBuffer.allocate(BUFFER_SIZE);
-        final private ByteBuffer bbout = ByteBuffer.allocate(BUFFER_SIZE);
-        final private Queue<ByteBuffer> queue = new LinkedList<>(); // buffers read-mode
-        private InstructionReader reader = new InstructionReader();
-        private boolean closed = false;
-
-        private Context(SelectionKey key){
-            this.key = key;
-            this.sc = (SocketChannel) key.channel();
-        }
-
-        /**
-         * Process the content of bbin
-         *
-         * The convention is that bbin is in write-mode before the call
-         * to process and after the call
-         *
-         */
-        private void processIn(ClientChatos client) {
-        	for(;;){
-        	    Reader.ProcessStatus status = reader.process(bbin);
-         	    switch (status){
-         	      case DONE:
-         	          Data value = reader.get();
-         	          value.decode(client);
-         	          reader.reset();
-         	          break;
-         	      case REFILL:
-         	          return;
-         	      case ERROR:
-         	          silentlyClose();
-         	          return;
-         	    }
-         	  }
-        }
-
-        /**
-         * Add a message to the message queue, tries to fill bbOut and updateInterestOps
-         *
-         * @param bb
-         */
-        private void queueMessage(ByteBuffer bb) {
-            queue.add(bb);
-            processOut();
-            updateInterestOps();
-        }
-
-        /**
-         * Try to fill bbout from the message queue
-         *
-         */
-        private void processOut() {
-            while (!queue.isEmpty()){
-                var bb = queue.peek();
-                if (bb.remaining()<=bbout.remaining()){
-                    queue.remove();
-                    bbout.put(bb);
-                }
-            }
-        }
-
-        /**
-         * Update the interestOps of the key looking
-         * only at values of the boolean closed and
-         * of both ByteBuffers.
-         *
-         * The convention is that both buffers are in write-mode before the call
-         * to updateInterestOps and after the call.
-         * Also it is assumed that process has been be called just
-         * before updateInterestOps.
-         */
-
-        private void updateInterestOps() {
-            var interesOps=0;
-            if (!closed && bbin.hasRemaining()){
-                interesOps=interesOps|SelectionKey.OP_READ;
-            }
-            if (bbout.position()!=0){
-                interesOps|=SelectionKey.OP_WRITE;
-            }
-            if (interesOps==0){
-                silentlyClose();
-                return;
-            }
-            key.interestOps(interesOps);
-        }
-
-        private void silentlyClose() {
-            try {
-                sc.close();
-            } catch (IOException e) {
-                // ignore exception
-            }
-        }
-
-        /**
-         * Performs the read action on sc
-         *
-         * The convention is that both buffers are in write-mode before the call
-         * to doRead and after the call
-         *
-         * @throws IOException
-         */
-        private void doRead(ClientChatos client) throws IOException {
-        	if (sc.read(bbin)==-1) {
-                System.out.println("read raté");
-                closed=true;
-            }
-            processIn(client);
-            updateInterestOps();
-        }
-
-        /**
-         * Performs the write action on sc
-         *
-         * The convention is that both buffers are in write-mode before the call
-         * to doWrite and after the call
-         *
-         * @throws IOException
-         */
-
-        private void doWrite() throws IOException {
-            bbout.flip();
-            sc.write(bbout);
-            bbout.compact();
-            processOut();
-            updateInterestOps();
-        }
-
-        public void doConnect() throws IOException {
-        	if (!sc.finishConnect())
-        	    return; // the selector gave a bad hint
-        	key.interestOps(SelectionKey.OP_READ);
-        }
-    }
-
     static private int BUFFER_SIZE = 1024;
     static private Logger logger = Logger.getLogger(ClientChatos.class.getName());
-
 
     private final SocketChannel sc;
     private final Selector selector;
@@ -184,7 +37,7 @@ public class ClientChatos {
     private final ArrayBlockingQueue<String> commandQueue = new ArrayBlockingQueue<>(10);
     private final HashMap<Login, PrivateRequest> hashPrivateRequest = new HashMap<>();
     private final HashMap<Login, PrivateConnectionClients> hashLoginFile = new HashMap<>();
-    private Context uniqueContext;
+    private ContextClient uniqueContext;
     private final Object lock = new Object();
 
     public ClientChatos(InetSocketAddress serverAddress, String directory) throws IOException {
@@ -239,9 +92,10 @@ public class ClientChatos {
         }
     }
     
-    public void addConnect_id(Long connectId, Login loginTarget) {
-    	hashLoginFile.putIfAbsent(loginTarget, new PrivateConnectionClients());
+    public void addConnect_id(Long connectId, Login loginTarget) throws IOException {
+    	hashLoginFile.putIfAbsent(loginTarget, new PrivateConnectionClients(this));
     	hashLoginFile.get(loginTarget).addConnectId(connectId);
+    	hashLoginFile.get(loginTarget).launch(serverAddress, selector);
     }
 
     public Optional<ByteBuffer> parseInput(String input) throws IOException {
@@ -302,6 +156,12 @@ public class ClientChatos {
                         		for(var value : hashLoginFile.values()) {
                         			if(value.correctConnectId(connect_id)) {
                         				correctId = true;
+                        				var privateLogin = new PrivateLogin(connect_id);
+                                		bb = Optional.of(privateLogin.encode(req));
+                                		if (!bb.isPresent()) {
+                                            break;
+                                        }
+                                		value.queueMessage(bb);
                         				continue;
                         			}
                         		}
@@ -310,8 +170,7 @@ public class ClientChatos {
                         			bb = Optional.empty();
                         			break;
                         		}
-                        		var privateLogin = new PrivateLogin(connect_id);
-                        		bb = Optional.of(privateLogin.encode(req));
+                        		bb = Optional.empty();//On remets a vide parce que le context principal n'envoie rien
                         	}catch(NumberFormatException nb) {
                         		System.out.println("Usage : /id connect_id");
                         		bb = Optional.empty();
@@ -325,7 +184,7 @@ public class ClientChatos {
                             }
                         	var targetLogin = new Login(content);
                             var privateRequest = new PrivateRequest(login, targetLogin);
-                            hashLoginFile.putIfAbsent(targetLogin, new PrivateConnectionClients());
+                            hashLoginFile.putIfAbsent(targetLogin, new PrivateConnectionClients(this));
                             hashLoginFile.get(targetLogin).addFileToSend(elements[1]);
                             bb = Optional.of(privateRequest.encodeAskPrivateRequest(req));
                             break;
@@ -342,7 +201,7 @@ public class ClientChatos {
     public void launch() throws IOException {
         sc.configureBlocking(false);
         var key = sc.register(selector, SelectionKey.OP_CONNECT);
-        uniqueContext = new Context(key);
+        uniqueContext = new ContextClient(key);
         key.attach(uniqueContext);
         sc.connect(serverAddress);
         console.start();
@@ -359,13 +218,14 @@ public class ClientChatos {
     private void treatKey(SelectionKey key) {
         try {
             if (key.isValid() && key.isConnectable()) {
-                uniqueContext.doConnect();
+                ((ContextClient) key.attachment()).doConnect();
             }
             if (key.isValid() && key.isWritable()) {
-                uniqueContext.doWrite();
+            	((ContextClient) key.attachment()).doWrite();
+            	
             }
             if (key.isValid() && key.isReadable()) {
-                uniqueContext.doRead(this);
+            	((ContextClient) key.attachment()).doRead(this);
             }
         } catch(IOException ioe) {
             // lambda call in select requires to tunnel IOException
@@ -412,6 +272,5 @@ public class ClientChatos {
 		synchronized (lock) {
 			hashPrivateRequest.put(privateRequest.getLoginRequester(), privateRequest);
 		}
-		
 	}
 }

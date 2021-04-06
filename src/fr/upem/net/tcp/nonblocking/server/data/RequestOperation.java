@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
-import fr.upem.net.tcp.nonblocking.server.Context;
+import fr.upem.net.tcp.nonblocking.server.ContextServer;
 import fr.upem.net.tcp.nonblocking.server.ServerChatos;
 
 public abstract class RequestOperation implements Data{
@@ -25,11 +25,11 @@ public abstract class RequestOperation implements Data{
     	return true;
     }
     
-    Context findContextRequester(Context context) {
+    ContextServer findContextRequester(ContextServer context) {
     	return context.findContextClient(loginRequester);
     }
     
-    Context findContextTarget(Context context) {
+    ContextServer findContextTarget(ContextServer context) {
     	return context.findContextClient(loginTarget);
     }
     

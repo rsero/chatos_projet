@@ -1,5 +1,6 @@
 package fr.upem.net.tcp.nonblocking.server.reader;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import fr.upem.net.tcp.nonblocking.server.data.Data;
@@ -24,7 +25,6 @@ public class InstructionReader implements Reader<Data> {
 			break;
 		case 1://Identification accepted
 		case 2://identification refused
-		case 10://Private connection established
 			reader = byteReader;
 			state = State.DONE;
 			break;
@@ -56,13 +56,17 @@ public class InstructionReader implements Reader<Data> {
 			reader = new PrivateLoginReader();
 			state = State.WAITING_DATA;
 			break;
+		case 10://Private connection established
+			reader = new PrivateLoginReader();
+			state = State.WAITING_DATA;
+			break;
 		default:
 			break;
 		}
 	}
 	
 	@Override
-	public ProcessStatus process(ByteBuffer bb) {
+	public ProcessStatus process(ByteBuffer bb) throws IOException {
 		if (state == State.DONE || state == State.ERROR) {
 			throw new IllegalStateException();
 		}
