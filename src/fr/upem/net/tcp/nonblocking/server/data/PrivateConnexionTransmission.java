@@ -13,17 +13,15 @@ public class PrivateConnexionTransmission implements Data  {
 	
     private final ByteBuffer bbin;
 
-    public PrivateConnexionTransmission(ByteBuffer buffer) {
-		this.bbin = buffer;
+    public PrivateConnexionTransmission(ByteBuffer bbin) {
+		this.bbin = bbin;
 	}
     
 	@Override
 	public boolean processOut(ByteBuffer bbout, ContextServer context, ServerChatos server)
 			throws IOException, IOException {
-		System.out.println(">>> in " + bbin);
-		System.out.println(bbout);
-		if(bbin.remaining() > bbout.remaining()) {
-			System.out.println("hhhh");
+    	bbout.clear();
+		if(bbin.remaining() < bbout.remaining()) {
             return false;
         }
 		bbout.put(bbin);
@@ -38,7 +36,12 @@ public class PrivateConnexionTransmission implements Data  {
 	@Override
 	public void broadcast(Selector selector, ContextServer context, SelectionKey key) throws IOException {
 		var keyTarget = context.findKeyTarget(key);
+		System.out.println("Key target >>> "+keyTarget);
 		((ContextServer) keyTarget.attachment()).queueMessage(this);
+	}
+
+	public ByteBuffer getbb(){
+		return bbin;
 	}
 
 }

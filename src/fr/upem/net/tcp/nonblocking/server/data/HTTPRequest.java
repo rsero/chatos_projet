@@ -26,7 +26,7 @@ public class HTTPRequest implements Data {
 
 	@Override
 	public void decode(ClientChatos server, SelectionKey key) throws IOException {
-		// TODO Auto-generated method stub
+		System.out.println(file);
 		
 	}
 

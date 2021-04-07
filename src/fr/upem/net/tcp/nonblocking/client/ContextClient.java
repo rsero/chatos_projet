@@ -41,27 +41,26 @@ public class ContextClient {
 	 */
 	private void processIn(ClientChatos client, SelectionKey key) throws IOException {
 		System.out.println("processIn");
-		for (;;) {
-			System.out.println("je reviens");
+		
+		for (var cpt =0 ; ; cpt++) {
+			boolean isPrivateConnection = client.isConnectionPrivate(key);
 			Reader.ProcessStatus status;
-//			boolean isPrivateConnection = client.isConnectionPrivate(key);
-//			if (isPrivateConnection) {
-//				status = httpReader.process(bbin);
-//			} else {
+			if (isPrivateConnection && cpt == 0) {
+				status = httpReader.process(bbin);
+			} else {
 				status = reader.process(bbin);
-//			}
-
+			}
 			switch (status) {
 			case DONE:
-//				if (isPrivateConnection) {
-//					httpReader.reset();
-//				} else {
-					Data value = reader.get();
-					System.out.println("avant");
+				if (isPrivateConnection && cpt == 0) {
+					Data value = httpReader.get();
 					value.decode(client, key);
-					System.out.println("apres");
+					httpReader.reset();
+				} else {
+					Data value = reader.get();
+					value.decode(client, key);
 					reader.reset();
-//				}
+				}
 				break;
 			case REFILL:
 				return;
