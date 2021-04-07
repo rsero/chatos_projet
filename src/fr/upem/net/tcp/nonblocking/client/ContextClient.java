@@ -4,12 +4,11 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.Charset;
 import java.util.LinkedList;
 import java.util.Queue;
 
 import fr.upem.net.tcp.nonblocking.server.data.Data;
-import fr.upem.net.tcp.nonblocking.server.reader.HTTPReader;
+import fr.upem.net.tcp.nonblocking.server.reader.HTTPRequestReader;
 import fr.upem.net.tcp.nonblocking.server.reader.InstructionReader;
 import fr.upem.net.tcp.nonblocking.server.reader.Reader;
 
@@ -22,7 +21,7 @@ public class ContextClient {
 	final private ByteBuffer bbout = ByteBuffer.allocate(BUFFER_SIZE);
 	final private Queue<ByteBuffer> queue = new LinkedList<>(); // buffers read-mode
 	private InstructionReader reader = new InstructionReader();
-	private HTTPReader httpReader = new HTTPReader();
+	private HTTPRequestReader httpReader = new HTTPRequestReader();
 	private boolean closed = false;
 
 	public ContextClient(SelectionKey key) {

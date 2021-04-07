@@ -82,8 +82,8 @@ public class PrivateConnectionClients {
 			var file = files.get(0);
 			String request;
 			try {
-				request = "GET / HTTP/1.1\r\n"
-				        + "Host: " + getURL(directory + "/" + file) + "\r\n"
+				request = "GET /"+ file + " HTTP/1.1\r\n"
+				        + "Host: " + getURL(directory) + "\r\n"
 				        + "\r\n";
 				System.out.println(request);
 				var bb = charsetASCII.encode(request);
