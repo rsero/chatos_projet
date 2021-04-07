@@ -174,7 +174,7 @@ public class ClientChatos {
 	private Optional<ByteBuffer> parseRequestPrivateConnection(ByteBuffer req, String data, String content,
 			String[] elements) throws IOException {
 		if (data.isEmpty()) {
-			System.out.println("Usage : /login data");
+			System.out.println("Usage : /login file");
 			return Optional.empty();
 		}
 		var targetLogin = new Login(content);
