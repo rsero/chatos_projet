@@ -72,13 +72,13 @@ public class ServerChatos {
             // lambda call in select requires to tunnel IOException
             throw new UncheckedIOException(ioe);
         }
-        try {
+        try {System.out.println("debut test1");printSelectedKey(key);System.out.println("fin test1");
             if (key.isValid() && key.isWritable()) {
                 ((ContextServer) key.attachment()).doWrite();
-            }
+            }System.out.println("debut test2");printSelectedKey(key);System.out.println("fin test2");
             if (key.isValid() && key.isReadable()) {
                 ((ContextServer) key.attachment()).doRead(key);
-            }
+            }System.out.println("debut test3");printSelectedKey(key);System.out.println("fin test3");
         } catch (IOException e) {
             logger.log(Level.INFO, "Connection closed with client due to IOException", e);
             silentlyClose(key);

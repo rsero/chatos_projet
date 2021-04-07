@@ -43,7 +43,6 @@ public class ContextServer {
             newInterestOps = newInterestOps | SelectionKey.OP_WRITE;
         }
         if (newInterestOps == 0) {
-        	System.out.println("o,n ferme");
         	server.close(this);
             silentlyClose();
             return;
@@ -76,49 +75,49 @@ public class ContextServer {
     }
 
     private void processIn(SelectionKey key) throws IOException {
-//    	System.out.println("on rentre dans le process in");
-//    	boolean connectionPrivate = server.isConnectionPrivate(key);
-    	for(;;) {
-    		System.out.println("on boucle");
-    		Reader.ProcessStatus status;
-//    		if(connectionPrivate) {
-//    			System.out.println("privéee1");
-//    			status = privateConnexionTransmissionReader.process(bbin);
-//    		}else {
-//    			System.out.println("pasprivéee1");
-    			status = reader.process(bbin);
-//    		}
-    		
-	        switch (status) {
-	            case DONE:
-	            	Data data;
-//	            	if(connectionPrivate) {
-//	            		System.out.println("privéee2");
-//	        			data = (Data) privateConnexionTransmissionReader.get();
-//	        			System.out.println(data);
-//	            		privateConnexionTransmissionReader.reset();
-//	            		System.out.println("commence broad");
-//		                server.broadcast(data, this, key);   
-//		                System.out.println("fin broad");
-//	            		return;
-//	            	} else {
-	            		System.out.println("pasprivéee2");
-	        			data = (Data) reader.get();
-	            		reader.reset();
-	            		System.out.println("commence broad");
-		                server.broadcast(data, this, key);   
-		                System.out.println("fin broad");
-//	            	}
-//	            	
-	                break;
-	            case REFILL:
-	            	System.out.println("je refill");
-	                return;
-	            case ERROR:
-	                silentlyClose();
-	                return;
-	        }
-    	}
+    	boolean connectionPrivate = server.isConnectionPrivate(key);
+        for (var cpt =0 ; ; cpt++) {
+            
+            Reader.ProcessStatus status;
+            if (connectionPrivate && cpt == 0) {
+                System.out.println("privéee1");
+                status = privateConnexionTransmissionReader.process(bbin);
+            } else {
+                System.out.println("pasprivéee1");
+                status = reader.process(bbin);
+            }
+                switch (status) {
+                    case DONE:
+                        Data data;
+                        if (connectionPrivate && cpt == 0) {
+                            System.out.println("privéee2");
+                            data = (Data) privateConnexionTransmissionReader.get();
+                            System.out.println(data);
+                            privateConnexionTransmissionReader.reset();
+                            System.out.println("commence broad");
+                            server.printKeys();
+                            server.broadcast(data, this, key);
+                            server.printKeys();
+                            System.out.println("fin broad");
+                            return;
+                        } else {
+                            System.out.println("pasprivéee2");
+                            data = (Data) reader.get();
+                            reader.reset();
+                            System.out.println("commence broad");
+                            server.broadcast(data, this, key);
+                            System.out.println("fin broad");
+                        }
+                        break;
+                    case REFILL:
+                        System.out.println("je refill");
+                        return;
+                    case ERROR:
+                        silentlyClose();
+                        return;
+                }
+
+        }
     }
 
     private void processOut() throws IOException {

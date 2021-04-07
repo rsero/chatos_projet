@@ -13,34 +13,22 @@ public class PrivateConnexionTransmissionReader implements Reader<PrivateConnexi
 
     private static int BUFFER_SIZE = 1024;
     private State state = State.WAITING;
-    private final ByteBuffer internalbb = ByteBuffer.allocate(BUFFER_SIZE); // write-mode
+    private ByteBuffer internalbb = ByteBuffer.allocate(BUFFER_SIZE); // write-mode
     private PrivateConnexionTransmission value;
 
     @Override
     public ProcessStatus process(ByteBuffer bb) {
         if (state == State.DONE || state == State.ERROR) {
-            throw new IllegalStateException();
+            throw new IllegalStateException("première erreur");
         }
-        if(bb.remaining() != BUFFER_SIZE)
-        	return ProcessStatus.REFILL;
         bb.flip();
         try {
-            if (bb.remaining() <= internalbb.remaining()) {
-                internalbb.put(bb);
-            } else {
-                var oldLimit = bb.limit();
-                bb.limit(internalbb.remaining());
-                internalbb.put(bb);
-                bb.limit(oldLimit);
-            }
+            internalbb.put(bb);
         } finally {
             bb.compact();
         }
-        if (internalbb.hasRemaining()) {
-            return ProcessStatus.REFILL;
-        }
         state = State.DONE;
-        internalbb.compact();
+        internalbb.flip();
         value = new PrivateConnexionTransmission(internalbb);
         return ProcessStatus.DONE;
     }
@@ -48,7 +36,7 @@ public class PrivateConnexionTransmissionReader implements Reader<PrivateConnexi
 	@Override
 	public PrivateConnexionTransmission get() throws IOException {
 		if (state != State.DONE) {
-            throw new IllegalStateException();
+            throw new IllegalStateException("deuxieme erreur");
         }
         return value;
     }

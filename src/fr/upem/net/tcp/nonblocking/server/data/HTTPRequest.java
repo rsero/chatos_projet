@@ -20,13 +20,12 @@ public class HTTPRequest implements Data {
 	@Override
 	public boolean processOut(ByteBuffer bbout, ContextServer context, ServerChatos server)
 			throws IOException, IOException {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public void decode(ClientChatos server, SelectionKey key) throws IOException {
-		// TODO Auto-generated method stub
+		System.out.println(file);
 		
 	}
 

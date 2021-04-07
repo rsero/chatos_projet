@@ -22,6 +22,30 @@ public class HTTPReader implements Reader<HTTPRequest>{
     		return State.WAITING_END;
     	return State.DONE;
     }
+
+	public String readLineCRLF(ByteBuffer buff) throws IOException {
+		var end = false;
+		var sb = new StringBuilder();
+		byte str;
+		char lastchar = 0;
+		while (!end) {
+			buff.flip();
+			while (buff.hasRemaining()) {
+				str = buff.get();
+				if (str == '\n') {
+					if (lastchar == '\r') {
+						end = true;
+						break;
+					}
+				}
+				sb.append((char) str);
+				lastchar = (char) str;
+			}
+			buff.compact();
+		}
+
+		return sb.substring(0, sb.length() - 1);
+	}
     
     private ProcessStatus returnState() {
     	if(state == State.WAITING_FIRTLINE)
@@ -43,7 +67,7 @@ public class HTTPReader implements Reader<HTTPRequest>{
 		var line = str.split("\r\n");
 		for(var i = 0; i < line.length; i++) {
 			state = updateState();
-			if(state == State.WAITING_SECONDLINE) {
+			if(state == State.WAITING_END) {
 				analyzeString(line[i]);
 			}
 		}

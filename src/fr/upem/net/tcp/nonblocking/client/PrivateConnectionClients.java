@@ -28,16 +28,10 @@ public class PrivateConnectionClients {
 	
 	public PrivateConnectionClients(ClientChatos clientChatos, String directory) throws IOException {
 		this.files = new ArrayList<>();
-		//sc = SocketChannel.open();
 		socketChannel = SocketChannel.open();
 		this.clientChatos = clientChatos;
 		this.directory = directory;
 	}
-	
-//	public PrivateConnectionClients(Long connect_id, ClientChatos clientChatos, String directory) throws IOException {
-//		this(clientChatos, directory);
-//		this.connect_id = connect_id;
-//	}
 	
 	public void addConnectId(Long connect_id) {
 		this.connect_id = connect_id;
@@ -64,9 +58,6 @@ public class PrivateConnectionClients {
     }
 
 	public void queueMessage(Optional<ByteBuffer> bb) {
-//		var tmp = charsetASCII.decode(bb.get().flip());
-//		System.out.println("On a encodé ca >>>" + tmp.toString());
-//		var buffer = charsetASCII.encode(tmp.toString());
 		privateContext.queueMessage(bb.get().flip());
 	}
 
