@@ -16,7 +16,7 @@ public class LoginReader implements Reader<Login> {
 	private StringReader stringReader = new StringReader();
 	private Login login;
 
-	public Reader.ProcessStatus process(ByteBuffer bb) {
+	public ProcessStatus process(ByteBuffer bb) {
 		var processlogin = stringReader.process(bb);
 		switch (processlogin) {
 		case DONE:
@@ -44,7 +44,7 @@ public class LoginReader implements Reader<Login> {
 
 	@Override
 	public void reset() {
-		state = LoginReader.State.WAITING_STR;
+		state = State.WAITING_STR;
 		internalbb.clear();
 	}
 }

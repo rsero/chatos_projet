@@ -30,7 +30,7 @@ public class HTTPReaderTest {
 
     /**
      * Test for ReadLineLFCR with a fake server
-     * @throws java.io.IOException
+     * @throws IOException
      */
     /*
     @Test
