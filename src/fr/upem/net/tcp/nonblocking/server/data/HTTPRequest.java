@@ -11,6 +11,12 @@ import fr.upem.net.tcp.nonblocking.server.ServerChatos;
 
 public class HTTPRequest implements Data {
 
+	private final String file;
+	
+	public HTTPRequest(String file) {
+		this.file = file;
+	}
+
 	@Override
 	public boolean processOut(ByteBuffer bbout, ContextServer context, ServerChatos server)
 			throws IOException, IOException {

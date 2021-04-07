@@ -16,6 +16,7 @@ public class AcceptRequest extends RequestOperation{
 	private static final Charset UTF8 = Charset.forName("UTF-8");
 	private boolean clientOneConnect = false;
 	private boolean clientTwoConnect = false;
+	private boolean connectionReady = false;
 	private SelectionKey keyClientOne;
 	private SelectionKey keyClientTwo;
     private long connect_id;

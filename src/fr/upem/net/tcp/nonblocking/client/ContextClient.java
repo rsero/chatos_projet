@@ -9,164 +9,165 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 import fr.upem.net.tcp.nonblocking.server.data.Data;
+import fr.upem.net.tcp.nonblocking.server.reader.HTTPReader;
 import fr.upem.net.tcp.nonblocking.server.reader.InstructionReader;
 import fr.upem.net.tcp.nonblocking.server.reader.Reader;
 
 public class ContextClient {
 
-    final private SelectionKey key;
-    final private SocketChannel sc;
-    static private int BUFFER_SIZE = 1024;
-    final private ByteBuffer bbin = ByteBuffer.allocate(BUFFER_SIZE);
-    final private ByteBuffer bbout = ByteBuffer.allocate(BUFFER_SIZE);
-    final private Queue<ByteBuffer> queue = new LinkedList<>(); // buffers read-mode
-    private InstructionReader reader = new InstructionReader();
-    //private HTTPReader httpReader = new HTTPReader();
-    private boolean closed = false;
+	final private SelectionKey key;
+	final private SocketChannel sc;
+	static private int BUFFER_SIZE = 1024;
+	final private ByteBuffer bbin = ByteBuffer.allocate(BUFFER_SIZE);
+	final private ByteBuffer bbout = ByteBuffer.allocate(BUFFER_SIZE);
+	final private Queue<ByteBuffer> queue = new LinkedList<>(); // buffers read-mode
+	private InstructionReader reader = new InstructionReader();
+	private HTTPReader httpReader = new HTTPReader();
+	private boolean closed = false;
 
-    public ContextClient(SelectionKey key){
-        this.key = key;
-        this.sc = (SocketChannel) key.channel();
-    }
+	public ContextClient(SelectionKey key) {
+		this.key = key;
+		this.sc = (SocketChannel) key.channel();
+	}
 
-    /**
-     * Process the content of bbin
-     *
-     * The convention is that bbin is in write-mode before the call
-     * to process and after the call
-     * @throws IOException 
-     *
-     */
-    private void processIn(ClientChatos client, SelectionKey key) throws IOException {
-    	for(;;){
-    		Reader.ProcessStatus status;
-    		boolean isPrivateConnection = client.isConnectionPrivate(key);
-    		if(isPrivateConnection) {
-    			//status = 
-    			System.out.println("ca marche");
-    			System.out.println(">>>" + bbin);
-    			System.out.println(Charset.forName("ASCII").decode(bbin));
-    			System.out.println("ca marche");
-    			return;
-    		}else {
-    			status = reader.process(bbin);
-    		}
-    		
-    	    switch (status){
-     	      case DONE:
-     	    	 if(isPrivateConnection) {
-     	    		 return;
-     	    	 }else {
-     	    		Data value = reader.get();
-       	            value.decode(client, key);
-       	            reader.reset();
-     	    	 }
-     	          break;
-     	      case REFILL:
-     	          return;
-     	      case ERROR:
-     	          silentlyClose();
-     	          return;
-     	    }
-     	  }
-    }
+	/**
+	 * Process the content of bbin
+	 *
+	 * The convention is that bbin is in write-mode before the call to process and
+	 * after the call
+	 * 
+	 * @throws IOException
+	 *
+	 */
+	private void processIn(ClientChatos client, SelectionKey key) throws IOException {
+		System.out.println("processIn");
+		for (;;) {
+			System.out.println("je reviens");
+			Reader.ProcessStatus status;
+//			boolean isPrivateConnection = client.isConnectionPrivate(key);
+//			if (isPrivateConnection) {
+//				status = httpReader.process(bbin);
+//			} else {
+				status = reader.process(bbin);
+//			}
 
-    /**
-     * Add a message to the message queue, tries to fill bbOut and updateInterestOps
-     *
-     * @param bb
-     */
-    public void queueMessage(ByteBuffer bb) {
-        queue.add(bb);
-        processOut();
-        updateInterestOps();
-    }
+			switch (status) {
+			case DONE:
+//				if (isPrivateConnection) {
+//					httpReader.reset();
+//				} else {
+					Data value = reader.get();
+					System.out.println("avant");
+					value.decode(client, key);
+					System.out.println("apres");
+					reader.reset();
+//				}
+				break;
+			case REFILL:
+				return;
+			case ERROR:
+				silentlyClose();
+				return;
+			}
+		}
+	}
 
-    /**
-     * Try to fill bbout from the message queue
-     *
-     */
-    private void processOut() {
-        while (!queue.isEmpty()){
-            var bb = queue.peek();
-            if (bb.remaining()<=bbout.remaining()){
-                queue.remove();
-                bbout.put(bb);
-            }
-        }
-    }
+	/**
+	 * Add a message to the message queue, tries to fill bbOut and updateInterestOps
+	 *
+	 * @param bb
+	 */
+	public void queueMessage(ByteBuffer bb) {
+		queue.add(bb);
+		processOut();
+		updateInterestOps();
+	}
 
-    /**
-     * Update the interestOps of the key looking
-     * only at values of the boolean closed and
-     * of both ByteBuffers.
-     *
-     * The convention is that both buffers are in write-mode before the call
-     * to updateInterestOps and after the call.
-     * Also it is assumed that process has been be called just
-     * before updateInterestOps.
-     */
+	/**
+	 * Try to fill bbout from the message queue
+	 *
+	 */
+	private void processOut() {
+		while (!queue.isEmpty()) {
+			var bb = queue.peek();
+			if (bb.remaining() <= bbout.remaining()) {
+				queue.remove();
+				bbout.put(bb);
+			}
+		}
+	}
 
-    private void updateInterestOps() {
-        var interesOps=0;
-        if (!closed && bbin.hasRemaining()){
-            interesOps=interesOps|SelectionKey.OP_READ;
-        }
-        if (bbout.position()!=0){
-            interesOps|=SelectionKey.OP_WRITE;
-        }
-        if (interesOps==0){
-            silentlyClose();
-            return;
-        }
-        key.interestOps(interesOps);
-    }
+	/**
+	 * Update the interestOps of the key looking only at values of the boolean
+	 * closed and of both ByteBuffers.
+	 *
+	 * The convention is that both buffers are in write-mode before the call to
+	 * updateInterestOps and after the call. Also it is assumed that process has
+	 * been be called just before updateInterestOps.
+	 */
 
-    private void silentlyClose() {
-        try {
-            sc.close();
-        } catch (IOException e) {
-            // ignore exception
-        }
-    }
+	private void updateInterestOps() {
+		var interesOps = 0;
+		if (!closed && bbin.hasRemaining()) {
+			interesOps = interesOps | SelectionKey.OP_READ;
+		}
+		if (!closed && bbout.position() != 0) {
+			interesOps |= SelectionKey.OP_WRITE;
+		}
+		if (interesOps == 0) {
+			silentlyClose();
+			return;
+		}
+		key.interestOps(interesOps);
+	}
 
-    /**
-     * Performs the read action on sc
-     *
-     * The convention is that both buffers are in write-mode before the call
-     * to doRead and after the call
-     *
-     * @throws IOException
-     */
-    public void doRead(ClientChatos client, SelectionKey key) throws IOException {
-    	if (sc.read(bbin)==-1) {
-            System.out.println("read raté");
-            closed=true;
-        }
-        processIn(client, key);
-        updateInterestOps();
-    }
+	private void silentlyClose() {
+		try {
+			sc.close();
+		} catch (IOException e) {
+			// ignore exception
+		}
+	}
 
-    /**
-     * Performs the write action on sc
-     *
-     * The convention is that both buffers are in write-mode before the call
-     * to doWrite and after the call
-     *
-     * @throws IOException
-     */
+	/**
+	 * Performs the read action on sc
+	 *
+	 * The convention is that both buffers are in write-mode before the call to
+	 * doRead and after the call
+	 *
+	 * @throws IOException
+	 */
+	public void doRead(ClientChatos client, SelectionKey key) throws IOException {
+		if (sc.read(bbin) == -1) {
+			System.out.println("read raté");
+			closed = true;
+		}
+		processIn(client, key);
+		updateInterestOps();
+	}
 
-    public void doWrite() throws IOException {
-        bbout.flip();
-        sc.write(bbout);
-        bbout.compact();
-        processOut();
-        updateInterestOps();
-    }
+	/**
+	 * Performs the write action on sc
+	 *
+	 * The convention is that both buffers are in write-mode before the call to
+	 * doWrite and after the call
+	 *
+	 * @throws IOException
+	 */
 
-    public void doConnect() throws IOException {
-    	if (!sc.finishConnect())
-    	    return; // the selector gave a bad hint
-    	key.interestOps(SelectionKey.OP_READ);
-    }
+	public void doWrite() throws IOException {
+		System.out.println("J'espedie le paquet");
+		bbout.flip();
+		sc.write(bbout);
+		bbout.compact();
+		processOut();
+		updateInterestOps();
+		System.out.println("j'au expedié le paquet");
+	}
+
+	public void doConnect() throws IOException {
+		if (!sc.finishConnect())
+			return; // the selector gave a bad hint
+		key.interestOps(SelectionKey.OP_READ);
+	}
 }

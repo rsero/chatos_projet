@@ -20,7 +20,10 @@ public class PrivateConnexionTransmission implements Data  {
 	@Override
 	public boolean processOut(ByteBuffer bbout, ContextServer context, ServerChatos server)
 			throws IOException, IOException {
+		System.out.println(">>> in " + bbin);
+		System.out.println(bbout);
 		if(bbin.remaining() > bbout.remaining()) {
+			System.out.println("hhhh");
             return false;
         }
 		bbout.put(bbin);

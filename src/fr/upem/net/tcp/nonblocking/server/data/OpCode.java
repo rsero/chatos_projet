@@ -54,6 +54,7 @@ public class OpCode implements Data{
 
 	@Override
 	public void broadcast(Selector selector, ContextServer context, SelectionKey key) throws IOException {
+		System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa");
 		context.queueMessage(this);
 	}
 

@@ -121,7 +121,9 @@ public class ServerChatos {
     public boolean isConnectionPrivate(SelectionKey key) {
     	for(var privateConnection : privateConnexion.values()) {
     		if(privateConnection.containsKey(key)) {
-    			return true;
+    			if(privateConnection.connexionReady())
+					return true;
+    			
     		}
     	}
     	return false;
@@ -225,6 +227,16 @@ public class ServerChatos {
     		}
     	}
     	return null;
+	}
+
+	public void close(ContextServer contextServer) {
+		for(var client : clients.keySet()) {
+			var ctx = clients.get(client);
+    		if(ctx.equals(contextServer)) {
+    			clients.remove(client);
+    			return;
+    		}
+    	}
 	}
 
 

@@ -64,6 +64,9 @@ public class PrivateConnectionClients {
     }
 
 	public void queueMessage(Optional<ByteBuffer> bb) {
+//		var tmp = charsetASCII.decode(bb.get().flip());
+//		System.out.println("On a encodé ca >>>" + tmp.toString());
+//		var buffer = charsetASCII.encode(tmp.toString());
 		privateContext.queueMessage(bb.get().flip());
 	}
 
@@ -92,8 +95,8 @@ public class PrivateConnectionClients {
 				        + "Host: " + getURL(directory + "/" + file) + "\r\n"
 				        + "\r\n";
 				System.out.println(request);
-				var bb = Optional.of(charsetASCII.encode(request));
-				queueMessage(bb);
+				var bb = charsetASCII.encode(request);
+				privateContext.queueMessage(bb);
 			} catch (MalformedURLException e) {
 				System.out.println(file + "doesn't exist");
 			}

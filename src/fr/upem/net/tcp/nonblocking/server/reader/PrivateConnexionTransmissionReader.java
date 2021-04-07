@@ -21,6 +21,8 @@ public class PrivateConnexionTransmissionReader implements Reader<PrivateConnexi
         if (state == State.DONE || state == State.ERROR) {
             throw new IllegalStateException();
         }
+        if(bb.remaining() != BUFFER_SIZE)
+        	return ProcessStatus.REFILL;
         bb.flip();
         try {
             if (bb.remaining() <= internalbb.remaining()) {
@@ -38,7 +40,7 @@ public class PrivateConnexionTransmissionReader implements Reader<PrivateConnexi
             return ProcessStatus.REFILL;
         }
         state = State.DONE;
-        internalbb.flip();
+        internalbb.compact();
         value = new PrivateConnexionTransmission(internalbb);
         return ProcessStatus.DONE;
     }
