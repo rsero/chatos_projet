@@ -30,9 +30,9 @@ public class ClientChatos {
 	private final ArrayBlockingQueue<String> commandQueue = new ArrayBlockingQueue<>(10);
 	private final HashMap<Login, PrivateRequest> hashPrivateRequest = new HashMap<>();// Client qui demande la connexion
 																						// privée
-	private final HashMap<Login, PrivateConnectionClients> hashLoginFile = new HashMap<>();// Client connecté a l'aide
+	private final HashMap<Login, ContextPrivateClient> hashLoginFile = new HashMap<>();// Client connecté a l'aide
 																							// d'une connexion privée
-	private ContextClient uniqueContext;
+	private ContextPublicClient uniqueContext;
 	private final Object lock = new Object();
 	private final Thread privateConnectionThread;
 
@@ -109,7 +109,7 @@ public class ClientChatos {
 
 	public void addConnect_id(Long connectId, Login loginTarget) throws IOException {
 		synchronized (lock) {
-			hashLoginFile.putIfAbsent(loginTarget, new PrivateConnectionClients(this, directory));
+			hashLoginFile.putIfAbsent(loginTarget, new ContextPrivateClient(this));
 			hashLoginFile.get(loginTarget).addConnectId(connectId);
 			hashLoginFile.get(loginTarget).launch(serverAddress, selector);
 		}
@@ -189,7 +189,6 @@ public class ClientChatos {
 		}
 		var privateRequest = new PrivateRequest(login, targetLogin);
 		synchronized (lock) {
-
 			if (hashLoginFile.putIfAbsent(targetLogin, new PrivateConnectionClients(this, directory)) == null) {
 				hashLoginFile.get(targetLogin).addFileToSend(elements[1]);
 				return Optional.of(privateRequest.encodeAskPrivateRequest(req));
@@ -271,7 +270,7 @@ public class ClientChatos {
 	public void launch() throws IOException {
 		sc.configureBlocking(false);
 		var key = sc.register(selector, SelectionKey.OP_CONNECT);
-		uniqueContext = new ContextClient(key);
+		uniqueContext = new ContextPublicClient(key);
 		key.attach(uniqueContext);
 		sc.connect(serverAddress);
 		console.start();
@@ -289,14 +288,14 @@ public class ClientChatos {
 	private void treatKey(SelectionKey key) {
 		try {
 			if (key.isValid() && key.isConnectable()) {
-				((ContextClient) key.attachment()).doConnect();
+				((ContextPublicClient) key.attachment()).doConnect();
 			}
 			if (key.isValid() && key.isWritable()) {
-				((ContextClient) key.attachment()).doWrite();
+				((ContextPublicClient) key.attachment()).doWrite();
 
 			}
 			if (key.isValid() && key.isReadable()) {
-				((ContextClient) key.attachment()).doRead(this, key);
+				((ContextPublicClient) key.attachment()).doRead(this, key);
 			}
 		} catch (IOException ioe) {
 			// lambda call in select requires to tunnel IOException

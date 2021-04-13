@@ -12,7 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.logging.Logger;
 
-import fr.upem.net.tcp.nonblocking.client.ContextClient;
+import fr.upem.net.tcp.nonblocking.client.ContextPublicClient;
 
 public class HTTPServer {
 
@@ -29,7 +29,7 @@ public class HTTPServer {
 		return file.endsWith(".txt");
 	}
 
-	private Thread inputStream(ContextClient ctx, InputStream in) {
+	private Thread inputStream(ContextPublicClient ctx, InputStream in) {
 		return new Thread(() -> {
 			byte[] buff = new byte[500];
 			ByteBuffer bb = ByteBuffer.wrap(buff);
@@ -52,7 +52,7 @@ public class HTTPServer {
 		});
 	}
 
-	private Thread textFile(ContextClient ctx, String file) {
+	private Thread textFile(ContextPublicClient ctx, String file) {
 		return new Thread(() -> {
 			var content = charsetASCII.encode(file);
 			try {
@@ -73,7 +73,7 @@ public class HTTPServer {
 	public HTTPServer(String file, SelectionKey key, String directory) throws IOException {
 		var shortPath = directory+"/"+file;
 		var path = new File(shortPath).toURI().getPath();
-		var ctx = (ContextClient) key.attachment();
+		var ctx = (ContextPublicClient) key.attachment();
 		File initialFile = new File(path);
 		if (!initialFile.exists()) {
 			System.out.println("Path : "+ path);

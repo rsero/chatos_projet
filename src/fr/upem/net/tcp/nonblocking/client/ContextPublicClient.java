@@ -14,21 +14,20 @@ import fr.upem.net.tcp.nonblocking.reader.HTTPReader;
 import fr.upem.net.tcp.nonblocking.reader.InstructionReader;
 import fr.upem.net.tcp.nonblocking.reader.ProcessStatus;
 
-public class ContextClient {
+public class ContextPublicClient implements Context {
 
-	final private SelectionKey key;
-	final private SocketChannel sc;
-	static private int BUFFER_SIZE = 1024;
+	private final SelectionKey key;
+	private final SocketChannel sc;
+	private static int BUFFER_SIZE = 1024;
 	final private ByteBuffer bbin = ByteBuffer.allocate(BUFFER_SIZE);
 	final private ByteBuffer bbout = ByteBuffer.allocate(BUFFER_SIZE);
 	final private Queue<ByteBuffer> queue = new LinkedList<>(); // buffers read-mode
 	private InstructionReader reader = new InstructionReader();
-	private HTTPReader httpReader = new HTTPReader();
 	private boolean closed = false;
-	private static final Logger logger = Logger.getLogger(ContextClient.class.getName());
+	private static final Logger logger = Logger.getLogger(ContextPublicClient.class.getName());
 	private Object lock = new Object();
 
-	public ContextClient(SelectionKey key) {
+	public ContextPublicClient(SelectionKey key) {
 		this.key = key;
 		this.sc = (SocketChannel) key.channel();
 	}
@@ -42,26 +41,15 @@ public class ContextClient {
 	 * @throws IOException
 	 *
 	 */
-	private void processIn(ClientChatos client, SelectionKey key) throws IOException {
-		for (var cpt =0 ; ; cpt++) {
+	public void processIn(ClientChatos client, SelectionKey key) throws IOException {
+		for (;;) {
 			boolean isPrivateConnection = client.isConnectionPrivate(key);
-			ProcessStatus status;
-			if (isPrivateConnection && cpt == 0) {
-				status = httpReader.process(bbin, key);
-			} else {
-				status = reader.process(bbin);
-			}
+			ProcessStatus status = reader.process(bbin);
 			switch (status) {
 			case DONE:
-				if (isPrivateConnection && cpt == 0) {
-					Data value = httpReader.get();
-					value.decode(client, key);
-					httpReader.reset();
-				} else {
-					Data value = reader.get();
-					value.decode(client, key);
-					reader.reset();
-				}
+				Data value = reader.get();
+				value.decode(client, key);
+				reader.reset();
 				break;
 			case REFILL:
 				return;
@@ -87,15 +75,16 @@ public class ContextClient {
 	 * Try to fill bbout from the message queue
 	 *
 	 */
-	private void processOut() {
+	public void processOut() {
 		synchronized (lock){
-		while (!queue.isEmpty()) {
-			var bb = queue.peek();
-			if (bb.remaining() <= bbout.remaining()) {
-				queue.remove();
-				bbout.put(bb);
+			while (!queue.isEmpty()) {
+				var bb = queue.peek();
+				if (bb.remaining() <= bbout.remaining()) {
+					queue.remove();
+					bbout.put(bb);
+				}
 			}
-		}}
+		}
 	}
 
 	/**
@@ -107,22 +96,22 @@ public class ContextClient {
 	 * been be called just before updateInterestOps.
 	 */
 
-	private void updateInterestOps() {
-		var interesOps = 0;
+	public void updateInterestOps() {
+		var interestOps = 0;
 		if (!closed && bbin.hasRemaining()) {
-			interesOps = interesOps | SelectionKey.OP_READ;
+			interestOps = interestOps | SelectionKey.OP_READ;
 		}
 		if (!closed && bbout.position() != 0) {
-			interesOps |= SelectionKey.OP_WRITE;
+			interestOps |= SelectionKey.OP_WRITE;
 		}
-		if (interesOps == 0) {
+		if (interestOps == 0) {
 			silentlyClose();
 			return;
 		}
-		key.interestOps(interesOps);
+		key.interestOps(interestOps);
 	}
 
-	private void silentlyClose() {
+	public void silentlyClose() {
 		try {
 			sc.close();
 		} catch (IOException e) {

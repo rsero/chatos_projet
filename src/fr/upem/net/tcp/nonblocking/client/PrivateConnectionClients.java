@@ -21,7 +21,7 @@ public class PrivateConnectionClients {
 	private final List<String> files;
 	private final String directory;
 	private final SocketChannel socketChannel;
-	private ContextClient privateContext;
+	private ContextPrivateClient privateContext;
 	private final ClientChatos clientChatos;
 	private final Charset charsetASCII = Charset.forName("ASCII");
 	private static final Logger logger = Logger.getLogger(PrivateConnectionClients.class.getName());
@@ -36,7 +36,7 @@ public class PrivateConnectionClients {
 	public void launch( InetSocketAddress serverAddress, Selector selector) throws IOException {
 		socketChannel.configureBlocking(false);
 		var key = socketChannel.register(selector, SelectionKey.OP_CONNECT);
-		privateContext = new ContextClient(key);
+		privateContext = new ContextPrivateClient(key);
 		key.attach(privateContext);
 		socketChannel.connect(serverAddress);
 	}
