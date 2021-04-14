@@ -1,6 +1,7 @@
 package fr.upem.net.tcp.nonblocking.client;
 
 import fr.upem.net.tcp.nonblocking.data.Data;
+import fr.upem.net.tcp.nonblocking.data.Login;
 import fr.upem.net.tcp.nonblocking.reader.HTTPReader;
 import fr.upem.net.tcp.nonblocking.reader.ProcessStatus;
 
@@ -14,9 +15,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 import java.util.logging.Logger;
 
 public class ContextPrivateClient implements Context {
@@ -30,9 +29,10 @@ public class ContextPrivateClient implements Context {
     private boolean closed = false;
     private Object lock = new Object();
     private static final Logger logger = Logger.getLogger(ContextPrivateClient.class.getName());
-    private final long connect_id;
+    private long connect_id;
     private final String directory;
     private final Charset charsetASCII = Charset.forName("ASCII");
+    private final HashMap<Login, List<String>> mapFiles = new HashMap<>();
 
     public ContextPrivateClient(Selector selector, String directory, InetSocketAddress serverAddress, long connect_id) throws IOException {
         sc = SocketChannel.open();
@@ -145,7 +145,8 @@ public class ContextPrivateClient implements Context {
     }
 
     //@Override
-    public void sendCommand(List<String> files) {
+    public void sendCommand(Login login) {
+        var files = mapFiles.get(login);
         while(!files.isEmpty()) {
             System.out.println("Un fichier est envoyé");
             var file = files.get(0);
@@ -163,12 +164,27 @@ public class ContextPrivateClient implements Context {
         }
     }
 
+    public void addFileToMap(Login login, String file){
+        if(mapFiles.putIfAbsent(login, new ArrayList<String>(Collections.singleton(file))) !=null) {
+            System.out.println("la map avait déja le login vide");
+            //mapFiles.get(login).add(file);
+        }
+    }
+
+    public List<String> getFiles(Login login){
+        return mapFiles.get(login);
+    }
+
     public boolean correctConnectId(Long id) {
         return id != null && id.equals(connect_id);
     }
 
     public long getConnectId(){
         return connect_id;
+    }
+
+    public void setConnect_id(long id){
+        this.connect_id=id;
     }
 
     private String getURL(String path) throws MalformedURLException {
@@ -178,4 +194,5 @@ public class ContextPrivateClient implements Context {
     public void removeFileToSend(String lastFile,List<String> files) {
         files.remove(lastFile);
     }
+
 }

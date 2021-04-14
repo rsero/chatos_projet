@@ -42,8 +42,9 @@ public class PrivateRequest extends RequestOperation {
     }
 
     @Override
-    public void decode(ClientChatos client, SelectionKey key) {
+    public void decode(ClientChatos client, SelectionKey key) throws IOException {
     	client.addSetPrivateRequest(this);
+    	client.addConnection(new Login(loginRequester()));
         System.out.println(this);
     }
 

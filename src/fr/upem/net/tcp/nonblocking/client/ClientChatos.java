@@ -28,9 +28,8 @@ public class ClientChatos {
 	private final ArrayBlockingQueue<String> commandQueue = new ArrayBlockingQueue<>(10);
 	private final HashMap<Login, PrivateRequest> hashPrivateRequest = new HashMap<>();// Client qui demande la connexion
 																						// privée
-	private final HashMap<Login, ContextPrivateClient> hashLoginContext = new HashMap<>();// Client connecté a l'aide
+	private final HashMap<Login, ContextPrivateClient> privateContexts = new HashMap<>();// Client connecté a l'aide
 																							// d'une connexion privée
-	private final HashMap<Login, List<String>> hashLoginFile = new HashMap<>();
 	private ContextPublicClient uniqueContext;
 	private final Object lock = new Object();
 	private final Thread privateConnectionThread;
@@ -61,10 +60,10 @@ public class ClientChatos {
 	private void privateConnection() {
 		while (!Thread.interrupted()) {
 			synchronized (lock) {
-				for (var login : hashLoginContext.keySet()) {
-					var files = hashLoginFile.get(login);
+				for (var login : privateContexts.keySet()) {
+					var files = privateContexts.get(login).getFiles(login);
 					if(files!= null)
-						hashLoginContext.get(login).sendCommand(files);
+						privateContexts.get(login).sendCommand(login);
 				}
 				selector.wakeup();
 			}
@@ -107,9 +106,7 @@ public class ClientChatos {
 	}
 
 	public void addConnect_id(Long connectId, Login loginTarget) throws IOException {
-		synchronized (lock) {
-			hashLoginContext.putIfAbsent(loginTarget, new ContextPrivateClient(selector, directory, serverAddress,connectId));
-		}
+		privateContexts.get(loginTarget).setConnect_id(connectId);
 	}
 
 	public Optional<ByteBuffer> parseInput(String input) throws IOException {
@@ -164,7 +161,7 @@ public class ClientChatos {
 																// pas demandé
 			System.out.println("This client doesn't ask the connexion");
 			return Optional.empty();
-		} else if (hashLoginFile.containsKey(new Login(content)) && data.isEmpty()){
+		} else if (privateContexts.containsKey(new Login(content)) && data.isEmpty()){
 			return disconnectPrivateClient(req, new Login(content));
 		} else if (content.equals("id")) {
 			return parseConnectId(req, data);
@@ -185,14 +182,11 @@ public class ClientChatos {
 			return Optional.empty();
 		}
 		var privateRequest = new PrivateRequest(login, targetLogin);
-		synchronized (lock) {
-			if (!hashLoginFile.containsKey(targetLogin)) {
-				var files = new ArrayList<String>(Collections.singleton(elements[1]));
-				hashLoginFile.put(targetLogin, files);
-				System.out.println("c bien dans la map : "+files.get(0));
-				return Optional.of(privateRequest.encodeAskPrivateRequest(req));
-			}
-			hashLoginFile.get(targetLogin).add(elements[1]);
+		var file = elements[1];
+		if(privateContexts.putIfAbsent(targetLogin, new ContextPrivateClient(selector, directory, serverAddress, 0))==null){
+			System.out.println("targetlogin after /y login is "+ targetLogin);
+			privateContexts.get(targetLogin).addFileToMap(targetLogin,file);
+			return Optional.of(privateRequest.encodeAskPrivateRequest(req));
 		}
 		return Optional.empty();
 	}
@@ -207,7 +201,7 @@ public class ClientChatos {
 			Long connect_id = Long.valueOf(data);
 			var correctId = false;
 			synchronized (lock) {
-				for (var value : hashLoginContext.values()) {
+				for (var value : privateContexts.values()) {
 					if (value.correctConnectId(connect_id)) {
 						correctId = true;
 						var privateLogin = new PrivateLogin(connect_id);
@@ -235,7 +229,9 @@ public class ClientChatos {
 			System.out.println("Usage : /n login");
 			return Optional.empty();
 		}
-		var privateRequest = hashPrivateRequest.remove(new Login(data));
+		var loginToRemove = new Login(data);
+		var privateRequest = hashPrivateRequest.remove(loginToRemove);
+		privateContexts.remove(loginToRemove);
 		System.out.println("Private connection refused");
 		return Optional.of(privateRequest.encodeRefusePrivateRequest(req));
 	}
@@ -257,9 +253,9 @@ public class ClientChatos {
 
 	private Optional<ByteBuffer> disconnectPrivateClient(ByteBuffer req, Login loginTarget) throws IOException {
 		synchronized (lock) {
-			var connectId = hashLoginContext.get(loginTarget).getConnectId();
-			hashLoginContext.get(loginTarget).closeConnection();
-			hashLoginContext.remove(loginTarget);
+			var connectId = privateContexts.get(loginTarget).getConnectId();
+			privateContexts.get(loginTarget).closeConnection();
+			privateContexts.remove(loginTarget);
 			var disconnectRequest = new DisconnectRequest(connectId, login, loginTarget);
 			return Optional.of(disconnectRequest.encode(req));
 		}
@@ -370,7 +366,11 @@ public class ClientChatos {
 
 	public void deleteRequestConnection(Login loginTarget) {
 		synchronized (lock) {
-			hashLoginFile.remove(loginTarget);
+			privateContexts.remove(loginTarget);
 		}
+	}
+
+	public void addConnection(Login login) throws IOException {
+		privateContexts.putIfAbsent(login, new ContextPrivateClient(selector, directory, serverAddress, 0));
 	}
 }

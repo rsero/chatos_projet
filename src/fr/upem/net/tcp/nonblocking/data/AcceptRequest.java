@@ -75,6 +75,7 @@ public class AcceptRequest extends RequestOperation{
 		else {
 			login = getLoginRequester();
 		}
+		System.out.println("targetlogin after acceptrequest is : "+ login);
 		client.addConnect_id(connect_id, login);
 		System.out.println("Connection " + loginRequester() + " : " + loginTarget() + " is established with id : "+ connect_id
 				+ "\n \"/id "+ connect_id +"\" to accept");
