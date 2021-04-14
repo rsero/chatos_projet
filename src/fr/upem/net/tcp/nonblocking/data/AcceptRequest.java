@@ -40,7 +40,7 @@ public class AcceptRequest extends RequestOperation{
 			keyClientOne = keyClient;
 			return;
 		}
-		keyClientTwo = keyClient;
+		keyClienestTwo = keyClient;
 		clientTwoConnect = true;
 	}
 

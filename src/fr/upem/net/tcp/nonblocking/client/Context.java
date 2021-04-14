@@ -14,4 +14,5 @@ public interface Context {
     void doWrite() throws IOException;
     void doConnect() throws IOException;
     void closeConnection();
+    void sendCommand(String msg);
 }

@@ -9,6 +9,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -30,8 +31,9 @@ public class ClientChatos {
 	private final ArrayBlockingQueue<String> commandQueue = new ArrayBlockingQueue<>(10);
 	private final HashMap<Login, PrivateRequest> hashPrivateRequest = new HashMap<>();// Client qui demande la connexion
 																						// privée
-	private final HashMap<Login, ContextPrivateClient> hashLoginFile = new HashMap<>();// Client connecté a l'aide
+	private final HashMap<Login, ContextPrivateClient> hashLoginContext = new HashMap<>();// Client connecté a l'aide
 																							// d'une connexion privée
+	private final HashMap<Login, List<String>> hashLoginFile = new HashMap<>();
 	private ContextPublicClient uniqueContext;
 	private final Object lock = new Object();
 	private final Thread privateConnectionThread;
@@ -62,10 +64,8 @@ public class ClientChatos {
 	private void privateConnection() {
 		while (!Thread.interrupted()) {
 			synchronized (lock) {
-				for (var privateConnection : hashLoginFile.values()) {
-					if (privateConnection.connectionReady()) {
+				for (var privateConnection : hashLoginContext.values()) {
 						privateConnection.sendRequest();
-					}
 				}
 				selector.wakeup();
 			}
@@ -109,9 +109,7 @@ public class ClientChatos {
 
 	public void addConnect_id(Long connectId, Login loginTarget) throws IOException {
 		synchronized (lock) {
-			hashLoginFile.putIfAbsent(loginTarget, new ContextPrivateClient(this));
-			hashLoginFile.get(loginTarget).addConnectId(connectId);
-			hashLoginFile.get(loginTarget).launch(serverAddress, selector);
+			hashLoginContext.putIfAbsent(loginTarget, new ContextPrivateClient(selector, directory, serverAddress,connectId));
 		}
 	}
 
@@ -189,11 +187,12 @@ public class ClientChatos {
 		}
 		var privateRequest = new PrivateRequest(login, targetLogin);
 		synchronized (lock) {
-			if (hashLoginFile.putIfAbsent(targetLogin, new PrivateConnectionClients(this, directory)) == null) {
-				hashLoginFile.get(targetLogin).addFileToSend(elements[1]);
+			if (!hashLoginFile.containsKey(targetLogin)) {
+				var files = List.of(elements[1]);
+				hashLoginFile.put(targetLogin, files);
 				return Optional.of(privateRequest.encodeAskPrivateRequest(req));
 			}
-			hashLoginFile.get(targetLogin).addFileToSend(elements[1]);
+			hashLoginFile.get(targetLogin).add(elements[1]);
 		}
 		return Optional.empty();
 	}
@@ -208,7 +207,7 @@ public class ClientChatos {
 			Long connect_id = Long.valueOf(data);
 			var correctId = false;
 			synchronized (lock) {
-				for (var value : hashLoginFile.values()) {
+				for (var value : hashLoginContext.values()) {
 					if (value.correctConnectId(connect_id)) {
 						correctId = true;
 						var privateLogin = new PrivateLogin(connect_id);
@@ -216,8 +215,7 @@ public class ClientChatos {
 						if (!bb.isPresent()) {
 							break;
 						}
-						value.queueMessage(bb);
-						continue;
+						value.queueMessage(bb.get());
 					}
 				}
 			}
@@ -259,9 +257,9 @@ public class ClientChatos {
 
 	private Optional<ByteBuffer> disconnectPrivateClient(ByteBuffer req, Login loginTarget) throws IOException {
 		synchronized (lock) {
-			var connectId = hashLoginFile.get(loginTarget).getConnectId();
-			hashLoginFile.get(loginTarget).closeConnection();
-			hashLoginFile.remove(loginTarget);
+			var connectId = hashLoginContext.get(loginTarget).getConnectId();
+			hashLoginContext.get(loginTarget).closeConnection();
+			hashLoginContext.remove(loginTarget);
 			var disconnectRequest = new DisconnectRequest(connectId, login, loginTarget);
 			return Optional.of(disconnectRequest.encode(req));
 		}
@@ -288,14 +286,14 @@ public class ClientChatos {
 	private void treatKey(SelectionKey key) {
 		try {
 			if (key.isValid() && key.isConnectable()) {
-				((ContextPublicClient) key.attachment()).doConnect();
+				((Context) key.attachment()).doConnect();
 			}
 			if (key.isValid() && key.isWritable()) {
-				((ContextPublicClient) key.attachment()).doWrite();
+				((Context) key.attachment()).doWrite();
 
 			}
 			if (key.isValid() && key.isReadable()) {
-				((ContextPublicClient) key.attachment()).doRead(this, key);
+				((Context) key.attachment()).doRead(this, key);
 			}
 		} catch (IOException ioe) {
 			// lambda call in select requires to tunnel IOException
@@ -341,7 +339,7 @@ public class ClientChatos {
 			hashPrivateRequest.put(privateRequest.getLoginRequester(), privateRequest);
 		}
 	}
-
+/*
 	public void activePrivateConnection(SelectionKey key) {
 		synchronized (lock) {
 			for (var privateClient : hashLoginFile.values()) {
@@ -351,6 +349,8 @@ public class ClientChatos {
 			}
 		}
 	}
+
+
 
 	public boolean isConnectionPrivate(SelectionKey key) {
 		synchronized (lock) {
@@ -363,7 +363,7 @@ public class ClientChatos {
 		}
 		return false;
 	}
-
+*/
 	public String getDirectory(){
 		return directory;
 	}

@@ -33,32 +33,20 @@ public class PrivateConnectionClients {
 		this.directory = directory;
 	}
 
-	public void launch( InetSocketAddress serverAddress, Selector selector) throws IOException {
+	/*
+	public void launch(InetSocketAddress serverAddress, Selector selector) throws IOException {
 		socketChannel.configureBlocking(false);
 		var key = socketChannel.register(selector, SelectionKey.OP_CONNECT);
-		privateContext = new ContextPrivateClient(key);
+		privateContext = new ContextPrivateClient(selector);
 		key.attach(privateContext);
 		socketChannel.connect(serverAddress);
 	}
+	*/
 
-	public long getConnectId(){
-		return connect_id;
-	}
-	
-	public void addConnectId(Long connect_id) {
-		this.connect_id = connect_id;
-	}
-	
-	public void addFileToSend(String newFile) {
-		files.add(newFile);
-	}
+
 	
 	public void removeFileToSend(String lastFile) {
 		files.remove(lastFile);
-	}
-	
-	public boolean correctConnectId(Long id) {
-		return id != null && id.equals(connect_id);
 	}
 
     public void closeConnection(){
@@ -69,6 +57,7 @@ public class PrivateConnectionClients {
 		privateContext.queueMessage(bb.get().flip());
 	}
 
+	/*
 	public boolean activeConnection(SelectionKey key) {
 		if(privateContext.equals(key.attachment())) {
 			connectionReady = true;
@@ -76,11 +65,13 @@ public class PrivateConnectionClients {
 		}
 		return false;
 	}
-	
+
+
 	public boolean connectionReady() {
 		return connectionReady;
 	}
-	
+
+
 	public String getURL(String path) throws MalformedURLException {
         return new File(path).toURI().getPath();
     }
@@ -102,7 +93,7 @@ public class PrivateConnectionClients {
 			clientChatos.wakeUp();
 		}
 	}
-
+*/
 	public boolean containsKey(SelectionKey key) {	
 		return privateContext != null && privateContext.equals(key.attachment());
 	}

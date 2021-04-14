@@ -4,12 +4,18 @@ import fr.upem.net.tcp.nonblocking.data.Data;
 import fr.upem.net.tcp.nonblocking.reader.HTTPReader;
 import fr.upem.net.tcp.nonblocking.reader.ProcessStatus;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channel;
 import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.Charset;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import java.util.logging.Logger;
 
@@ -24,10 +30,18 @@ public class ContextPrivateClient implements Context {
     private boolean closed = false;
     private Object lock = new Object();
     private static final Logger logger = Logger.getLogger(ContextPrivateClient.class.getName());
+    private final long connect_id;
+    private final String directory;
+    private final Charset charsetASCII = Charset.forName("ASCII");
 
-    public ContextPrivateClient(SocketChannel sc) throws IOException {
+    public ContextPrivateClient(Selector selector, String directory, InetSocketAddress serverAddress, long connect_id) throws IOException {
+        sc = SocketChannel.open();
         sc.configureBlocking(false);
-        var key = sc.register(selector, SelectionKey.OP_CONNECT);
+        key = sc.register(selector, SelectionKey.OP_CONNECT);
+        key.attach(this);
+        sc.connect(serverAddress);
+        this.connect_id=connect_id;
+        this.directory=directory;
     }
 
     @Override
@@ -130,4 +144,29 @@ public class ContextPrivateClient implements Context {
         }
     }
 
+    @Override
+    public void sendCommand(String file) {
+        String request;
+        try {
+            request = "GET /"+ file + " HTTP/1.1\r\n"
+                    + "Host: " + getURL(directory) + "\r\n"
+                    + "\r\n";
+            var bb = charsetASCII.encode(request);
+            queueMessage(bb);
+        } catch (MalformedURLException e) {
+            logger.warning(file + "doesn't exist");
+        }
+    }
+
+    public boolean correctConnectId(Long id) {
+        return id != null && id.equals(connect_id);
+    }
+
+    public long getConnectId(){
+        return connect_id;
+    }
+
+    private String getURL(String path) throws MalformedURLException {
+        return new File(path).toURI().getPath();
+    }
 }

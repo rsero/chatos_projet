@@ -43,7 +43,7 @@ public class ContextPublicClient implements Context {
 	 */
 	public void processIn(ClientChatos client, SelectionKey key) throws IOException {
 		for (;;) {
-			boolean isPrivateConnection = client.isConnectionPrivate(key);
+			//boolean isPrivateConnection = client.isConnectionPrivate(key);
 			ProcessStatus status = reader.process(bbin);
 			switch (status) {
 			case DONE:
@@ -165,6 +165,13 @@ public class ContextPublicClient implements Context {
 			sc.close();
 		} catch (IOException e) {
 			// ignore exception
+		}
+	}
+
+	@Override
+	public void sendCommand(String msg) {
+		synchronized (lock) {
+			queue.add(msg);
 		}
 	}
 }

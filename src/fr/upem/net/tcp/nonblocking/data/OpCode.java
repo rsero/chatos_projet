@@ -38,7 +38,7 @@ public class OpCode implements Data{
 			break;
 		case 10:
 			System.out.println("Connexion was established");
-			client.activePrivateConnection(key);
+			//client.activePrivateConnection(key);
 			break;
 		default:
 			System.out.println("Operation does not exist");
