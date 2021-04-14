@@ -8,10 +8,7 @@ import java.nio.channels.Channel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
-import java.util.Scanner;
+import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Logger;
 
@@ -64,8 +61,10 @@ public class ClientChatos {
 	private void privateConnection() {
 		while (!Thread.interrupted()) {
 			synchronized (lock) {
-				for (var privateConnection : hashLoginContext.values()) {
-						privateConnection.sendRequest();
+				for (var login : hashLoginContext.keySet()) {
+					var files = hashLoginFile.get(login);
+					if(files!= null)
+						hashLoginContext.get(login).sendCommand(files);
 				}
 				selector.wakeup();
 			}
@@ -188,8 +187,9 @@ public class ClientChatos {
 		var privateRequest = new PrivateRequest(login, targetLogin);
 		synchronized (lock) {
 			if (!hashLoginFile.containsKey(targetLogin)) {
-				var files = List.of(elements[1]);
+				var files = new ArrayList<String>(Collections.singleton(elements[1]));
 				hashLoginFile.put(targetLogin, files);
+				System.out.println("c bien dans la map : "+files.get(0));
 				return Optional.of(privateRequest.encodeAskPrivateRequest(req));
 			}
 			hashLoginFile.get(targetLogin).add(elements[1]);

@@ -168,10 +168,8 @@ public class ContextPublicClient implements Context {
 		}
 	}
 
-	@Override
+	//@Override
 	public void sendCommand(String msg) {
-		synchronized (lock) {
-			queue.add(msg);
-		}
+		//
 	}
 }

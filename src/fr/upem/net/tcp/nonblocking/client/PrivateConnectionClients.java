@@ -45,9 +45,7 @@ public class PrivateConnectionClients {
 
 
 	
-	public void removeFileToSend(String lastFile) {
-		files.remove(lastFile);
-	}
+
 
     public void closeConnection(){
 		privateContext.closeConnection();

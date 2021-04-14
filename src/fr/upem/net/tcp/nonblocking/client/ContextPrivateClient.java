@@ -144,17 +144,22 @@ public class ContextPrivateClient implements Context {
         }
     }
 
-    @Override
-    public void sendCommand(String file) {
-        String request;
-        try {
-            request = "GET /"+ file + " HTTP/1.1\r\n"
-                    + "Host: " + getURL(directory) + "\r\n"
-                    + "\r\n";
-            var bb = charsetASCII.encode(request);
-            queueMessage(bb);
-        } catch (MalformedURLException e) {
-            logger.warning(file + "doesn't exist");
+    //@Override
+    public void sendCommand(List<String> files) {
+        while(!files.isEmpty()) {
+            System.out.println("Un fichier est envoyé");
+            var file = files.get(0);
+            String request;
+            try {
+                request = "GET /" + file + " HTTP/1.1\r\n"
+                        + "Host: " + getURL(directory) + "\r\n"
+                        + "\r\n";
+                var bb = charsetASCII.encode(request);
+                queueMessage(bb);
+            } catch (MalformedURLException e) {
+                logger.warning(file + "doesn't exist");
+            }
+            removeFileToSend(file,files);
         }
     }
 
@@ -168,5 +173,9 @@ public class ContextPrivateClient implements Context {
 
     private String getURL(String path) throws MalformedURLException {
         return new File(path).toURI().getPath();
+    }
+
+    public void removeFileToSend(String lastFile,List<String> files) {
+        files.remove(lastFile);
     }
 }
