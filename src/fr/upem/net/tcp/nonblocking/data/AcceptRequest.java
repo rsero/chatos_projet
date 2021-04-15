@@ -50,10 +50,12 @@ public class AcceptRequest extends RequestOperation{
 		return clientOneConnect && clientTwoConnect;
 	}
 
-	//@Override
+	/*@Override
 	public boolean processOut(ContextServer context, ServerChatos server) throws IOException {
 		return processOut(encode());
 	}
+
+	 */
 
 	public ByteBuffer encode() throws IOException {
 		var req = ByteBuffer.allocate(BUFFER_SIZE);

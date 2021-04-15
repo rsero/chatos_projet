@@ -31,13 +31,13 @@ public class DisconnectRequestConnection implements Data{
     }
 
 
-    //@Override
+    /*@Override
     public boolean processOut(ContextServer context, ServerChatos server) throws IOException {
         //var bb = encode(bbout);
         //return bb != null;
         return true;
     }
-
+*/
     @Override
     public void accept(DataClientVisitor visitor) {
         visitor.visit(this);

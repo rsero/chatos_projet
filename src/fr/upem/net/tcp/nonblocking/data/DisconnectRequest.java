@@ -25,13 +25,13 @@ public class DisconnectRequest extends RequestOperation{
     }
 
 
-    //@Override
+    /*@Override
     public boolean processOut(ContextServer context, ServerChatos server) throws IOException {
         //var bb = encode(bbout);
         //return bb != null;
         return true;
     }
-
+*/
     public ByteBuffer encode(ByteBuffer req) throws IOException {
         req.clear();
         var loginRequester = UTF8.encode(loginRequester());

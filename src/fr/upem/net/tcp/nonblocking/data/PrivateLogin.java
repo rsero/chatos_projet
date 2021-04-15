@@ -41,13 +41,13 @@ public class PrivateLogin implements Data {
         return req;
     }
 
-	//@Override
+	/*@Override
 	public boolean processOut(ContextServer context, ServerChatos server) throws IOException {
 		//var bb = encodeResponse(bbout);
 		//return bb != null;
 		return true;
 	}
-
+*/
 	@Override
 	public void accept(DataClientVisitor visitor) {
 		visitor.visit(this);

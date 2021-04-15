@@ -24,7 +24,7 @@ public class MessageGlobal implements Data{
         this.msg=msg;
     }
 
-    //@Override
+    /*@Override
     public boolean processOut(ContextServer context, ServerChatos server) throws IOException {
     	var bb = encode();
     	if (bb==null) {
@@ -32,7 +32,7 @@ public class MessageGlobal implements Data{
     	}
     	return true;
     }
-    
+    */
     public ByteBuffer encode() throws IOException {
         var req = ByteBuffer.allocate(BUFFER_SIZE);
         var loginbuff = UTF8.encode(login.getLogin());

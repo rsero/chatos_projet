@@ -68,9 +68,9 @@ public class PrivateRequest extends RequestOperation {
 		return encode();
 	}
 
-	//@Override
+	/*@Override
 	public boolean processOut(ContextServer context, ServerChatos server) throws IOException {
 		//return processOut(encode(bbout));
         return true;
-	}
+	}*/
 }

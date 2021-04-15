@@ -18,12 +18,12 @@ public class HTTPError implements Data{
         this.file = file;
     }
 
-    //@Override
+    /*@Override
     public boolean processOut(ContextServer context, ServerChatos server)
             throws IOException {
         return false;
     }
-
+*/
     @Override
     public void accept(DataClientVisitor visitor) {
         visitor.visit(this);

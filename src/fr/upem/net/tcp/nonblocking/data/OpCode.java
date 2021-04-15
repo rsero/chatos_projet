@@ -22,10 +22,12 @@ public class OpCode implements Data{
 		return opCode;
 	}
 	
-	//@Override
+	/*@Override
 	public boolean processOut(ContextServer context, ServerChatos server) {
 		return false;
 	}
+
+	 */
 
 	@Override
 	public void accept(DataClientVisitor visitor) { visitor.visit(this); }

@@ -39,12 +39,12 @@ public class HTTPFile implements Data {
         return nameFile.endsWith(".txt");
     }
 
-    //@Override
+    /*@Override
     public boolean processOut(ContextServer context, ServerChatos server)
             throws IOException {
         return false;
     }
-
+*/
     @Override
     public void accept(DataClientVisitor visitor) throws IOException {
         visitor.visit(this);

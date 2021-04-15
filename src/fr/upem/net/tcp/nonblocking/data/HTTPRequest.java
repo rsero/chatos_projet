@@ -21,12 +21,12 @@ public class HTTPRequest implements Data {
 		this.key = key;
 	}
 
-	//@Override
+	/*@Override
 	public boolean processOut(ContextServer context, ServerChatos server)
 			throws IOException {
 		return false;
 	}
-	/*
+
 	@Override
 		public void decode(ClientChatos client) throws IOException {
 		new HTTPServer(file, key, client.getDirectory()).serve();

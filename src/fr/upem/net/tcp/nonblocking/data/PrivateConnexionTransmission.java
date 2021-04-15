@@ -20,19 +20,19 @@ public class PrivateConnexionTransmission implements Data  {
 		this.key=key;
 	}
 
-	//@Override
+	/*@Override
 	public boolean processOut(ContextServer context, ServerChatos server)
 			throws IOException {
-		/*bbout.clear();
+		bbout.clear();
 		if(bbin.remaining() < bbout.remaining()) {
 			return false;
 		}
 		bbout.put(bbin);
 
-		 */
+
 		return true;
 	}
-
+*/
 	public ByteBuffer encode(){
 		return bbin;
 	}

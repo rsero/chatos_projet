@@ -52,9 +52,11 @@ public class RefuseRequest extends RequestOperation {
         visitor.visit(this, context);
     }
 
-    //@Override
+    /*@Override
 	public boolean processOut(ContextServer context, ServerChatos server) throws IOException {
 		//return processOut(encode(bbout));
         return true;
 	}
+
+     */
 }

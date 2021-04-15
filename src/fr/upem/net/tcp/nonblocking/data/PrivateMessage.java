@@ -26,13 +26,13 @@ public class PrivateMessage implements Data {
         this.msg=msg;
     }
 
-    //@Override
+    /*@Override
     public boolean processOut(ContextServer context, ServerChatos server) throws IOException {
     	//var bb = encode(bbout);
         //return bb != null;
         return true;
     }
-
+*/
     public ByteBuffer encode() throws IOException {
         var req = ByteBuffer.allocate(BUFFER_SIZE);
         var senderbuff = UTF8.encode(loginSender.getLogin());
