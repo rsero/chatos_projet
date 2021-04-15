@@ -23,7 +23,7 @@ public class PrivateConnexionTransmissionReader implements Reader<PrivateConnexi
     private PrivateConnexionTransmission value;
 
     @Override
-    public ProcessStatus process(ByteBuffer bb) {
+    public ProcessStatus process(ByteBuffer bb, SelectionKey key) {
         if (state == State.DONE || state == State.ERROR) {
             throw new IllegalStateException();
         }

@@ -74,10 +74,10 @@ public class ServerChatos {
         }
         try {
             if (key.isValid() && key.isWritable()) {
-                ((ContextServer) key.attachment()).doWrite();
+                ((Context) key.attachment()).doWrite();
             }
             if (key.isValid() && key.isReadable()) {
-                ((ContextServer) key.attachment()).doRead();
+                ((Context) key.attachment()).doRead();
             }
         } catch (IOException e) {
             logger.log(Level.INFO, "Connection closed with client due to IOException", e);
@@ -119,16 +119,16 @@ public class ServerChatos {
         return List.of(privateClient.getKeyRequester(), privateClient.getKeyTarget());
     }
 
-    public boolean isConnectionPrivate(SelectionKey key) {
-    	for(var privateConnection : privateConnexion.values()) {
-    		if(privateConnection.containsKey(key)) {
-    			if(privateConnection.connexionReady())
-					return true;
-    			
-    		}
-    	}
-    	return false;
-    }
+//    public boolean isConnectionPrivate(SelectionKey key) {
+//    	for(var privateConnection : privateConnexion.values()) {
+//    		if(privateConnection.containsKey(key)) {
+//    			if(privateConnection.connexionReady())
+//					return true;
+//
+//    		}
+//    	}
+//    	return false;
+//    }
     
     public long definedConnectId(AcceptRequest acceptRequest) {
         Random rand = new Random();
@@ -230,7 +230,7 @@ public class ServerChatos {
     	return null;
 	}
 
-	public void close(ContextServer contextServer) {
+	public void close(Context contextServer) {
 		for(var client : clients.keySet()) {
 			var ctx = clients.get(client);
     		if(ctx.equals(contextServer)) {

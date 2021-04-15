@@ -5,6 +5,7 @@ import fr.upem.net.tcp.nonblocking.data.Login;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
 
 public class DisconnectRequestReader implements Reader<DisconnectRequest> {
 
@@ -22,13 +23,13 @@ public class DisconnectRequestReader implements Reader<DisconnectRequest> {
     private State state = State.WAITING_ID;
 
     @Override
-    public ProcessStatus process(ByteBuffer bb) throws IOException {
+    public ProcessStatus process(ByteBuffer bb, SelectionKey key) throws IOException {
         if (state == State.DONE || state == State.ERROR) {
             throw new IllegalStateException();
         }
         switch (state){
             case WAITING_ID :
-            var processLongReader = longReader.process(bb);
+            var processLongReader = longReader.process(bb, key);
             switch (processLongReader) {
                 case DONE:
                     connect_id = longReader.get();
@@ -42,7 +43,7 @@ public class DisconnectRequestReader implements Reader<DisconnectRequest> {
                     return ProcessStatus.ERROR;
             }
             case WAITING_LOGIN_REQUESTER:
-                var processLoginReader = loginReaderRequester.process(bb);
+                var processLoginReader = loginReaderRequester.process(bb, key);
                 switch (processLoginReader) {
                     case DONE:
                         loginRequester = loginReaderRequester.get();
@@ -56,7 +57,7 @@ public class DisconnectRequestReader implements Reader<DisconnectRequest> {
                         return ProcessStatus.ERROR;
                 }
             case WAITING_LOGIN_TARGET:
-                var processLoginTarget = loginReaderTarget.process(bb);
+                var processLoginTarget = loginReaderTarget.process(bb, key);
                 switch (processLoginTarget){
                     case DONE :
                         loginTarget = loginReaderTarget.get();

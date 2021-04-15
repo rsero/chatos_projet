@@ -2,7 +2,7 @@ package fr.upem.net.tcp.nonblocking.client;
 
 import fr.upem.net.tcp.nonblocking.data.Data;
 import fr.upem.net.tcp.nonblocking.data.Login;
-import fr.upem.net.tcp.nonblocking.reader.HTTPReader;
+import fr.upem.net.tcp.nonblocking.reader.PrivateConnectionReader;
 import fr.upem.net.tcp.nonblocking.reader.ProcessStatus;
 
 import java.io.File;
@@ -25,7 +25,7 @@ public class ContextPrivateClient implements Context {
     private final ByteBuffer bbin = ByteBuffer.allocate(BUFFER_SIZE);
     private final ByteBuffer bbout = ByteBuffer.allocate(BUFFER_SIZE);
     private final Queue<ByteBuffer> queue = new LinkedList<>(); // buffers read-mode
-    private HTTPReader httpReader = new HTTPReader();
+    private PrivateConnectionReader connectionReader = new PrivateConnectionReader();
     private boolean closed = false;
     private Object lock = new Object();
     private static final Logger logger = Logger.getLogger(ContextPrivateClient.class.getName());
@@ -51,12 +51,12 @@ public class ContextPrivateClient implements Context {
     @Override
     public void processIn() throws IOException {
         for(;;) {
-            ProcessStatus status = httpReader.process(bbin, key);
+            ProcessStatus status = connectionReader.process(bbin, key);
             switch (status) {
                 case DONE:
-                    Data value = httpReader.get();
+                    Data value = connectionReader.get();
                     value.accept(visitor);
-                    httpReader.reset();
+                    connectionReader.reset();
                     break;
                 case REFILL:
                     return;

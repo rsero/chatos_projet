@@ -1,6 +1,7 @@
 package fr.upem.net.tcp.nonblocking.reader;
 
 import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
 
 import fr.upem.net.tcp.nonblocking.data.OpCode;
 
@@ -14,9 +15,10 @@ public class ByteReader implements Reader<OpCode> {
     private OpCode value;
 
     @Override
-    public ProcessStatus process(ByteBuffer bb) {
+    public ProcessStatus process(ByteBuffer bb, SelectionKey key) {
+        System.out.println("process bytereader");
         if (state == State.DONE || state == State.ERROR) {
-            throw new IllegalStateException();
+            throw new IllegalStateException(state.toString());
         }
         bb.flip();
         try {

@@ -8,7 +8,7 @@ import java.nio.channels.SocketChannel;
 import fr.upem.net.http.exception.HTTPException;
 import fr.upem.net.tcp.nonblocking.data.HTTPFile;
 
-public class HTTPFileReader implements ReaderHTTP<HTTPFile> {
+public class HTTPFileReader implements Reader<HTTPFile> {
 
 	private enum State {
 		DONE, WAITING_CONTENTLENGTH, WAITING_CONTENTTYPE, WAITING_FILENAME, WAITING_EMPTYLINE, WAITING_DATA, WAITING_END,

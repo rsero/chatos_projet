@@ -345,9 +345,6 @@ public class ClientChatos {
 			}
 		}
 	}
-
-
-
 	public boolean isConnectionPrivate(SelectionKey key) {
 		synchronized (lock) {
 			for (var privateClient : hashLoginFile.values()) {

@@ -1,6 +1,7 @@
 package fr.upem.net.tcp.nonblocking.reader;
 
 import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
 
 import fr.upem.net.tcp.nonblocking.data.*;
 
@@ -20,12 +21,12 @@ public class PrivateRequestReader implements Reader<RequestOperation> {
 	}
 
 	@Override
-    public ProcessStatus process(ByteBuffer bb) {
+    public ProcessStatus process(ByteBuffer bb, SelectionKey key) {
         if (state == State.DONE || state == State.ERROR) {
             throw new IllegalStateException();
         }
         if (state == State.WAITING_REQUESTER_LOGIN) {
-            var processLogin = loginReader.process(bb);
+            var processLogin = loginReader.process(bb, key);
             switch (processLogin) {
                 case DONE:
                     requesterLogin = loginReader.get();
@@ -40,7 +41,7 @@ public class PrivateRequestReader implements Reader<RequestOperation> {
             }
         }
         if (state == State.WAITING_TARGET_LOGIN) {
-            var processLogin = loginReader.process(bb);
+            var processLogin = loginReader.process(bb, key);
             switch (processLogin) {
                 case DONE:
                     targetLogin = loginReader.get();

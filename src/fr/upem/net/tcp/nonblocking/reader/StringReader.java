@@ -1,6 +1,7 @@
 package fr.upem.net.tcp.nonblocking.reader;
 
 import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
@@ -17,10 +18,10 @@ public class StringReader implements Reader<String> {
 	private int size;
 	private final Charset UTF8 = StandardCharsets.UTF_8;
 
-	public ProcessStatus process(ByteBuffer bb) {
+	public ProcessStatus process(ByteBuffer bb, SelectionKey key) {
 		switch (state) {
 			case WAITING_INT:
-				var status = intReader.process(bb);
+				var status = intReader.process(bb, key);
 				switch (status) {
 					case DONE:
 						size = intReader.get();

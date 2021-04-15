@@ -1,6 +1,7 @@
 package fr.upem.net.tcp.nonblocking.reader;
 
 import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
 
 public class LongReader implements Reader<Long> {
 
@@ -13,7 +14,7 @@ public class LongReader implements Reader<Long> {
     private long value;
 
     @Override
-    public ProcessStatus process(ByteBuffer bb) {
+    public ProcessStatus process(ByteBuffer bb, SelectionKey key) {
         if (state == State.DONE || state == State.ERROR) {
             throw new IllegalStateException();
         }

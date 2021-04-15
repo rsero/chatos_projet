@@ -2,6 +2,7 @@ package fr.upem.net.tcp.nonblocking.reader;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
 
 import fr.upem.net.tcp.nonblocking.data.Data;
 import fr.upem.net.tcp.nonblocking.data.OpCode;
@@ -72,12 +73,12 @@ public class InstructionReader implements Reader<Data> {
 	}
 
 	@Override
-	public ProcessStatus process(ByteBuffer bb) throws IOException {
+	public ProcessStatus process(ByteBuffer bb, SelectionKey key) throws IOException {
 		if (state == State.DONE || state == State.ERROR) {
 			throw new IllegalStateException();
 		}
 		if (state == State.WAITING_OPCODE) {
-			var stat = byteReader.process(bb);
+			var stat = byteReader.process(bb, key);
 			if(stat!=ProcessStatus.DONE){
 				return stat;
 			}
@@ -85,7 +86,7 @@ public class InstructionReader implements Reader<Data> {
 			definedReader(opCode, byteReader);
 		}
 		if (state == State.WAITING_DATA) {
-			var stateProcess = reader.process(bb);
+			var stateProcess = reader.process(bb, key);
 			if (stateProcess == ProcessStatus.REFILL) {
 				return ProcessStatus.REFILL;
 			} else if (stateProcess == ProcessStatus.ERROR) {

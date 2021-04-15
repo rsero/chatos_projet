@@ -3,6 +3,7 @@ package fr.upem.net.tcp.nonblocking.reader;
 import fr.upem.net.tcp.nonblocking.data.Login;
 
 import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
 
 public class LoginReader implements Reader<Login> {
 
@@ -16,8 +17,8 @@ public class LoginReader implements Reader<Login> {
 	private final StringReader stringReader = new StringReader();
 	private Login login;
 
-	public ProcessStatus process(ByteBuffer bb) {
-		var processlogin = stringReader.process(bb);
+	public ProcessStatus process(ByteBuffer bb, SelectionKey key) {
+		var processlogin = stringReader.process(bb,key);
 		switch (processlogin) {
 		case DONE:
 			var log = stringReader.get();

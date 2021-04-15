@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.nio.ByteBuffer;
 import java.io.IOException;
 
-public class HTTPReaderTest {
+public class PrivateConnectionReaderTest {
     /**
      * Test for ReadLineLFCR with a null Socket
      */

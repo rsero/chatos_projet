@@ -1,6 +1,7 @@
 package fr.upem.net.tcp.nonblocking.reader;
 
 import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
 
 import fr.upem.net.tcp.nonblocking.data.AcceptRequest;
 import fr.upem.net.tcp.nonblocking.data.PrivateRequest;
@@ -18,12 +19,12 @@ public class AcceptRequestReader implements Reader<AcceptRequest>{
     private final LongReader longReader = new LongReader();
 
 	@Override
-    public ProcessStatus process(ByteBuffer bb) {
+    public ProcessStatus process(ByteBuffer bb, SelectionKey key) {
         if (state == State.DONE || state == State.ERROR) {
             throw new IllegalStateException();
         }
         if (state == State.WAITING_PRIVATE_REQUEST) {
-            var processPrivateRequest = privateRequestReader.process(bb);
+            var processPrivateRequest = privateRequestReader.process(bb, key);
             switch (processPrivateRequest) {
                 case DONE:
                 	privateRequest = (PrivateRequest) privateRequestReader.get();
@@ -38,7 +39,7 @@ public class AcceptRequestReader implements Reader<AcceptRequest>{
             }
         }
         if (state == State.WAITING_ID) {
-            var processLongReader = longReader.process(bb);
+            var processLongReader = longReader.process(bb, key);
             switch (processLongReader) {
                 case DONE:
                     connect_id = longReader.get();

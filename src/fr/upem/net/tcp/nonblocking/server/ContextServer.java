@@ -23,7 +23,7 @@ public class ContextServer implements Context {
     private final SocketChannel sc;
     private final Queue<ByteBuffer> queue = new LinkedList<>();
     private final InstructionReader reader = new InstructionReader();
-    private final PrivateConnexionTransmissionReader privateConnexionTransmissionReader;
+    //private final PrivateConnexionTransmissionReader privateConnexionTransmissionReader;
     private boolean closed = false;
     private final ByteBuffer bbin = ByteBuffer.allocate(BUFFER_SIZE);
     private final ByteBuffer bbout = ByteBuffer.allocate(BUFFER_SIZE);
@@ -33,7 +33,6 @@ public class ContextServer implements Context {
         this.server=server;
         this.key=key;
         this.sc = (SocketChannel) key.channel();
-        privateConnexionTransmissionReader = new PrivateConnexionTransmissionReader(key);
     }
 
     public void updateInterestOps() {
@@ -87,28 +86,17 @@ public class ContextServer implements Context {
     }
 
     public void processIn() throws IOException {
-        boolean connectionPrivate = server.isConnectionPrivate(key);
-        for (var cpt =0 ; ; cpt++) {
+        System.out.println("processin hors du for");
+        for (;;) {
+            System.out.println("processin dans le for");
             ProcessStatus status;
-            if (connectionPrivate && cpt == 0) {
-                privateConnexionTransmissionReader.reset();
-                status = privateConnexionTransmissionReader.process(bbin);
-            } else {
-                status = reader.process(bbin);
-            }
+            status = reader.process(bbin, key);
             switch (status) {
                 case DONE:
-                    Data data;
-                    if (connectionPrivate && cpt == 0) {
-                        data = (Data) privateConnexionTransmissionReader.get();
-                        privateConnexionTransmissionReader.reset();
-                        server.broadcast(data, this);
-                        return;
-                    } else {
-                        data = (Data) reader.get();
-                        reader.reset();
-                        server.broadcast(data, this);
-                    }
+                    Data data = (Data) reader.get();
+                    System.out.println("je clear le bb");
+                    reader.reset();
+                    server.broadcast(data, this);
                     break;
                 case REFILL:
                     return;
@@ -177,5 +165,9 @@ public class ContextServer implements Context {
 
     public SelectionKey getKey(){
         return key;
+    }
+
+    public void contextToPrivateContext(){
+        key.attach(new ContextPrivateServer(server, key, sc));
     }
 }

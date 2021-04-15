@@ -28,6 +28,7 @@ public class PrivateLogin implements Data {
         if(req.remaining() < Long.BYTES + 1) {
             return null;
         }
+        System.out.println("client envoie 9");
         req.put((byte) 9).putLong(connectId);
         return req;
     }
@@ -37,6 +38,7 @@ public class PrivateLogin implements Data {
         if(req.remaining() < 1) {
             return null;
         }
+		System.out.println("serveur envoie 10");
         req.put((byte) 10);
         return req;
     }
