@@ -42,7 +42,7 @@ public class ServerDataTreatmentVisitor implements DataServerVisitor {
     public void visit(DisconnectRequest disconnectRequest, Context context) {
         ContextServer contextServer = (ContextServer) context;
         contextServer.disconnectClient(disconnectRequest.getConnectId());
-        var ctx = contextServer.findContextClient(disconnectRequest.getLoginTarget());
+        var ctx = server.findContext(disconnectRequest.getLoginTarget());
         System.out.println(ctx);
         System.out.println(context);
         /*if(ctx != null)

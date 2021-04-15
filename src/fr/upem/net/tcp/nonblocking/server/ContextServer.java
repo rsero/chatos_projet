@@ -150,10 +150,6 @@ public class ContextServer implements Context {
         return server.findContext(login);
     }
 
-    public long definedConnectId(AcceptRequest acceptRequest) {
-        return server.definedConnectId(acceptRequest);
-    }
-
     public boolean connectionReady(Long connectId) {
         return server.connectionReady(connectId);
     }
@@ -169,6 +165,10 @@ public class ContextServer implements Context {
 
     public SelectionKey findKeyTarget(SelectionKey keyTarget) {
         return server.findKeyTarget(keyTarget);
+    }
+
+    public long definedConnectId(AcceptRequest acceptRequest) {
+        return server.definedConnectId(acceptRequest);
     }
 
     public void disconnectClient(Long connect_id){
