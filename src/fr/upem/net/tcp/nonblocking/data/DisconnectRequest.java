@@ -36,7 +36,7 @@ public class DisconnectRequest extends RequestOperation{
         int lenRequester = loginRequester.remaining();
         var loginTarget = UTF8.encode(loginTarget());
         int lenTarget = loginTarget.remaining();
-        if(req.remaining() < lenTarget + lenRequester + 2 * Integer.BYTES + Long.BYTES + 1) {
+        if (req.remaining() < lenTarget + lenRequester + 2 * Integer.BYTES + Long.BYTES + 1) {
             return null;
         }
         req.put((byte) 11).putLong(connectId).putInt(lenRequester).put(loginRequester).putInt(lenTarget).put(loginTarget);
@@ -44,21 +44,16 @@ public class DisconnectRequest extends RequestOperation{
     }
 
     @Override
-    public void decode(ClientChatos client, SelectionKey key) throws IOException {
-
+    public void accept(DataClientVisitor visitor) {
+        visitor.visit(this);
     }
 
     @Override
-    public void broadcast(Selector selector, ContextServer context, SelectionKey key) throws IOException {
-        context.disconnectClient(connectId);
-        var ctx = context.findContextClient(getLoginTarget());
-        System.out.println(ctx);
-        System.out.println(context);
-        /*if(ctx != null)
-            ctx.queueMessage(new DisconnectRequestConnection(getLoginRequester()));
-        else
-            logger.info("This client is not connected to the server");
-*/
-        logger.log(Level.INFO,"Connection is now closed");
+    public void accept(DataServerVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    public Long getConnectId() {
+        return connectId;
     }
 }

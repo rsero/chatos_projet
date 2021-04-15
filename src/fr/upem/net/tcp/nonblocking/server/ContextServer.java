@@ -22,7 +22,7 @@ public class ContextServer {
     private final SocketChannel sc;
     private final Queue<Data> queue = new LinkedList<>();
     private final InstructionReader reader = new InstructionReader();
-    private final PrivateConnexionTransmissionReader privateConnexionTransmissionReader = new PrivateConnexionTransmissionReader();
+    private final PrivateConnexionTransmissionReader privateConnexionTransmissionReader;
     private boolean closed = false;
     private final ByteBuffer bbin = ByteBuffer.allocate(BUFFER_SIZE);
     private final ByteBuffer bbout = ByteBuffer.allocate(BUFFER_SIZE);
@@ -32,6 +32,7 @@ public class ContextServer {
         this.server=server;
         this.key=key;
         this.sc = (SocketChannel) key.channel();
+        privateConnexionTransmissionReader = new PrivateConnexionTransmissionReader(key);
     }
 
     private void updateInterestOps() {
@@ -77,7 +78,6 @@ public class ContextServer {
     private void processIn(SelectionKey key) throws IOException {
         boolean connectionPrivate = server.isConnectionPrivate(key);
         for (var cpt =0 ; ; cpt++) {
-
             ProcessStatus status;
             if (connectionPrivate && cpt == 0) {
                 privateConnexionTransmissionReader.reset();
@@ -91,12 +91,12 @@ public class ContextServer {
                     if (connectionPrivate && cpt == 0) {
                         data = (Data) privateConnexionTransmissionReader.get();
                         privateConnexionTransmissionReader.reset();
-                        server.broadcast(data, this, key);
+                        server.broadcast(data);
                         return;
                     } else {
                         data = (Data) reader.get();
                         reader.reset();
-                        server.broadcast(data, this, key);
+                        server.broadcast(data);
                     }
                     break;
                 case REFILL:
@@ -149,15 +149,15 @@ public class ContextServer {
 
     }
 
-    public List<ContextServer> contextPublic() {
-        return server.contextPublic();
-    }
-
     public SelectionKey findKeyTarget(SelectionKey keyTarget) {
         return server.findKeyTarget(keyTarget);
     }
 
     public void disconnectClient(Long connect_id){
         server.removePrivateConnection(connect_id);
+    }
+
+    public SelectionKey getKey(){
+        return key;
     }
 }

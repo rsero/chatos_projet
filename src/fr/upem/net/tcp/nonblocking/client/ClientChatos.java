@@ -183,7 +183,7 @@ public class ClientChatos {
 		}
 		var privateRequest = new PrivateRequest(login, targetLogin);
 		var file = elements[1];
-		if(privateContexts.putIfAbsent(targetLogin, new ContextPrivateClient(selector, directory, serverAddress, 0))==null){
+		if(privateContexts.putIfAbsent(targetLogin, new ContextPrivateClient(this, selector, directory, serverAddress, 0))==null){
 			System.out.println("targetlogin after /y login is "+ targetLogin);
 			privateContexts.get(targetLogin).addFileToMap(targetLogin,file);
 			return Optional.of(privateRequest.encodeAskPrivateRequest(req));
@@ -264,7 +264,7 @@ public class ClientChatos {
 	public void launch() throws IOException {
 		sc.configureBlocking(false);
 		var key = sc.register(selector, SelectionKey.OP_CONNECT);
-		uniqueContext = new ContextPublicClient(key);
+		uniqueContext = new ContextPublicClient(key, this);
 		key.attach(uniqueContext);
 		sc.connect(serverAddress);
 		console.start();
@@ -371,6 +371,6 @@ public class ClientChatos {
 	}
 
 	public void addConnection(Login login) throws IOException {
-		privateContexts.putIfAbsent(login, new ContextPrivateClient(selector, directory, serverAddress, 0));
+		privateContexts.putIfAbsent(login, new ContextPrivateClient(this, selector, directory, serverAddress, 0));
 	}
 }

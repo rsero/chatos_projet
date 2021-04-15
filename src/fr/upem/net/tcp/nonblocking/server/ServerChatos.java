@@ -28,11 +28,13 @@ public class ServerChatos {
     private final ServerSocketChannel serverSocketChannel;
     private final Selector selector;
     private final static Logger logger = Logger.getLogger(ServerChatos.class.getName());
+    private final ServerDataTreatmentVisitor visitor;
 
     public ServerChatos(int port) throws IOException {
         serverSocketChannel = ServerSocketChannel.open();
         serverSocketChannel.bind(new InetSocketAddress(port));
         selector = Selector.open();
+        visitor = new ServerDataTreatmentVisitor(this);
     }
 
     public boolean addClient(String login, ContextServer context){
@@ -90,7 +92,9 @@ public class ServerChatos {
         }
         client.configureBlocking(false);
         var clientKey = client.register(selector, SelectionKey.OP_READ);
-        clientKey.attach(new ContextServer(this, clientKey));
+        var context = new ContextServer(this, clientKey);
+        visitor.setContext(context);
+        clientKey.attach(context);
     }
 
     private void silentlyClose(SelectionKey key) {
@@ -102,8 +106,8 @@ public class ServerChatos {
         }
     }
     
-    public void broadcast(Data data, ContextServer context, SelectionKey key) throws IOException {
-    	data.broadcast(selector, context, key);
+    public void broadcast(Data data) throws IOException {
+    	data.accept(visitor);
     }
 
     public ContextServer findContext(Login login) {

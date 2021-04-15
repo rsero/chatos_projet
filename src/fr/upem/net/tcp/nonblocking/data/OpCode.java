@@ -27,28 +27,11 @@ public class OpCode implements Data{
 	}
 
 	@Override
-	public void decode(ClientChatos client, SelectionKey key) {
-		switch (opCode) {
-		case 1:
-			client.updateLogin();
-			System.out.println("Identification accepted");
-			break;
-		case 2:
-			System.out.println("Login already taken");
-			break;
-		case 10:
-			System.out.println("Connexion was established");
-			//client.activePrivateConnection(key);
-			break;
-		default:
-			System.out.println("Operation does not exist");
-			break;
-		}
-	}
+	public void accept(DataClientVisitor visitor) { visitor.visit(this); }
 
 	@Override
-	public void broadcast(Selector selector, ContextServer context, SelectionKey key) throws IOException {
-		context.queueMessage(this);
+	public void accept(DataServerVisitor visitor) throws IOException {
+		visitor.visit(this);
 	}
 
 }

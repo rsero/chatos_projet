@@ -65,31 +65,18 @@ public class AcceptRequest extends RequestOperation{
 		req.put((byte) 8).putInt(senderlen).put(senderbuff).putInt(targetlen).put(targetbuff).putLong(connect_id);
 		return req;
 	}
-
-	@Override
-	public void decode(ClientChatos client, SelectionKey key) throws IOException {
-		Login login;
-		if(client.getLogin().equals(getLoginRequester())){
-			login = getLoginTarget();
-		}
-		else {
-			login = getLoginRequester();
-		}
-		System.out.println("targetlogin after acceptrequest is : "+ login);
-		client.addConnect_id(connect_id, login);
-		System.out.println("Connection " + loginRequester() + " : " + loginTarget() + " is established with id : "+ connect_id
-				+ "\n \"/id "+ connect_id +"\" to accept");
-
-	}
-
+/*
 	@Override
 	public void broadcast(Selector selector, ContextServer context, SelectionKey key) throws IOException {
 		connect_id = context.definedConnectId(this);
-		var ctx = findContextRequester(context);
-		ctx.queueMessage(this);
-		ctx = findContextTarget(context);
-		ctx.queueMessage(this);
 	}
+*/
+	@Override
+	public void accept(DataClientVisitor visitor) throws IOException { visitor.visit(this);
+	}
+
+	@Override
+	public void accept(DataServerVisitor visitor) throws IOException { visitor.visit(this); }
 
 	public SelectionKey getKeyRequester() {
 		return keyClientOne;
@@ -123,4 +110,11 @@ public class AcceptRequest extends RequestOperation{
 		silentlyClose(keyClientTwo);
 	}
 
+	public long getConnect_id(){
+		return connect_id;
+	}
+
+	public void setConnect_id(long connect_id){
+		this.connect_id=connect_id;
+	}
 }

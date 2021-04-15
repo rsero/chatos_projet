@@ -2,10 +2,15 @@ package fr.upem.net.tcp.nonblocking.reader;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
 
 import fr.upem.net.tcp.nonblocking.data.PrivateConnexionTransmission;
 
 public class PrivateConnexionTransmissionReader implements Reader<PrivateConnexionTransmission>{
+
+    public PrivateConnexionTransmissionReader(SelectionKey key) {
+        this.key=key;
+    }
 
     private enum State {
         DONE, WAITING, ERROR
@@ -14,6 +19,7 @@ public class PrivateConnexionTransmissionReader implements Reader<PrivateConnexi
     private static int BUFFER_SIZE = 1024;
     private State state = State.WAITING;
     private ByteBuffer internalbb = ByteBuffer.allocate(BUFFER_SIZE); // write-mode
+    private final SelectionKey key;
     private PrivateConnexionTransmission value;
 
     @Override
@@ -29,7 +35,7 @@ public class PrivateConnexionTransmissionReader implements Reader<PrivateConnexi
         }
         state = State.DONE;
         internalbb.flip();
-        value = new PrivateConnexionTransmission(internalbb);
+        value = new PrivateConnexionTransmission(internalbb, key);
         bb.clear();
         return ProcessStatus.DONE;
     }

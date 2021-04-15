@@ -74,12 +74,11 @@ public class Login implements Data {
 	}
 
 	@Override
-	public void decode(ClientChatos client, SelectionKey key) {
+	public void accept(DataClientVisitor visitor) {
+		visitor.visit(this);
 	}
 
 	@Override
-	public void broadcast(Selector selector, ContextServer context, SelectionKey key) throws IOException {
-		context.queueMessage(this);
-	}
+	public void accept(DataServerVisitor visitor) throws IOException { visitor.visit(this); }
 
 }

@@ -54,7 +54,7 @@ public class HTTPReader implements ReaderHTTP<Data>{
 			case WAITING_FIRST_LINE:
 				var firstLine = readLineCRLF(bb, sc);
 				if(firstLine.startsWith("GET")) {
-					reader = new HTTPRequestReader(firstLine);
+					reader = new HTTPRequestReader(firstLine, key);
 				}
 				else if(firstLine.startsWith("HTTP/1.1 200")) {
 					reader = new HTTPFileReader(firstLine);

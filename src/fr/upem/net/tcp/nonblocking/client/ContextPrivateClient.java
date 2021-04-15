@@ -30,11 +30,14 @@ public class ContextPrivateClient implements Context {
     private Object lock = new Object();
     private static final Logger logger = Logger.getLogger(ContextPrivateClient.class.getName());
     private long connect_id;
+    private final ClientChatos client;
     private final String directory;
     private final Charset charsetASCII = Charset.forName("ASCII");
     private final HashMap<Login, List<String>> mapFiles = new HashMap<>();
+    private final ClientDataTreatmentVisitor visitor;
 
-    public ContextPrivateClient(Selector selector, String directory, InetSocketAddress serverAddress, long connect_id) throws IOException {
+    public ContextPrivateClient(ClientChatos client, Selector selector, String directory, InetSocketAddress serverAddress, long connect_id) throws IOException {
+        this.client=client;
         sc = SocketChannel.open();
         sc.configureBlocking(false);
         key = sc.register(selector, SelectionKey.OP_CONNECT);
@@ -42,6 +45,7 @@ public class ContextPrivateClient implements Context {
         sc.connect(serverAddress);
         this.connect_id=connect_id;
         this.directory=directory;
+        visitor = new ClientDataTreatmentVisitor(client);
     }
 
     @Override
@@ -51,7 +55,7 @@ public class ContextPrivateClient implements Context {
             switch (status) {
                 case DONE:
                     Data value = httpReader.get();
-                    value.decode(client, key);
+                    value.accept(visitor);
                     httpReader.reset();
                     break;
                 case REFILL:

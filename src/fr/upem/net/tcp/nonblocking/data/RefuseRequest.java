@@ -36,15 +36,18 @@ public class RefuseRequest extends RequestOperation {
     }
 
     @Override
-    public void decode(ClientChatos client, SelectionKey key) {
+    public void deleteRequestConnection(ClientChatos client){
     	super.deleteRequestConnection(client);
-    	System.out.println(this);
     }
 
     @Override
-    public void broadcast(Selector selector, ContextServer context, SelectionKey key) throws IOException {
-    		var ctx = findContextRequester(context);
-            ctx.queueMessage(this);
+    public void accept(DataClientVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public void accept(DataServerVisitor visitor) throws IOException {
+        visitor.visit(this);
     }
 
     @Override

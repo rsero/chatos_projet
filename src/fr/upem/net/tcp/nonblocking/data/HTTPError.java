@@ -24,13 +24,17 @@ public class HTTPError implements Data{
     }
 
     @Override
-    public void decode(ClientChatos client, SelectionKey key) throws IOException {
-        System.out.println("The file " + file + " was not found");
+    public void accept(DataClientVisitor visitor) {
+        visitor.visit(this);
     }
 
     @Override
-    public void broadcast(Selector selector, ContextServer context, SelectionKey key) throws IOException {
+    public void accept(DataServerVisitor visitor) {
+        visitor.visit(this);
     }
 
+    public String getFile() {
+        return file;
+    }
 }
 

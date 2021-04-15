@@ -46,16 +46,17 @@ public class MessageGlobal implements Data{
         return req;
     }
 
-    @Override
-    public void decode(ClientChatos client, SelectionKey key) {
-        if(client.isConnected())
-            System.out.println(login + " : " + msg);
+    public Login getLogin(){
+        return login;
+    }
+
+    public String getMsg(){
+        return msg;
     }
 
     @Override
-    public void broadcast(Selector selector, ContextServer context, SelectionKey keyServer) throws IOException {
-        for (ContextServer ctx : context.contextPublic()){
-            ctx.queueMessage(this);
-        }
-    }
+    public void accept(DataClientVisitor visitor) { visitor.visit(this); }
+
+    @Override
+    public void accept(DataServerVisitor visitor) throws IOException { visitor.visit(this); }
 }

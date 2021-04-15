@@ -37,13 +37,14 @@ public class DisconnectRequestConnection implements Data{
     }
 
     @Override
-    public void decode(ClientChatos client, SelectionKey key) throws IOException {
-        System.out.println("decode");
-        client.deleteRequestConnection(login);
+    public void accept(DataClientVisitor visitor) {
+        visitor.visit(this);
     }
 
     @Override
-    public void broadcast(Selector selector, ContextServer context, SelectionKey key) throws IOException {
+    public void accept(DataServerVisitor visitor) { visitor.visit(this); }
 
+    public Login getLogin() {
+        return login;
     }
 }

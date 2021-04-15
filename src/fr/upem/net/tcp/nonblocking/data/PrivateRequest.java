@@ -42,19 +42,13 @@ public class PrivateRequest extends RequestOperation {
     }
 
     @Override
-    public void decode(ClientChatos client, SelectionKey key) throws IOException {
-    	client.addSetPrivateRequest(this);
-    	client.addConnection(new Login(loginRequester()));
-        System.out.println(this);
+    public void accept(DataClientVisitor visitor) throws IOException {
+        visitor.visit(this);
     }
 
     @Override
-    public void broadcast(Selector selector, ContextServer context, SelectionKey key) throws IOException {
-    		var ctx = findContextTarget(context);
-    		if(ctx != null)
-                ctx.queueMessage(this);
-    		else
-    		    logger.info("This client is not connected to the server");
+    public void accept(DataServerVisitor visitor) throws IOException {
+        visitor.visit(this);
     }
 
     public ByteBuffer encodeAskPrivateRequest(ByteBuffer req) {

@@ -19,9 +19,11 @@ public class HTTPRequestReader implements ReaderHTTP<HTTPRequest>{
 	private String file;
 	private String directory;
 	private String path;
+	private SelectionKey key;
 
-	public HTTPRequestReader(String firstLine) {
+	public HTTPRequestReader(String firstLine, SelectionKey key) {
 		parseFirstLine(firstLine);
+		this.key=key;
 		state = State.WAITING_SECOND_LINE;
 	}
 
@@ -89,7 +91,7 @@ public class HTTPRequestReader implements ReaderHTTP<HTTPRequest>{
 		if (state != State.DONE) {
 			throw new IllegalStateException();
 		}
-		return new HTTPRequest(file);
+		return new HTTPRequest(file, key);
 	}
 
 	@Override

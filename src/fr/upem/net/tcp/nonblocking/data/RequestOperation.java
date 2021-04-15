@@ -20,11 +20,11 @@ public abstract class RequestOperation implements Data{
 		return bb != null;
 	}
     
-    ContextServer findContextRequester(ContextServer context) {
+    public ContextServer findContextRequester(ContextServer context) {
     	return context.findContextClient(loginRequester);
     }
     
-    ContextServer findContextTarget(ContextServer context) {
+    public ContextServer findContextTarget(ContextServer context) {
     	return context.findContextClient(loginTarget);
     }
     
@@ -47,4 +47,5 @@ public abstract class RequestOperation implements Data{
 	public void deleteRequestConnection(ClientChatos client) {
 		client.deleteRequestConnection(loginTarget);
 	}
+
 }

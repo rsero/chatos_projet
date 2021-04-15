@@ -12,9 +12,11 @@ import fr.upem.net.tcp.nonblocking.server.ServerChatos;
 public class PrivateConnexionTransmission implements Data  {
 
 	private final ByteBuffer bbin;
+	private final SelectionKey key;
 
-	public PrivateConnexionTransmission(ByteBuffer bbin) {
+	public PrivateConnexionTransmission(ByteBuffer bbin, SelectionKey key) {
 		this.bbin = bbin;
+		this.key=key;
 	}
 
 	@Override
@@ -29,18 +31,17 @@ public class PrivateConnexionTransmission implements Data  {
 	}
 
 	@Override
-	public void decode(ClientChatos server, SelectionKey key) throws IOException {
-
+	public void accept(DataClientVisitor visitor) {
+		visitor.visit(this);
 	}
 
 	@Override
-	public void broadcast(Selector selector, ContextServer context, SelectionKey key) throws IOException {
-		var keyTarget = context.findKeyTarget(key);
-		((ContextServer) keyTarget.attachment()).queueMessage(this);
+	public void accept(DataServerVisitor visitor) throws IOException {
+		visitor.visit(this);
 	}
 
-	public ByteBuffer getbb(){
-		return bbin;
+	public SelectionKey getKey(){
+		return key;
 	}
 
 }

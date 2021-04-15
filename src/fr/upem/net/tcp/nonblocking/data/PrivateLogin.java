@@ -16,7 +16,11 @@ public class PrivateLogin implements Data {
 	public PrivateLogin(Long connectId) {
 		this.connectId = connectId;
 	}
-	
+
+	public Long getConnectId() {
+		return connectId;
+	}
+
 	public ByteBuffer encode(ByteBuffer req) throws IOException {
     	req.clear();
         if(req.remaining() < Long.BYTES + 1) {
@@ -42,16 +46,12 @@ public class PrivateLogin implements Data {
 	}
 
 	@Override
-	public void decode(ClientChatos server, SelectionKey key) {
+	public void accept(DataClientVisitor visitor) {
+		visitor.visit(this);
 	}
 
 	@Override
-	public void broadcast(Selector selector, ContextServer context, SelectionKey key) throws IOException {
-		context.updatePrivateConnexion(connectId, key);
-		if(!context.connectionReady(connectId))
-			return;
-		var contexts = context.findContext(connectId);
-        ((ContextServer) contexts.get(0).attachment()).queueMessage(this);
-        ((ContextServer) contexts.get(1).attachment()).queueMessage(this);
+	public void accept(DataServerVisitor visitor) throws IOException {
+		visitor.visit(this);
 	}
 }

@@ -26,7 +26,15 @@ public class HTTPFile implements Data {
         this.nameFile = nameFile;
     }
 
-    private boolean isTextFile() {
+    public ByteBuffer getBuffRead() {
+        return buffRead;
+    }
+
+    public String getNameFile() {
+        return nameFile;
+    }
+
+    public boolean isTextFile() {
         return nameFile.endsWith(".txt");
     }
 
@@ -37,26 +45,12 @@ public class HTTPFile implements Data {
     }
 
     @Override
-    public void decode(ClientChatos client, SelectionKey key) throws IOException {
-        if (isTextFile()) {
-            buffRead.flip();
-            System.out.println("File received : \n" + charsetASCII.decode(buffRead).toString());
-        } else {
-            var shortPath = client.getDirectory()+"/"+nameFile;
-            var path = new File(shortPath).toURI().getPath();
-            File initialFile = new File(path);
-            buffRead.flip();
-
-            OutputStream outputStream = new FileOutputStream(initialFile);
-
-            byte[] arr = buffRead.array();
-            outputStream.write(arr);
-            outputStream.close();
-        }
+    public void accept(DataClientVisitor visitor) throws IOException {
+        visitor.visit(this);
     }
 
     @Override
-    public void broadcast(Selector selector, ContextServer context, SelectionKey key) throws IOException {
-
+    public void accept(DataServerVisitor visitor) {
+        visitor.visit(this);
     }
 }

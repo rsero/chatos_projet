@@ -10,7 +10,6 @@ import java.util.Queue;
 import java.util.logging.Logger;
 
 import fr.upem.net.tcp.nonblocking.data.Data;
-import fr.upem.net.tcp.nonblocking.reader.HTTPReader;
 import fr.upem.net.tcp.nonblocking.reader.InstructionReader;
 import fr.upem.net.tcp.nonblocking.reader.ProcessStatus;
 
@@ -18,6 +17,7 @@ public class ContextPublicClient implements Context {
 
 	private final SelectionKey key;
 	private final SocketChannel sc;
+	private final ClientChatos client;
 	private static int BUFFER_SIZE = 1024;
 	final private ByteBuffer bbin = ByteBuffer.allocate(BUFFER_SIZE);
 	final private ByteBuffer bbout = ByteBuffer.allocate(BUFFER_SIZE);
@@ -26,10 +26,13 @@ public class ContextPublicClient implements Context {
 	private boolean closed = false;
 	private static final Logger logger = Logger.getLogger(ContextPublicClient.class.getName());
 	private Object lock = new Object();
+	private ClientDataTreatmentVisitor visitor;
 
-	public ContextPublicClient(SelectionKey key) {
+	public ContextPublicClient(SelectionKey key, ClientChatos client) {
 		this.key = key;
 		this.sc = (SocketChannel) key.channel();
+		this.client=client;
+		visitor = new ClientDataTreatmentVisitor(client);
 	}
 
 	/**
@@ -48,7 +51,7 @@ public class ContextPublicClient implements Context {
 			switch (status) {
 			case DONE:
 				Data value = reader.get();
-				value.decode(client, key);
+				value.accept(visitor);
 				reader.reset();
 				break;
 			case REFILL:

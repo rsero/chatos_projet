@@ -45,13 +45,22 @@ public class PrivateMessage implements Data {
     }
 
     @Override
-    public void decode(ClientChatos client, SelectionKey key) {
-        System.out.println(loginSender + " : " + msg);
+    public void accept(DataClientVisitor visitor) {
+        visitor.visit(this);
     }
 
     @Override
-    public void broadcast(Selector selector, ContextServer context, SelectionKey key) throws IOException {
-		var ctx = context.findContextClient(loginTarget);
-        ctx.queueMessage(this);
+    public void accept(DataServerVisitor visitor) throws IOException {
+        visitor.visit(this);
+    }
+
+    public String getLoginSender() {
+        return loginSender.toString();
+    }
+
+    public Login getLoginTarget() { return loginTarget; }
+
+    public String getMsg() {
+        return msg;
     }
 }
