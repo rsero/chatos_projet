@@ -9,20 +9,15 @@ import java.nio.charset.Charset;
 public class ClientDataTreatmentVisitor implements DataClientVisitor {
 
     private final ClientChatos client;
-    private ContextPublicClient context;
     private final Charset charsetASCII = Charset.forName("ASCII");
 
     public ClientDataTreatmentVisitor(ClientChatos client){
         this.client=client;
     }
 
-    public void setContext(ContextPublicClient context){
-        this.context=context;
-    }
-
     @Override
     public void visit(Login login) {
-
+        //pas de decode
     }
 
     @Override

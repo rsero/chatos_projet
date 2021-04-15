@@ -1,5 +1,6 @@
 package fr.upem.net.tcp.nonblocking.server;
 
+import fr.upem.net.tcp.nonblocking.client.Context;
 import fr.upem.net.tcp.nonblocking.data.*;
 
 import java.io.IOException;
@@ -7,39 +8,41 @@ import java.io.IOException;
 public class ServerDataTreatmentVisitor implements DataServerVisitor {
 
     private ServerChatos server;
-    private ContextServer context;
 
     public ServerDataTreatmentVisitor(ServerChatos server){
         this.server = server;
     }
 
-    public void setContext(ContextServer context){
-        this.context=context;
+    @Override
+    public void visit(Login login, Context context) throws IOException {
+        if(login.processOut(context, server)){
+            context.queueMessage(login.encode((byte)1).flip());
+        } else {
+            context.queueMessage(login.encode((byte)2).flip());
+        }
     }
 
     @Override
-    public void visit(Login login) throws IOException {
-        context.queueMessage(login);
+    public void visit(OpCode opCode, Context context) throws IOException {
+        //pas utile ici
+        //context.queueMessage(opCode);
     }
 
     @Override
-    public void visit(OpCode opCode) throws IOException {
-        context.queueMessage(opCode);
-    }
-
-    @Override
-    public void visit(AcceptRequest acceptRequest) throws IOException {
+    public void visit(AcceptRequest acceptRequest, Context context) throws IOException {
+        ContextServer contextServer = (ContextServer) context;
         acceptRequest.setConnect_id(server.definedConnectId(acceptRequest));
-        var ctx = acceptRequest.findContextRequester(context);
-        ctx.queueMessage(acceptRequest);
-        ctx = acceptRequest.findContextTarget(context);
-        ctx.queueMessage(acceptRequest);
+        var ctx = acceptRequest.findContextRequester(contextServer);
+        ctx.queueMessage(acceptRequest.encode().flip());
+        ctx = acceptRequest.findContextTarget(contextServer);
+        ctx.queueMessage(acceptRequest.encode().flip());
     }
 
     @Override
-    public void visit(DisconnectRequest disconnectRequest) {
-        context.disconnectClient(disconnectRequest.getConnectId());
-        var ctx = context.findContextClient(disconnectRequest.getLoginTarget());
+    public void visit(DisconnectRequest disconnectRequest, Context context) {
+        ContextServer contextServer = (ContextServer) context;
+        contextServer.disconnectClient(disconnectRequest.getConnectId());
+        var ctx = contextServer.findContextClient(disconnectRequest.getLoginTarget());
         System.out.println(ctx);
         System.out.println(context);
         /*if(ctx != null)
@@ -50,66 +53,73 @@ public class ServerDataTreatmentVisitor implements DataServerVisitor {
     }
 
     @Override
-    public void visit(DisconnectRequestConnection disconnectRequestConnection) {
+    public void visit(DisconnectRequestConnection disconnectRequestConnection, Context context) {
         //pas de broadcast
     }
 
     @Override
-    public void visit(HTTPError httpError) {
+    public void visit(HTTPError httpError, Context context) {
         //pas de broadcast
     }
 
     @Override
-    public void visit(HTTPFile httpFile) {
+    public void visit(HTTPFile httpFile, Context context) {
         //pas de broadcast
     }
 
     @Override
-    public void visit(HTTPRequest httpRequest) {
+    public void visit(HTTPRequest httpRequest, Context context) {
         //pas de broadcast
     }
 
     @Override
-    public void visit(MessageGlobal messageGlobal) throws IOException {
-        for (ContextServer ctx : server.contextPublic()){
-            ctx.queueMessage(messageGlobal);
+    public void visit(MessageGlobal messageGlobal, Context context) throws IOException {
+        var bb = messageGlobal.encode();
+        if (bb==null) {
+            return;
+        }
+        for (Context ctx : server.contextPublic()){
+            ctx.queueMessage(bb.flip());
         }
     }
 
     @Override
-    public void visit(PrivateConnexionTransmission privateConnexionTransmission) throws IOException {
+    public void visit(PrivateConnexionTransmission privateConnexionTransmission, Context context) throws IOException {
         var keyTarget = server.findKeyTarget(privateConnexionTransmission.getKey());
-        ((ContextServer) keyTarget.attachment()).queueMessage(privateConnexionTransmission);
+        ((ContextServer) keyTarget.attachment()).queueMessage(privateConnexionTransmission.encode());
     }
 
     @Override
-    public void visit(PrivateLogin privateLogin) throws IOException {
-        context.updatePrivateConnexion(privateLogin.getConnectId(), context.getKey());
-        if(!context.connectionReady(privateLogin.getConnectId()))
+    public void visit(PrivateLogin privateLogin, Context context) throws IOException {
+        ContextServer contextServer = (ContextServer) context;
+        contextServer.updatePrivateConnexion(privateLogin.getConnectId(), contextServer.getKey());
+        if(!contextServer.connectionReady(privateLogin.getConnectId()))
             return;
-        var contexts = context.findContext(privateLogin.getConnectId());
-        ((ContextServer) contexts.get(0).attachment()).queueMessage(privateLogin);
-        ((ContextServer) contexts.get(1).attachment()).queueMessage(privateLogin);
+        var contexts = contextServer.findContext(privateLogin.getConnectId());
+        ((ContextServer) contexts.get(0).attachment()).queueMessage(privateLogin.encodeResponse().flip());
+        ((ContextServer) contexts.get(1).attachment()).queueMessage(privateLogin.encodeResponse().flip());
     }
 
     @Override
-    public void visit(PrivateMessage privateMessage) throws IOException {
-        var ctx = context.findContextClient(privateMessage.getLoginTarget());
-        ctx.queueMessage(privateMessage);
+    public void visit(PrivateMessage privateMessage, Context context) throws IOException {
+        var ctx = server.findContext(privateMessage.getLoginTarget());
+        ctx.queueMessage(privateMessage.encode().flip());
     }
 
     @Override
-    public void visit(PrivateRequest privateRequest) throws IOException {
-        var ctx = privateRequest.findContextTarget(context);
+    public void visit(PrivateRequest privateRequest, Context context) throws IOException {
+        ContextServer contextServer = (ContextServer) context;
+        var ctx = privateRequest.findContextTarget(contextServer);
         if(ctx != null)
-            ctx.queueMessage(privateRequest);
+            ctx.queueMessage(privateRequest.encode().flip());
         else
             System.out.println("This client is not connected");
     }
 
     @Override
-    public void visit(RefuseRequest refuseRequest) throws IOException {
-        var ctx = refuseRequest.findContextRequester(context);
-        ctx.queueMessage(refuseRequest);
+    public void visit(RefuseRequest refuseRequest, Context context) throws IOException {
+        ContextServer contextServer = (ContextServer) context;
+        var ctx = refuseRequest.findContextRequester(contextServer);
+        ctx.queueMessage(refuseRequest.encode().flip());
     }
 }

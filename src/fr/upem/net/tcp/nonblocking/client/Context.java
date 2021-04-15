@@ -5,12 +5,12 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 
 public interface Context {
-    void processIn(ClientChatos client, SelectionKey key) throws IOException;
+    void processIn() throws IOException;
     void queueMessage(ByteBuffer bb);
     void processOut();
     void updateInterestOps();
     void silentlyClose();
-    void doRead(ClientChatos client, SelectionKey key) throws IOException;
+    void doRead() throws IOException;
     void doWrite() throws IOException;
     void doConnect() throws IOException;
     void closeConnection();

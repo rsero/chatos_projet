@@ -26,6 +26,7 @@ public class InstructionReader implements Reader<Data> {
 		case 1://Identification accepted
 		case 2://identification refused
 		case 10://Private connection established
+			System.out.println("instruction reader case 10");
 			reader = byteReader;
 			state = State.DONE;
 			break;
@@ -54,6 +55,7 @@ public class InstructionReader implements Reader<Data> {
 			state = State.WAITING_DATA;
 			break;
 		case 9://Send private login
+			System.out.println("instruction reader case 9");
 			reader = new PrivateLoginReader();
 			state = State.WAITING_DATA;
 			break;

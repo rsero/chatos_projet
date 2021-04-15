@@ -6,12 +6,14 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 
 import fr.upem.net.tcp.nonblocking.client.ClientChatos;
+import fr.upem.net.tcp.nonblocking.client.Context;
 import fr.upem.net.tcp.nonblocking.server.ContextServer;
 import fr.upem.net.tcp.nonblocking.server.ServerChatos;
 
 public class PrivateLogin implements Data {
 
 	private final Long connectId;
+	private static final int BUFFER_SIZE = 1024;
 	
 	public PrivateLogin(Long connectId) {
 		this.connectId = connectId;
@@ -30,8 +32,8 @@ public class PrivateLogin implements Data {
         return req;
     }
 	
-	public ByteBuffer encodeResponse(ByteBuffer req) {
-    	req.clear();
+	public ByteBuffer encodeResponse() {
+		var req = ByteBuffer.allocate(BUFFER_SIZE);
         if(req.remaining() < 1) {
             return null;
         }
@@ -39,10 +41,11 @@ public class PrivateLogin implements Data {
         return req;
     }
 
-	@Override
-	public boolean processOut(ByteBuffer bbout, ContextServer context, ServerChatos server) throws IOException {
-		var bb = encodeResponse(bbout);
-		return bb != null;
+	//@Override
+	public boolean processOut(ContextServer context, ServerChatos server) throws IOException {
+		//var bb = encodeResponse(bbout);
+		//return bb != null;
+		return true;
 	}
 
 	@Override
@@ -51,7 +54,7 @@ public class PrivateLogin implements Data {
 	}
 
 	@Override
-	public void accept(DataServerVisitor visitor) throws IOException {
-		visitor.visit(this);
+	public void accept(DataServerVisitor visitor, Context context) throws IOException {
+		visitor.visit(this, context);
 	}
 }

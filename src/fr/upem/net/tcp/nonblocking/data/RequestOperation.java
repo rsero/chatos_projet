@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import fr.upem.net.tcp.nonblocking.client.ClientChatos;
+import fr.upem.net.tcp.nonblocking.client.Context;
 import fr.upem.net.tcp.nonblocking.server.ContextServer;
 
 public abstract class RequestOperation implements Data{
@@ -20,11 +21,11 @@ public abstract class RequestOperation implements Data{
 		return bb != null;
 	}
     
-    public ContextServer findContextRequester(ContextServer context) {
+    public Context findContextRequester(ContextServer context) {
     	return context.findContextClient(loginRequester);
     }
     
-    public ContextServer findContextTarget(ContextServer context) {
+    public Context findContextTarget(ContextServer context) {
     	return context.findContextClient(loginTarget);
     }
     

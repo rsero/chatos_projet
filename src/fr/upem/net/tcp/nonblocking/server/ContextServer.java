@@ -8,6 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
+import fr.upem.net.tcp.nonblocking.client.Context;
 import fr.upem.net.tcp.nonblocking.data.AcceptRequest;
 import fr.upem.net.tcp.nonblocking.data.Data;
 import fr.upem.net.tcp.nonblocking.data.Login;
@@ -15,12 +16,12 @@ import fr.upem.net.tcp.nonblocking.reader.InstructionReader;
 import fr.upem.net.tcp.nonblocking.reader.PrivateConnexionTransmissionReader;
 import fr.upem.net.tcp.nonblocking.reader.ProcessStatus;
 
-public class ContextServer {
+public class ContextServer implements Context {
     private final static int BUFFER_SIZE = 1024;
     private final ServerChatos server;
     private final SelectionKey key;
     private final SocketChannel sc;
-    private final Queue<Data> queue = new LinkedList<>();
+    private final Queue<ByteBuffer> queue = new LinkedList<>();
     private final InstructionReader reader = new InstructionReader();
     private final PrivateConnexionTransmissionReader privateConnexionTransmissionReader;
     private boolean closed = false;
@@ -35,7 +36,7 @@ public class ContextServer {
         privateConnexionTransmissionReader = new PrivateConnexionTransmissionReader(key);
     }
 
-    private void updateInterestOps() {
+    public void updateInterestOps() {
         int newInterestOps = 0;
         if (!closed && bbin.hasRemaining()) {
             newInterestOps = newInterestOps | SelectionKey.OP_READ;
@@ -51,7 +52,7 @@ public class ContextServer {
         key.interestOps(newInterestOps);
     }
 
-    private void silentlyClose() {
+    public void silentlyClose() {
         try {
             sc.close();
         } catch (IOException e) {
@@ -59,11 +60,11 @@ public class ContextServer {
         }
     }
 
-    public void doRead(SelectionKey key) throws IOException {
+    public void doRead() throws IOException {
         if (sc.read(bbin) == -1) {
             closed = true;
         }
-        processIn(key);
+        processIn();
         updateInterestOps();
     }
 
@@ -75,7 +76,17 @@ public class ContextServer {
         updateInterestOps();
     }
 
-    private void processIn(SelectionKey key) throws IOException {
+    @Override
+    public void doConnect() throws IOException {
+        // do nothing
+    }
+
+    @Override
+    public void closeConnection() {
+        //do nothing
+    }
+
+    public void processIn() throws IOException {
         boolean connectionPrivate = server.isConnectionPrivate(key);
         for (var cpt =0 ; ; cpt++) {
             ProcessStatus status;
@@ -91,12 +102,12 @@ public class ContextServer {
                     if (connectionPrivate && cpt == 0) {
                         data = (Data) privateConnexionTransmissionReader.get();
                         privateConnexionTransmissionReader.reset();
-                        server.broadcast(data);
+                        server.broadcast(data, this);
                         return;
                     } else {
                         data = (Data) reader.get();
                         reader.reset();
-                        server.broadcast(data);
+                        server.broadcast(data, this);
                     }
                     break;
                 case REFILL:
@@ -109,18 +120,25 @@ public class ContextServer {
         }
     }
 
-    private void processOut() throws IOException {
+    public void processOut() {
         synchronized (lock){
             while (!queue.isEmpty()) {
                var data = queue.peek();
+               if(data.remaining() <= bbout.remaining()){
+                   bbout.put(data);
+                   queue.remove();
+               }
+               /*
                if(data.processOut(bbout, this, server)) {
                    queue.remove();
                }
+               */
+
             }
         }
     }
 
-    public void queueMessage(Data data) throws IOException {
+    public void queueMessage(ByteBuffer data) {
         synchronized (lock){
             queue.add(data);
             processOut();
@@ -128,7 +146,7 @@ public class ContextServer {
         }
     }
 
-    public ContextServer findContextClient(Login login) {
+    public Context findContextClient(Login login) {
         return server.findContext(login);
     }
 

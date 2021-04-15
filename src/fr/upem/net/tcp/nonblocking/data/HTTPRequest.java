@@ -7,6 +7,7 @@ import java.nio.channels.Selector;
 
 import fr.upem.net.http.server.HTTPServer;
 import fr.upem.net.tcp.nonblocking.client.ClientChatos;
+import fr.upem.net.tcp.nonblocking.client.Context;
 import fr.upem.net.tcp.nonblocking.server.ContextServer;
 import fr.upem.net.tcp.nonblocking.server.ServerChatos;
 
@@ -20,8 +21,8 @@ public class HTTPRequest implements Data {
 		this.key = key;
 	}
 
-	@Override
-	public boolean processOut(ByteBuffer bbout, ContextServer context, ServerChatos server)
+	//@Override
+	public boolean processOut(ContextServer context, ServerChatos server)
 			throws IOException {
 		return false;
 	}
@@ -36,7 +37,7 @@ public class HTTPRequest implements Data {
 	}
 
 	@Override
-	public void accept(DataServerVisitor visitor) { visitor.visit(this); }
+	public void accept(DataServerVisitor visitor, Context context) throws IOException { visitor.visit(this, context); }
 
 	public String getFile() {
 		return file;

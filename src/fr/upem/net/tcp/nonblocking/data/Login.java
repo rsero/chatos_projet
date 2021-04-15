@@ -8,6 +8,7 @@ import java.nio.charset.Charset;
 import java.util.Objects;
 
 import fr.upem.net.tcp.nonblocking.client.ClientChatos;
+import fr.upem.net.tcp.nonblocking.client.Context;
 import fr.upem.net.tcp.nonblocking.server.ContextServer;
 import fr.upem.net.tcp.nonblocking.server.ServerChatos;
 
@@ -42,22 +43,22 @@ public class Login implements Data {
 		return name.equals("");
 	}
 
-	@Override
-	public boolean processOut(ByteBuffer bbout, ContextServer context, ServerChatos server) {
-		if (!bbout.hasRemaining()) {
-			return false;
-		}
+	public boolean processOut(Context context, ServerChatos server) {
 		if (server.addClient(name, context)) {
-			bbout.put((byte) 1);
-		} else {
-			bbout.put((byte) 2);
+			return true;
 		}
-		return true;
+		return false;
 	}
 
 	@Override
 	public String toString() {
 		return name;
+	}
+
+	public ByteBuffer encode(Byte opCode){
+		var req = ByteBuffer.allocate(Byte.BYTES);
+		req.put(opCode);
+		return req;
 	}
 
 	public ByteBuffer encodeLogin(String log) {
@@ -67,9 +68,7 @@ public class Login implements Data {
 		if (BUFFER_SIZE < len + Integer.BYTES + 1) {
 			return null;
 		}
-		req.put((byte) 0);
-		req.putInt(len);
-		req.put(loginbuff);
+		req.put((byte) 0).putInt(len).put(loginbuff);
 		return req;
 	}
 
@@ -79,6 +78,6 @@ public class Login implements Data {
 	}
 
 	@Override
-	public void accept(DataServerVisitor visitor) throws IOException { visitor.visit(this); }
+	public void accept(DataServerVisitor visitor, Context context) throws IOException { visitor.visit(this, context); }
 
 }

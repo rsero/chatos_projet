@@ -148,7 +148,7 @@ public class ClientChatos {
 
 	private Optional<ByteBuffer> parsePrivateMessage(ByteBuffer req, String content, String data) throws IOException {
 		var msgprive = new PrivateMessage(login, new Login(content), data);
-		return Optional.of(msgprive.encode(req));
+		return Optional.of(msgprive.encode());
 	}
 
 	private Optional<ByteBuffer> parsePrivateConnection(ByteBuffer req, String content, String data, String[] elements)
@@ -186,7 +186,7 @@ public class ClientChatos {
 		if(privateContexts.putIfAbsent(targetLogin, new ContextPrivateClient(this, selector, directory, serverAddress, 0))==null){
 			System.out.println("targetlogin after /y login is "+ targetLogin);
 			privateContexts.get(targetLogin).addFileToMap(targetLogin,file);
-			return Optional.of(privateRequest.encodeAskPrivateRequest(req));
+			return Optional.of(privateRequest.encodeAskPrivateRequest());
 		}
 		return Optional.empty();
 	}
@@ -233,7 +233,7 @@ public class ClientChatos {
 		var privateRequest = hashPrivateRequest.remove(loginToRemove);
 		privateContexts.remove(loginToRemove);
 		System.out.println("Private connection refused");
-		return Optional.of(privateRequest.encodeRefusePrivateRequest(req));
+		return Optional.of(privateRequest.encodeRefusePrivateRequest());
 	}
 
 	private Optional<ByteBuffer> parseAcceptPrivateConnection(ByteBuffer req, String data){
@@ -243,12 +243,12 @@ public class ClientChatos {
 		}
 		var privateRequest = hashPrivateRequest.get(new Login(data));
 		System.out.println("Private connection with " + data + " accepted");
-		return Optional.of(privateRequest.encodeAcceptPrivateRequest(req));
+		return Optional.of(privateRequest.encodeAcceptPrivateRequest());
 	}
 
 	private Optional<ByteBuffer> parseMessageGlobal(ByteBuffer req, String input) throws IOException {
 		var messageGlobal = new MessageGlobal(login, input);
-		return Optional.of(messageGlobal.encode(req));
+		return Optional.of(messageGlobal.encode());
 	}
 
 	private Optional<ByteBuffer> disconnectPrivateClient(ByteBuffer req, Login loginTarget) throws IOException {
@@ -289,7 +289,7 @@ public class ClientChatos {
 
 			}
 			if (key.isValid() && key.isReadable()) {
-				((Context) key.attachment()).doRead(this, key);
+				((Context) key.attachment()).doRead();
 			}
 		} catch (IOException ioe) {
 			// lambda call in select requires to tunnel IOException

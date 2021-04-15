@@ -7,6 +7,7 @@ import java.nio.channels.Selector;
 import java.nio.charset.Charset;
 
 import fr.upem.net.tcp.nonblocking.client.ClientChatos;
+import fr.upem.net.tcp.nonblocking.client.Context;
 import fr.upem.net.tcp.nonblocking.server.ContextServer;
 import fr.upem.net.tcp.nonblocking.server.ServerChatos;
 
@@ -23,17 +24,17 @@ public class MessageGlobal implements Data{
         this.msg=msg;
     }
 
-    @Override
-    public boolean processOut(ByteBuffer bbout, ContextServer context, ServerChatos server) throws IOException {
-    	var bb = encode(bbout);
+    //@Override
+    public boolean processOut(ContextServer context, ServerChatos server) throws IOException {
+    	var bb = encode();
     	if (bb==null) {
     		return false;
     	}
     	return true;
     }
     
-    public ByteBuffer encode(ByteBuffer req) throws IOException {
-    	req.clear();
+    public ByteBuffer encode() throws IOException {
+        var req = ByteBuffer.allocate(BUFFER_SIZE);
         var loginbuff = UTF8.encode(login.getLogin());
         var msgbuff = UTF8.encode(msg);
         int loginlen = loginbuff.remaining();
@@ -58,5 +59,5 @@ public class MessageGlobal implements Data{
     public void accept(DataClientVisitor visitor) { visitor.visit(this); }
 
     @Override
-    public void accept(DataServerVisitor visitor) throws IOException { visitor.visit(this); }
+    public void accept(DataServerVisitor visitor, Context context) throws IOException { visitor.visit(this, context); }
 }

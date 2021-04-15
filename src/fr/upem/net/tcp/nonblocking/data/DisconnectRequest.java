@@ -1,6 +1,7 @@
 package fr.upem.net.tcp.nonblocking.data;
 
 import fr.upem.net.tcp.nonblocking.client.ClientChatos;
+import fr.upem.net.tcp.nonblocking.client.Context;
 import fr.upem.net.tcp.nonblocking.server.ContextServer;
 import fr.upem.net.tcp.nonblocking.server.ServerChatos;
 
@@ -24,10 +25,11 @@ public class DisconnectRequest extends RequestOperation{
     }
 
 
-    @Override
-    public boolean processOut(ByteBuffer bbout, ContextServer context, ServerChatos server) throws IOException {
-        var bb = encode(bbout);
-        return bb != null;
+    //@Override
+    public boolean processOut(ContextServer context, ServerChatos server) throws IOException {
+        //var bb = encode(bbout);
+        //return bb != null;
+        return true;
     }
 
     public ByteBuffer encode(ByteBuffer req) throws IOException {
@@ -49,9 +51,7 @@ public class DisconnectRequest extends RequestOperation{
     }
 
     @Override
-    public void accept(DataServerVisitor visitor) {
-        visitor.visit(this);
-    }
+    public void accept(DataServerVisitor visitor, Context context) throws IOException { visitor.visit(this, context); }
 
     public Long getConnectId() {
         return connectId;

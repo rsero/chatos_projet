@@ -44,7 +44,7 @@ public class ContextPublicClient implements Context {
 	 * @throws IOException
 	 *
 	 */
-	public void processIn(ClientChatos client, SelectionKey key) throws IOException {
+	public void processIn() throws IOException {
 		for (;;) {
 			//boolean isPrivateConnection = client.isConnectionPrivate(key);
 			ProcessStatus status = reader.process(bbin);
@@ -130,12 +130,12 @@ public class ContextPublicClient implements Context {
 	 *
 	 * @throws IOException
 	 */
-	public void doRead(ClientChatos client, SelectionKey key) throws IOException {
+	public void doRead() throws IOException {
 		if (sc.read(bbin) == -1) {
 			logger.info("read raté");
 			closed = true;
 		}
-		processIn(client, key);
+		processIn();
 		updateInterestOps();
 	}
 

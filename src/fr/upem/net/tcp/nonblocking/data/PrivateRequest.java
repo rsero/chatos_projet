@@ -8,6 +8,7 @@ import java.nio.charset.Charset;
 import java.util.logging.Logger;
 
 import fr.upem.net.tcp.nonblocking.client.ClientChatos;
+import fr.upem.net.tcp.nonblocking.client.Context;
 import fr.upem.net.tcp.nonblocking.server.ContextServer;
 import fr.upem.net.tcp.nonblocking.server.ServerChatos;
 
@@ -16,6 +17,7 @@ public class PrivateRequest extends RequestOperation {
 	private Byte opCode;
     private static final Charset UTF8 = Charset.forName("UTF-8");
     private static final Logger logger = Logger.getLogger(PrivateRequest.class.getName());
+    private static final int BUFFER_SIZE = 1024;
 
     public PrivateRequest(Login loginRequester, Login loginTarget) {
     	super(loginRequester, loginTarget);
@@ -28,8 +30,8 @@ public class PrivateRequest extends RequestOperation {
                 "\"/n "+ loginRequester() +"\" to refuse";
     }
 
-    private ByteBuffer encode(ByteBuffer req) {
-    	req.clear();
+    public ByteBuffer encode() {
+        var req = ByteBuffer.allocate(BUFFER_SIZE);
         var senderbuff = UTF8.encode(loginRequester());
         var targetbuff = UTF8.encode(loginTarget());
         int senderlen =senderbuff.remaining();
@@ -47,27 +49,28 @@ public class PrivateRequest extends RequestOperation {
     }
 
     @Override
-    public void accept(DataServerVisitor visitor) throws IOException {
-        visitor.visit(this);
+    public void accept(DataServerVisitor visitor, Context context) throws IOException {
+        visitor.visit(this, context);
     }
 
-    public ByteBuffer encodeAskPrivateRequest(ByteBuffer req) {
+    public ByteBuffer encodeAskPrivateRequest() {
     	opCode = (byte) 5;
-		return encode(req);
+		return encode();
 	}
     
-	public ByteBuffer encodeAcceptPrivateRequest(ByteBuffer req) {
+	public ByteBuffer encodeAcceptPrivateRequest() {
 		opCode = (byte) 6;
-		return encode(req);
+		return encode();
 	}
 	
-	public ByteBuffer encodeRefusePrivateRequest(ByteBuffer req) {
+	public ByteBuffer encodeRefusePrivateRequest() {
 		opCode = (byte) 7;
-		return encode(req);
+		return encode();
 	}
 
-	@Override
-	public boolean processOut(ByteBuffer bbout, ContextServer context, ServerChatos server) throws IOException {
-		return processOut(encode(bbout));
+	//@Override
+	public boolean processOut(ContextServer context, ServerChatos server) throws IOException {
+		//return processOut(encode(bbout));
+        return true;
 	}
 }

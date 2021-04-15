@@ -10,6 +10,7 @@ import java.nio.channels.Selector;
 import java.nio.charset.Charset;
 
 import fr.upem.net.tcp.nonblocking.client.ClientChatos;
+import fr.upem.net.tcp.nonblocking.client.Context;
 import fr.upem.net.tcp.nonblocking.server.ContextServer;
 import fr.upem.net.tcp.nonblocking.server.ServerChatos;
 
@@ -38,8 +39,8 @@ public class HTTPFile implements Data {
         return nameFile.endsWith(".txt");
     }
 
-    @Override
-    public boolean processOut(ByteBuffer bbout, ContextServer context, ServerChatos server)
+    //@Override
+    public boolean processOut(ContextServer context, ServerChatos server)
             throws IOException {
         return false;
     }
@@ -50,7 +51,5 @@ public class HTTPFile implements Data {
     }
 
     @Override
-    public void accept(DataServerVisitor visitor) {
-        visitor.visit(this);
-    }
+    public void accept(DataServerVisitor visitor, Context context) throws IOException { visitor.visit(this, context); }
 }

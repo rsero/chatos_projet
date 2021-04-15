@@ -49,7 +49,7 @@ public class ContextPrivateClient implements Context {
     }
 
     @Override
-    public void processIn(ClientChatos client, SelectionKey key) throws IOException {
+    public void processIn() throws IOException {
         for(;;) {
             ProcessStatus status = httpReader.process(bbin, key);
             switch (status) {
@@ -113,12 +113,12 @@ public class ContextPrivateClient implements Context {
     }
 
     @Override
-    public void doRead(ClientChatos client, SelectionKey key) throws IOException {
+    public void doRead() throws IOException {
         if (sc.read(bbin) == -1) {
             logger.info("read raté");
             closed = true;
         }
-        processIn(client, key);
+        processIn();
         updateInterestOps();
     }
 

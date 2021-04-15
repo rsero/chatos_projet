@@ -18,12 +18,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import fr.upem.net.tcp.nonblocking.client.Context;
 import fr.upem.net.tcp.nonblocking.data.AcceptRequest;
 import fr.upem.net.tcp.nonblocking.data.Data;
 import fr.upem.net.tcp.nonblocking.data.Login;
 
 public class ServerChatos {
-    private final HashMap<String, ContextServer> clients = new HashMap<>();//Connexion public des clients
+    private final HashMap<String, Context> clients = new HashMap<>();//Connexion public des clients
     private final HashMap<Long, AcceptRequest> privateConnexion = new HashMap<>();//Connexion privée des clients
     private final ServerSocketChannel serverSocketChannel;
     private final Selector selector;
@@ -37,7 +38,7 @@ public class ServerChatos {
         visitor = new ServerDataTreatmentVisitor(this);
     }
 
-    public boolean addClient(String login, ContextServer context){
+    public boolean addClient(String login, Context context){
         return clients.putIfAbsent(login, context) == null;
     }
     
@@ -76,7 +77,7 @@ public class ServerChatos {
                 ((ContextServer) key.attachment()).doWrite();
             }
             if (key.isValid() && key.isReadable()) {
-                ((ContextServer) key.attachment()).doRead(key);
+                ((ContextServer) key.attachment()).doRead();
             }
         } catch (IOException e) {
             logger.log(Level.INFO, "Connection closed with client due to IOException", e);
@@ -93,7 +94,6 @@ public class ServerChatos {
         client.configureBlocking(false);
         var clientKey = client.register(selector, SelectionKey.OP_READ);
         var context = new ContextServer(this, clientKey);
-        visitor.setContext(context);
         clientKey.attach(context);
     }
 
@@ -106,11 +106,11 @@ public class ServerChatos {
         }
     }
     
-    public void broadcast(Data data) throws IOException {
-    	data.accept(visitor);
+    public void broadcast(Data data, Context context) throws IOException {
+    	data.accept(visitor, context);
     }
 
-    public ContextServer findContext(Login login) {
+    public Context findContext(Login login) {
         return clients.get(login.getLogin());
     }
     
@@ -215,7 +215,7 @@ public class ServerChatos {
     }
 
 
-    public List<ContextServer> contextPublic() {
+    public List<Context> contextPublic() {
 		return clients.values().stream().collect(Collectors.toList());
 	}
     
