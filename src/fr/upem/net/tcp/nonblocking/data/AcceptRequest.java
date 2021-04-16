@@ -4,14 +4,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channel;
 import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
 import java.nio.charset.Charset;
 import java.util.Objects;
-
-import fr.upem.net.tcp.nonblocking.client.ClientChatos;
-import fr.upem.net.tcp.nonblocking.client.Context;
-import fr.upem.net.tcp.nonblocking.server.ContextServer;
-import fr.upem.net.tcp.nonblocking.server.ServerChatos;
 
 public class AcceptRequest extends RequestOperation{
 
@@ -50,13 +44,6 @@ public class AcceptRequest extends RequestOperation{
 		return clientOneConnect && clientTwoConnect;
 	}
 
-	/*@Override
-	public boolean processOut(ContextServer context, ServerChatos server) throws IOException {
-		return processOut(encode());
-	}
-
-	 */
-
 	public ByteBuffer encode() throws IOException {
 		var req = ByteBuffer.allocate(BUFFER_SIZE);
 		var senderbuff = UTF8.encode(loginRequester());
@@ -69,20 +56,9 @@ public class AcceptRequest extends RequestOperation{
 		req.put((byte) 8).putInt(senderlen).put(senderbuff).putInt(targetlen).put(targetbuff).putLong(connect_id);
 		return req;
 	}
-	/*
 
 	@Override
-	public void broadcast(Selector selector, ContextServer context, SelectionKey key) throws IOException {
-		connect_id = context.definedConnectId(this);
-	}
-	*/
-
-	@Override
-	public void accept(DataClientVisitor visitor) throws IOException { visitor.visit(this);
-	}
-
-	@Override
-	public void accept(DataServerVisitor visitor, Context context) throws IOException { visitor.visit(this, context); }
+	public void accept(DataVisitor visitor) throws IOException { visitor.visit(this); }
 
 	public SelectionKey getKeyRequester() {
 		return keyClientOne;

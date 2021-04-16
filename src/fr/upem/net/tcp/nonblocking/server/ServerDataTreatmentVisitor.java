@@ -5,16 +5,18 @@ import fr.upem.net.tcp.nonblocking.data.*;
 
 import java.io.IOException;
 
-public class ServerDataTreatmentVisitor implements DataServerVisitor {
+public class ServerDataTreatmentVisitor implements DataVisitor {
 
     private ServerChatos server;
+    private Context context;
 
-    public ServerDataTreatmentVisitor(ServerChatos server){
+    public ServerDataTreatmentVisitor(ServerChatos server,Context context){
         this.server = server;
+        this.context = context;
     }
 
     @Override
-    public void visit(Login login, Context context) throws IOException {
+    public void visit(Login login) throws IOException {
         if(login.processOut(context, server)){
             context.queueMessage(login.encode((byte)1).flip());
         } else {
@@ -23,13 +25,13 @@ public class ServerDataTreatmentVisitor implements DataServerVisitor {
     }
 
     @Override
-    public void visit(OpCode opCode, Context context) throws IOException {
+    public void visit(OpCode opCode) throws IOException {
         //pas utile ici
         //context.queueMessage(opCode);
     }
 
     @Override
-    public void visit(AcceptRequest acceptRequest, Context context) throws IOException {
+    public void visit(AcceptRequest acceptRequest) throws IOException {
         ContextServer contextServer = (ContextServer) context;
         acceptRequest.setConnect_id(server.definedConnectId(acceptRequest));
         var ctx = acceptRequest.findContextRequester(contextServer);
@@ -39,7 +41,7 @@ public class ServerDataTreatmentVisitor implements DataServerVisitor {
     }
 
     @Override
-    public void visit(DisconnectRequest disconnectRequest, Context context) {
+    public void visit(DisconnectRequest disconnectRequest) {
         ContextServer contextServer = (ContextServer) context;
         contextServer.disconnectClient(disconnectRequest.getConnectId());
         var ctx = server.findContext(disconnectRequest.getLoginTarget());
@@ -53,27 +55,27 @@ public class ServerDataTreatmentVisitor implements DataServerVisitor {
     }
 
     @Override
-    public void visit(DisconnectRequestConnection disconnectRequestConnection, Context context) {
+    public void visit(DisconnectRequestConnection disconnectRequestConnection) {
         //pas de broadcast
     }
 
     @Override
-    public void visit(HTTPError httpError, Context context) {
+    public void visit(HTTPError httpError) {
         //pas de broadcast
     }
 
     @Override
-    public void visit(HTTPFile httpFile, Context context) {
+    public void visit(HTTPFile httpFile) {
         //pas de broadcast
     }
 
     @Override
-    public void visit(HTTPRequest httpRequest, Context context) {
+    public void visit(HTTPRequest httpRequest) {
         //pas de broadcast
     }
 
     @Override
-    public void visit(MessageGlobal messageGlobal, Context context) throws IOException {
+    public void visit(MessageGlobal messageGlobal) throws IOException {
         var bb = messageGlobal.encode();
         if (bb==null) {
             return;
@@ -84,18 +86,22 @@ public class ServerDataTreatmentVisitor implements DataServerVisitor {
     }
 
     @Override
-    public void visit(PrivateConnexionTransmission privateConnexionTransmission, Context context) throws IOException {
-        var keyTarget = server.findKeyTarget(privateConnexionTransmission.getKey());
+    public void visit(PrivateConnexionTransmission privateConnexionTransmission) throws IOException {
+        ContextServer contextServer = (ContextServer) context;
+        var keyTarget = contextServer.getKey();
         ((ContextServer) keyTarget.attachment()).queueMessage(privateConnexionTransmission.encode());
     }
 
     @Override
-    public void visit(PrivateLogin privateLogin, Context context) throws IOException {
+    public void visit(PrivateLogin privateLogin) throws IOException {
         ContextServer contextServer = (ContextServer) context;
-        var newContext = contextServer.contextToPrivateContext();
-        server.updatePrivateConnexion(privateLogin.getConnectId(), newContext.getKey());
-        if(!newContext.connectionReady(privateLogin.getConnectId()))
+        //var newContext = contextServer.contextToPrivateContext();
+        contextServer.setPrivate();
+        server.updatePrivateConnexion(privateLogin.getConnectId(), contextServer.getKey());
+        if(!contextServer.connectionReady(privateLogin.getConnectId())) {
+            System.out.println("première clée enregistrée ");
             return;
+        }
         var contexts = server.findContext(privateLogin.getConnectId());
         var response = privateLogin.encodeResponse();
         var response2 = privateLogin.encodeResponse();
@@ -107,13 +113,13 @@ public class ServerDataTreatmentVisitor implements DataServerVisitor {
     }
 
     @Override
-    public void visit(PrivateMessage privateMessage, Context context) throws IOException {
+    public void visit(PrivateMessage privateMessage) throws IOException {
         var ctx = server.findContext(privateMessage.getLoginTarget());
         ctx.queueMessage(privateMessage.encode().flip());
     }
 
     @Override
-    public void visit(PrivateRequest privateRequest, Context context) throws IOException {
+    public void visit(PrivateRequest privateRequest) throws IOException {
         ContextServer contextServer = (ContextServer) context;
         var ctx = privateRequest.findContextTarget(contextServer);
         if(ctx != null)
@@ -123,7 +129,7 @@ public class ServerDataTreatmentVisitor implements DataServerVisitor {
     }
 
     @Override
-    public void visit(RefuseRequest refuseRequest, Context context) throws IOException {
+    public void visit(RefuseRequest refuseRequest) throws IOException {
         ContextServer contextServer = (ContextServer) context;
         var ctx = refuseRequest.findContextRequester(contextServer);
         ctx.queueMessage(refuseRequest.encode().flip());

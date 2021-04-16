@@ -2,7 +2,6 @@ package fr.upem.net.tcp.nonblocking.server;
 
 import fr.upem.net.tcp.nonblocking.client.Context;
 import fr.upem.net.tcp.nonblocking.data.Data;
-import fr.upem.net.tcp.nonblocking.reader.InstructionReader;
 import fr.upem.net.tcp.nonblocking.reader.PrivateConnexionTransmissionReader;
 import fr.upem.net.tcp.nonblocking.reader.ProcessStatus;
 
@@ -46,7 +45,7 @@ public class ContextPrivateServer implements Context {
                 case DONE:
                     Data data = (Data) privateConnexionTransmissionReader.get();
                     privateConnexionTransmissionReader.reset();
-                    server.broadcast(data, this);
+                    //data.accept(visitor);
                     return;
                 case REFILL:
                     return;

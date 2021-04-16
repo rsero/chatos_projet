@@ -23,28 +23,43 @@ public class ContextServer implements Context {
     private final SocketChannel sc;
     private final Queue<ByteBuffer> queue = new LinkedList<>();
     private final InstructionReader reader = new InstructionReader();
+    private final PrivateConnexionTransmissionReader privateConnexionTransmissionReader;
     private boolean closed = false;
     private final ByteBuffer bbin = ByteBuffer.allocate(BUFFER_SIZE);
     private final ByteBuffer bbout = ByteBuffer.allocate(BUFFER_SIZE);
     private final Object lock = new Object();
+    private boolean isPrivate = false;
+    private final ServerDataTreatmentVisitor visitor;
 
     public ContextServer(ServerChatos server, SelectionKey key) {
         this.server=server;
         this.key=key;
         this.sc = (SocketChannel) key.channel();
+        visitor = new ServerDataTreatmentVisitor(server, this);
+        privateConnexionTransmissionReader = new PrivateConnexionTransmissionReader(key);
     }
 
     public void processIn() throws IOException {
-        for (;;) {
-            System.out.println("processin public dans le for");
+        boolean connectionPrivate = server.isConnectionPrivate(key);
+        for (var cpt =0 ; ; cpt++) {
             ProcessStatus status;
-            status = reader.process(bbin, key);
+            if (connectionPrivate && cpt == 0) {
+                privateConnexionTransmissionReader.reset();
+                status = privateConnexionTransmissionReader.process(bbin, key);
+            } else {
+                status = reader.process(bbin, key);
+            }
             switch (status) {
                 case DONE:
-                    Data data = (Data) reader.get();
-                    System.out.println("je clear le bb");
-                    reader.reset();
-                    server.broadcast(data, this);
+                    Data data;
+                    if (connectionPrivate && cpt == 0) {
+                        data = privateConnexionTransmissionReader.get();
+                        privateConnexionTransmissionReader.reset();
+                    } else {
+                        data = reader.get();
+                        reader.reset();
+                    }
+                    data.accept(visitor);
                     break;
                 case REFILL:
                     return;
@@ -52,6 +67,7 @@ public class ContextServer implements Context {
                     silentlyClose();
                     return;
             }
+
         }
     }
 
@@ -88,7 +104,6 @@ public class ContextServer implements Context {
     }
 
     public void doWrite() throws IOException {
-        System.out.println("dowrite public context server");
         bbout.flip();
         sc.write(bbout);
         bbout.compact();
@@ -130,14 +145,6 @@ public class ContextServer implements Context {
         return server.findContext(login);
     }
 
-    public SelectionKey findKeyTarget(SelectionKey keyTarget) {
-        return server.findKeyTarget(keyTarget);
-    }
-
-    public long definedConnectId(AcceptRequest acceptRequest) {
-        return server.definedConnectId(acceptRequest);
-    }
-
     public void disconnectClient(Long connect_id){
         server.removePrivateConnection(connect_id);
     }
@@ -150,5 +157,13 @@ public class ContextServer implements Context {
         var context = new ContextPrivateServer(server, key, sc, bbout);
         key.attach(context);
         return context;
+    }
+
+    public boolean connectionReady(Long connectId) {
+        return server.connectionReady(connectId);
+    }
+
+    public void setPrivate(){
+        isPrivate = true;
     }
 }

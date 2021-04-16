@@ -61,10 +61,8 @@ public class ClientChatos {
 		while (!Thread.interrupted()) {
 			synchronized (lock) {
 				for (var login : privateContexts.keySet()) {
-					//System.out.println("client send command boucle for");
 					var files = privateContexts.get(login).getFiles(login);
 					if(files!= null)
-						//System.out.println("client send command");
 						privateContexts.get(login).sendCommand(login);
 				}
 				selector.wakeup();
@@ -270,7 +268,7 @@ public class ClientChatos {
 		key.attach(uniqueContext);
 		sc.connect(serverAddress);
 		console.start();
-		//privateConnectionThread.start();
+		privateConnectionThread.start();
 		while (!Thread.interrupted()) {
 			try {
 				selector.select(this::treatKey);

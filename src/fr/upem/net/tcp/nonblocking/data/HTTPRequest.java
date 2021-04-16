@@ -1,15 +1,7 @@
 package fr.upem.net.tcp.nonblocking.data;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-
-import fr.upem.net.http.server.HTTPServer;
-import fr.upem.net.tcp.nonblocking.client.ClientChatos;
-import fr.upem.net.tcp.nonblocking.client.Context;
-import fr.upem.net.tcp.nonblocking.server.ContextServer;
-import fr.upem.net.tcp.nonblocking.server.ServerChatos;
 
 public class HTTPRequest implements Data {
 
@@ -21,23 +13,8 @@ public class HTTPRequest implements Data {
 		this.key = key;
 	}
 
-	/*@Override
-	public boolean processOut(ContextServer context, ServerChatos server)
-			throws IOException {
-		return false;
-	}
-
 	@Override
-		public void decode(ClientChatos client) throws IOException {
-		new HTTPServer(file, key, client.getDirectory()).serve();
-	}
-	*/
-	@Override
-	public void accept(DataClientVisitor visitor) throws IOException { visitor.visit(this);
-	}
-
-	@Override
-	public void accept(DataServerVisitor visitor, Context context) throws IOException { visitor.visit(this, context); }
+	public void accept(DataVisitor visitor) throws IOException { visitor.visit(this); }
 
 	public String getFile() {
 		return file;

@@ -1,18 +1,8 @@
 package fr.upem.net.tcp.nonblocking.data;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
 import java.nio.charset.Charset;
-
-import fr.upem.net.tcp.nonblocking.client.ClientChatos;
-import fr.upem.net.tcp.nonblocking.client.Context;
-import fr.upem.net.tcp.nonblocking.server.ContextServer;
-import fr.upem.net.tcp.nonblocking.server.ServerChatos;
 
 public class HTTPFile implements Data {
 
@@ -39,17 +29,6 @@ public class HTTPFile implements Data {
         return nameFile.endsWith(".txt");
     }
 
-    /*@Override
-    public boolean processOut(ContextServer context, ServerChatos server)
-            throws IOException {
-        return false;
-    }
-*/
     @Override
-    public void accept(DataClientVisitor visitor) throws IOException {
-        visitor.visit(this);
-    }
-
-    @Override
-    public void accept(DataServerVisitor visitor, Context context) throws IOException { visitor.visit(this, context); }
+    public void accept(DataVisitor visitor) throws IOException { visitor.visit(this); }
 }

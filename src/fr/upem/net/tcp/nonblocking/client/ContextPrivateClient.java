@@ -56,8 +56,8 @@ public class ContextPrivateClient implements Context {
             switch (status) {
                 case DONE:
                     Data value = connectionReader.get();
-                    value.accept(visitor);
                     connectionReader.reset();
+                    value.accept(visitor);
                     break;
                 case REFILL:
                     return;

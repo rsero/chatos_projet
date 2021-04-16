@@ -29,13 +29,11 @@ public class ServerChatos {
     private final ServerSocketChannel serverSocketChannel;
     private final Selector selector;
     private final static Logger logger = Logger.getLogger(ServerChatos.class.getName());
-    private final ServerDataTreatmentVisitor visitor;
 
     public ServerChatos(int port) throws IOException {
         serverSocketChannel = ServerSocketChannel.open();
         serverSocketChannel.bind(new InetSocketAddress(port));
         selector = Selector.open();
-        visitor = new ServerDataTreatmentVisitor(this);
     }
 
     public boolean addClient(String login, Context context){
@@ -105,10 +103,6 @@ public class ServerChatos {
             // ignore exception
         }
     }
-    
-    public void broadcast(Data data, Context context) throws IOException {
-    	data.accept(visitor, context);
-    }
 
     public Context findContext(Login login) {
         return clients.get(login.getLogin());
@@ -119,16 +113,16 @@ public class ServerChatos {
         return List.of(privateClient.getKeyTarget(), privateClient.getKeyRequester());
     }
 
-//    public boolean isConnectionPrivate(SelectionKey key) {
-//    	for(var privateConnection : privateConnexion.values()) {
-//    		if(privateConnection.containsKey(key)) {
-//    			if(privateConnection.connexionReady())
-//					return true;
-//
-//    		}
-//    	}
-//    	return false;
-//    }
+    public boolean isConnectionPrivate(SelectionKey key) {
+        for(var privateConnection : privateConnexion.values()) {
+            if(privateConnection.containsKey(key)) {
+                if(privateConnection.connexionReady())
+                    return true;
+
+            }
+        }
+        return false;
+    }
     
     public long definedConnectId(AcceptRequest acceptRequest) {
         Random rand = new Random();
