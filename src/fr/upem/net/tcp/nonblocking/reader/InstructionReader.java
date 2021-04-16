@@ -43,6 +43,7 @@ public class InstructionReader implements Reader<Data> {
 			state = State.WAITING_DATA;
 			break;
 		case 6://Private connexion accepted
+			System.out.println("instruction reader case 6");
 			reader = new PrivateRequestReader((byte) 6);
 			state = State.WAITING_DATA;
 			break;
@@ -51,6 +52,7 @@ public class InstructionReader implements Reader<Data> {
 			state = State.WAITING_DATA;
 			break;
 		case 8://Accept connection and give connect_id
+			System.out.println("instruction reader case 8");
 			reader = new AcceptRequestReader();
 			state = State.WAITING_DATA;
 			break;
@@ -83,7 +85,9 @@ public class InstructionReader implements Reader<Data> {
 				return stat;
 			}
 			opCode = byteReader.get();
+			System.out.println(opCode.getByte());
 			definedReader(opCode, byteReader);
+			//byteReader.reset();
 		}
 		if (state == State.WAITING_DATA) {
 			var stateProcess = reader.process(bb, key);

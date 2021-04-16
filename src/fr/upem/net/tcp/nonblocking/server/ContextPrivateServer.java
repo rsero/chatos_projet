@@ -11,6 +11,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 public class ContextPrivateServer implements Context {
@@ -22,21 +23,22 @@ public class ContextPrivateServer implements Context {
     private final PrivateConnexionTransmissionReader privateConnexionTransmissionReader;
     private boolean closed = false;
     private final ByteBuffer bbin = ByteBuffer.allocate(BUFFER_SIZE);
-    private final ByteBuffer bbout = ByteBuffer.allocate(BUFFER_SIZE);
+    private final ByteBuffer bbout;
     private final Object lock = new Object();
 
-    public ContextPrivateServer(ServerChatos server, SelectionKey key, SocketChannel sc){
+    public ContextPrivateServer(ServerChatos server, SelectionKey key, SocketChannel sc, ByteBuffer bbout){
         this.server=server;
-        this.key=key;
+        this.key = key;
         this.sc = sc;
+        this.bbout = bbout;
         privateConnexionTransmissionReader = new PrivateConnexionTransmissionReader(key);
     }
 
     @Override
     public void processIn() throws IOException {
-        System.out.println("processin hors du for");
+        System.out.println("processin private hors du for");
         for (;;) {
-            System.out.println("processin dans le for");
+            System.out.println("processin private  dans le for");
             ProcessStatus status;
             privateConnexionTransmissionReader.reset();
             status = privateConnexionTransmissionReader.process(bbin, key);
@@ -57,8 +59,11 @@ public class ContextPrivateServer implements Context {
 
     @Override
     public void queueMessage(ByteBuffer bb) {
+        System.out.println("queuemessage context prive server");
         synchronized (lock){
+            System.out.println("queuemessage context prive server avant add : "+ queue.size());
             queue.add(bb);
+            System.out.println("queuemessage context prive server apres add : "+ queue.size());
             processOut();
             updateInterestOps();
         }
@@ -66,6 +71,7 @@ public class ContextPrivateServer implements Context {
 
     @Override
     public void processOut() {
+        System.out.println("processout context prive server avant : "+queue.size());
         synchronized (lock){
             while (!queue.isEmpty()) {
                 var data = queue.peek();
@@ -74,7 +80,7 @@ public class ContextPrivateServer implements Context {
                     queue.remove();
                 }
             }
-        }
+        }System.out.println("processout context prive server apres : "+queue.size());
     }
 
     @Override
@@ -84,6 +90,7 @@ public class ContextPrivateServer implements Context {
             newInterestOps = newInterestOps | SelectionKey.OP_READ;
         }
         if (!closed && bbout.position() > 0) {
+            System.out.println("updateinterest OP_WRITE");
             newInterestOps = newInterestOps | SelectionKey.OP_WRITE;
         }
         if (newInterestOps == 0) {
@@ -91,6 +98,7 @@ public class ContextPrivateServer implements Context {
             silentlyClose();
             return;
         }
+        System.out.println("interestop context prive serveur "+ newInterestOps);
         key.interestOps(newInterestOps);
     }
 
@@ -112,6 +120,7 @@ public class ContextPrivateServer implements Context {
     }
 
     public void doWrite() throws IOException {
+        System.out.println("dowrite private context server");
         bbout.flip();
         sc.write(bbout);
         bbout.compact();
@@ -127,5 +136,22 @@ public class ContextPrivateServer implements Context {
     @Override
     public void closeConnection() {
         //do nothing
+    }
+
+    public SelectionKey getKey(){
+        return key;
+    }
+
+    public boolean connectionReady(Long connectId) {
+        return server.connectionReady(connectId);
+    }
+
+    public List<SelectionKey> findContext(Long connectId) {
+        return server.findContext(connectId);
+    }
+
+    public void updatePrivateConnexion(Long connectId, SelectionKey keyClient) {
+        server.updatePrivateConnexion(connectId, keyClient);
+
     }
 }

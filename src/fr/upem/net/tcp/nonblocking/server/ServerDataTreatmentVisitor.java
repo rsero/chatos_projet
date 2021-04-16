@@ -92,13 +92,18 @@ public class ServerDataTreatmentVisitor implements DataServerVisitor {
     @Override
     public void visit(PrivateLogin privateLogin, Context context) throws IOException {
         ContextServer contextServer = (ContextServer) context;
-        contextServer.contextToPrivateContext();
-        contextServer.updatePrivateConnexion(privateLogin.getConnectId(), contextServer.getKey());
-        if(!contextServer.connectionReady(privateLogin.getConnectId()))
+        var newContext = contextServer.contextToPrivateContext();
+        server.updatePrivateConnexion(privateLogin.getConnectId(), newContext.getKey());
+        if(!newContext.connectionReady(privateLogin.getConnectId()))
             return;
-        var contexts = contextServer.findContext(privateLogin.getConnectId());
-        ((Context) contexts.get(0).attachment()).queueMessage(privateLogin.encodeResponse().flip());
-        ((Context) contexts.get(1).attachment()).queueMessage(privateLogin.encodeResponse().flip());
+        var contexts = server.findContext(privateLogin.getConnectId());
+        var response = privateLogin.encodeResponse();
+        var response2 = privateLogin.encodeResponse();
+        ((Context) contexts.get(0).attachment()).queueMessage(response.flip());
+        ((Context) contexts.get(1).attachment()).queueMessage(response2.flip());
+        server.printKeys();
+        System.out.println("visit private login : ");
+        System.out.println("visit private login : ");
     }
 
     @Override

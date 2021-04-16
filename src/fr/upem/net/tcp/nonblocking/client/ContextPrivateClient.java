@@ -51,6 +51,7 @@ public class ContextPrivateClient implements Context {
     @Override
     public void processIn() throws IOException {
         for(;;) {
+            System.out.println("processin contextprive");
             ProcessStatus status = connectionReader.process(bbin, key);
             switch (status) {
                 case DONE:

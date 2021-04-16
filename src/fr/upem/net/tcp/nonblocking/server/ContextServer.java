@@ -23,7 +23,6 @@ public class ContextServer implements Context {
     private final SocketChannel sc;
     private final Queue<ByteBuffer> queue = new LinkedList<>();
     private final InstructionReader reader = new InstructionReader();
-    //private final PrivateConnexionTransmissionReader privateConnexionTransmissionReader;
     private boolean closed = false;
     private final ByteBuffer bbin = ByteBuffer.allocate(BUFFER_SIZE);
     private final ByteBuffer bbout = ByteBuffer.allocate(BUFFER_SIZE);
@@ -33,6 +32,27 @@ public class ContextServer implements Context {
         this.server=server;
         this.key=key;
         this.sc = (SocketChannel) key.channel();
+    }
+
+    public void processIn() throws IOException {
+        for (;;) {
+            System.out.println("processin public dans le for");
+            ProcessStatus status;
+            status = reader.process(bbin, key);
+            switch (status) {
+                case DONE:
+                    Data data = (Data) reader.get();
+                    System.out.println("je clear le bb");
+                    reader.reset();
+                    server.broadcast(data, this);
+                    break;
+                case REFILL:
+                    return;
+                case ERROR:
+                    silentlyClose();
+                    return;
+            }
+        }
     }
 
     public void updateInterestOps() {
@@ -68,6 +88,7 @@ public class ContextServer implements Context {
     }
 
     public void doWrite() throws IOException {
+        System.out.println("dowrite public context server");
         bbout.flip();
         sc.write(bbout);
         bbout.compact();
@@ -85,29 +106,6 @@ public class ContextServer implements Context {
         //do nothing
     }
 
-    public void processIn() throws IOException {
-        System.out.println("processin hors du for");
-        for (;;) {
-            System.out.println("processin dans le for");
-            ProcessStatus status;
-            status = reader.process(bbin, key);
-            switch (status) {
-                case DONE:
-                    Data data = (Data) reader.get();
-                    System.out.println("je clear le bb");
-                    reader.reset();
-                    server.broadcast(data, this);
-                    break;
-                case REFILL:
-                    return;
-                case ERROR:
-                    silentlyClose();
-                    return;
-            }
-
-        }
-    }
-
     public void processOut() {
         synchronized (lock){
             while (!queue.isEmpty()) {
@@ -116,12 +114,6 @@ public class ContextServer implements Context {
                    bbout.put(data);
                    queue.remove();
                }
-               /*
-               if(data.processOut(bbout, this, server)) {
-                   queue.remove();
-               }
-               */
-
             }
         }
     }
@@ -136,19 +128,6 @@ public class ContextServer implements Context {
 
     public Context findContextClient(Login login) {
         return server.findContext(login);
-    }
-
-    public boolean connectionReady(Long connectId) {
-        return server.connectionReady(connectId);
-    }
-
-    public List<SelectionKey> findContext(Long connectId) {
-        return server.findContext(connectId);
-    }
-
-    public void updatePrivateConnexion(Long connectId, SelectionKey keyClient) {
-        server.updatePrivateConnexion(connectId, keyClient);
-
     }
 
     public SelectionKey findKeyTarget(SelectionKey keyTarget) {
@@ -167,7 +146,9 @@ public class ContextServer implements Context {
         return key;
     }
 
-    public void contextToPrivateContext(){
-        key.attach(new ContextPrivateServer(server, key, sc));
+    public ContextPrivateServer contextToPrivateContext(){
+        var context = new ContextPrivateServer(server, key, sc, bbout);
+        key.attach(context);
+        return context;
     }
 }

@@ -87,9 +87,7 @@ public class AcceptRequest extends RequestOperation{
 	public SelectionKey getKeyRequester() {
 		return keyClientOne;
 	}
-	public SelectionKey getKeyTarget() {
-		return keyClientTwo;
-	}
+	public SelectionKey getKeyTarget() { return keyClientTwo; }
 
 	public boolean containsKey(SelectionKey key) {
 		return key.equals(keyClientOne) || key.equals(keyClientTwo);

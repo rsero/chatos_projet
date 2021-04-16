@@ -16,7 +16,7 @@ public class ByteReader implements Reader<OpCode> {
 
     @Override
     public ProcessStatus process(ByteBuffer bb, SelectionKey key) {
-        System.out.println("process bytereader");
+        //System.out.println("process bytereader");
         if (state == State.DONE || state == State.ERROR) {
             throw new IllegalStateException(state.toString());
         }

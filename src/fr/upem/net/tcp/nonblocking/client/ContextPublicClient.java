@@ -46,7 +46,6 @@ public class ContextPublicClient implements Context {
 	 */
 	public void processIn() throws IOException {
 		for (;;) {
-			//boolean isPrivateConnection = client.isConnectionPrivate(key);
 			ProcessStatus status = reader.process(bbin, key);
 			switch (status) {
 			case DONE:

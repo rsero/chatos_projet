@@ -116,7 +116,7 @@ public class ServerChatos {
     
     public List<SelectionKey> findContext(Long connectId) {
     	var privateClient = privateConnexion.get(connectId);
-        return List.of(privateClient.getKeyRequester(), privateClient.getKeyTarget());
+        return List.of(privateClient.getKeyTarget(), privateClient.getKeyRequester());
     }
 
 //    public boolean isConnectionPrivate(SelectionKey key) {
@@ -176,7 +176,7 @@ public class ServerChatos {
                 System.out.println("\tKey for ServerSocketChannel : " + interestOpsToString(key));
             } else {
                 SocketChannel sc = (SocketChannel) channel;
-                System.out.println("\tKey for Client " + remoteAddressToString(sc) + " : " + interestOpsToString(key));
+                System.out.println("\tKey for Client " + remoteAddressToString(sc) + " : " + interestOpsToString(key) + " "+ key.attachment().getClass());
             }
         }
     }
@@ -189,7 +189,7 @@ public class ServerChatos {
         }
     }
 
-    public void printSelectedKey(SelectionKey key) {
+    private void printSelectedKey(SelectionKey key) {
         SelectableChannel channel = key.channel();
         if (channel instanceof ServerSocketChannel) {
             System.out.println("\tServerSocketChannel can perform : " + possibleActionsToString(key));
