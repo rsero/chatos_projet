@@ -29,13 +29,11 @@ public class ServerChatos {
     private final ServerSocketChannel serverSocketChannel;
     private final Selector selector;
     private final static Logger logger = Logger.getLogger(ServerChatos.class.getName());
-    private final ServerDataTreatmentVisitor visitor;
 
     public ServerChatos(int port) throws IOException {
         serverSocketChannel = ServerSocketChannel.open();
         serverSocketChannel.bind(new InetSocketAddress(port));
         selector = Selector.open();
-        visitor = new ServerDataTreatmentVisitor(this);
     }
 
     public boolean addClient(String login, Context context){
@@ -104,10 +102,6 @@ public class ServerChatos {
         } catch (IOException e) {
             // ignore exception
         }
-    }
-    
-    public void broadcast(Data data, Context context) throws IOException {
-    	data.accept(visitor, context);
     }
 
     public Context findContext(Login login) {

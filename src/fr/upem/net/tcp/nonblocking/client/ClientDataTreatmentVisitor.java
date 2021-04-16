@@ -6,7 +6,7 @@ import fr.upem.net.tcp.nonblocking.data.*;
 import java.io.*;
 import java.nio.charset.Charset;
 
-public class ClientDataTreatmentVisitor implements DataClientVisitor {
+public class ClientDataTreatmentVisitor implements DataVisitor {
 
     private final ClientChatos client;
     private final Charset charsetASCII = Charset.forName("ASCII");

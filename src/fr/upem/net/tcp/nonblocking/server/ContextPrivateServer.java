@@ -25,12 +25,14 @@ public class ContextPrivateServer implements Context {
     private final ByteBuffer bbin = ByteBuffer.allocate(BUFFER_SIZE);
     private final ByteBuffer bbout;
     private final Object lock = new Object();
+    private final ServerDataTreatmentVisitor visitor;
 
     public ContextPrivateServer(ServerChatos server, SelectionKey key, SocketChannel sc, ByteBuffer bbout){
         this.server=server;
         this.key = key;
         this.sc = sc;
         this.bbout = bbout;
+        visitor = new ServerDataTreatmentVisitor(server, this);
         privateConnexionTransmissionReader = new PrivateConnexionTransmissionReader(key);
     }
 
@@ -46,7 +48,7 @@ public class ContextPrivateServer implements Context {
                 case DONE:
                     Data data = (Data) privateConnexionTransmissionReader.get();
                     privateConnexionTransmissionReader.reset();
-                    server.broadcast(data, this);
+                    data.accept(visitor);
                     return;
                 case REFILL:
                     return;

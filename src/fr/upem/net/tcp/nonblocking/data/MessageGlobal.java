@@ -2,14 +2,9 @@ package fr.upem.net.tcp.nonblocking.data;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
 import java.nio.charset.Charset;
 
-import fr.upem.net.tcp.nonblocking.client.ClientChatos;
 import fr.upem.net.tcp.nonblocking.client.Context;
-import fr.upem.net.tcp.nonblocking.server.ContextServer;
-import fr.upem.net.tcp.nonblocking.server.ServerChatos;
 
 public class MessageGlobal implements Data{
 
@@ -24,15 +19,6 @@ public class MessageGlobal implements Data{
         this.msg=msg;
     }
 
-    /*@Override
-    public boolean processOut(ContextServer context, ServerChatos server) throws IOException {
-    	var bb = encode();
-    	if (bb==null) {
-    		return false;
-    	}
-    	return true;
-    }
-    */
     public ByteBuffer encode() throws IOException {
         var req = ByteBuffer.allocate(BUFFER_SIZE);
         var loginbuff = UTF8.encode(login.getLogin());
@@ -56,8 +42,5 @@ public class MessageGlobal implements Data{
     }
 
     @Override
-    public void accept(DataClientVisitor visitor) { visitor.visit(this); }
-
-    @Override
-    public void accept(DataServerVisitor visitor, Context context) throws IOException { visitor.visit(this, context); }
+    public void accept(DataVisitor visitor) throws IOException { visitor.visit(this); }
 }

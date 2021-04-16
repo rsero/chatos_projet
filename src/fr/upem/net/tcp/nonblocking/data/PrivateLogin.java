@@ -2,13 +2,8 @@ package fr.upem.net.tcp.nonblocking.data;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
 
-import fr.upem.net.tcp.nonblocking.client.ClientChatos;
 import fr.upem.net.tcp.nonblocking.client.Context;
-import fr.upem.net.tcp.nonblocking.server.ContextServer;
-import fr.upem.net.tcp.nonblocking.server.ServerChatos;
 
 public class PrivateLogin implements Data {
 
@@ -43,20 +38,9 @@ public class PrivateLogin implements Data {
         return req;
     }
 
-	/*@Override
-	public boolean processOut(ContextServer context, ServerChatos server) throws IOException {
-		//var bb = encodeResponse(bbout);
-		//return bb != null;
-		return true;
-	}
-*/
 	@Override
-	public void accept(DataClientVisitor visitor) {
+	public void accept(DataVisitor visitor) throws IOException {
 		visitor.visit(this);
 	}
 
-	@Override
-	public void accept(DataServerVisitor visitor, Context context) throws IOException {
-		visitor.visit(this, context);
-	}
 }

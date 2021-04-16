@@ -27,24 +27,24 @@ public class ContextServer implements Context {
     private final ByteBuffer bbin = ByteBuffer.allocate(BUFFER_SIZE);
     private final ByteBuffer bbout = ByteBuffer.allocate(BUFFER_SIZE);
     private final Object lock = new Object();
+    private final ServerDataTreatmentVisitor visitor;
 
     public ContextServer(ServerChatos server, SelectionKey key) {
         this.server=server;
         this.key=key;
         this.sc = (SocketChannel) key.channel();
+        visitor = new ServerDataTreatmentVisitor(server, this);
     }
 
     public void processIn() throws IOException {
         for (;;) {
-            System.out.println("processin public dans le for");
             ProcessStatus status;
             status = reader.process(bbin, key);
             switch (status) {
                 case DONE:
-                    Data data = (Data) reader.get();
-                    System.out.println("je clear le bb");
+                    Data data = reader.get();
                     reader.reset();
-                    server.broadcast(data, this);
+                    data.accept(visitor);
                     break;
                 case REFILL:
                     return;
@@ -128,14 +128,6 @@ public class ContextServer implements Context {
 
     public Context findContextClient(Login login) {
         return server.findContext(login);
-    }
-
-    public SelectionKey findKeyTarget(SelectionKey keyTarget) {
-        return server.findKeyTarget(keyTarget);
-    }
-
-    public long definedConnectId(AcceptRequest acceptRequest) {
-        return server.definedConnectId(acceptRequest);
     }
 
     public void disconnectClient(Long connect_id){
