@@ -29,22 +29,15 @@ public class ContextPrivateClient implements Context {
     private boolean closed = false;
     private Object lock = new Object();
     private static final Logger logger = Logger.getLogger(ContextPrivateClient.class.getName());
-    private long connect_id;
     private final ClientChatos client;
-    private final String directory;
     private final Charset charsetASCII = Charset.forName("ASCII");
     private final HashMap<Login, List<String>> mapFiles = new HashMap<>();
     private final ClientDataTreatmentVisitor visitor;
 
-    public ContextPrivateClient(ClientChatos client, Selector selector, String directory, InetSocketAddress serverAddress, long connect_id) throws IOException {
+    public ContextPrivateClient(SelectionKey key, ClientChatos client) {
+        this.key = key;
+        this.sc = (SocketChannel) key.channel();
         this.client=client;
-        sc = SocketChannel.open();
-        sc.configureBlocking(false);
-        key = sc.register(selector, SelectionKey.OP_CONNECT);
-        key.attach(this);
-        sc.connect(serverAddress);
-        this.connect_id=connect_id;
-        this.directory=directory;
         visitor = new ClientDataTreatmentVisitor(client);
     }
 
@@ -53,6 +46,8 @@ public class ContextPrivateClient implements Context {
         for(;;) {
             System.out.println("processin contextprive");
             ProcessStatus status = connectionReader.process(bbin, key);
+            System.out.println("sort processin contextprive");
+            System.out.println(status);
             switch (status) {
                 case DONE:
                     Data value = connectionReader.get();
@@ -70,6 +65,7 @@ public class ContextPrivateClient implements Context {
 
     @Override
     public void queueMessage(ByteBuffer bb) {
+        System.out.println("queuemessage private client");
         queue.add(bb);
         processOut();
         updateInterestOps();
@@ -77,6 +73,7 @@ public class ContextPrivateClient implements Context {
 
     @Override
     public void processOut() {
+        System.out.println("processoutcontextprivateclient");
         synchronized (lock) {
             while (!queue.isEmpty()) {
                 var bb = queue.peek();
@@ -149,7 +146,7 @@ public class ContextPrivateClient implements Context {
         }
     }
 
-    //@Override
+    /*
     public void sendCommand(Login login) {
         var files = mapFiles.get(login);
         while(!files.isEmpty()) {
@@ -168,7 +165,7 @@ public class ContextPrivateClient implements Context {
             removeFileToSend(file,files);
         }
     }
-
+*/
     public void addFileToMap(Login login, String file){
         if(mapFiles.putIfAbsent(login, new ArrayList<String>(Collections.singleton(file))) !=null) {
             System.out.println("la map avait déja le login vide");
@@ -179,7 +176,7 @@ public class ContextPrivateClient implements Context {
     public List<String> getFiles(Login login){
         return mapFiles.get(login);
     }
-
+/*
     public boolean correctConnectId(Long id) {
         return id != null && id.equals(connect_id);
     }
@@ -199,5 +196,5 @@ public class ContextPrivateClient implements Context {
     public void removeFileToSend(String lastFile,List<String> files) {
         files.remove(lastFile);
     }
-
+*/
 }

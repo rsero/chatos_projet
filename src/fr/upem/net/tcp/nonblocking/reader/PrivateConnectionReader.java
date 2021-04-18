@@ -7,6 +7,7 @@ import java.nio.channels.SocketChannel;
 
 import fr.upem.net.http.exception.HTTPException;
 import fr.upem.net.tcp.nonblocking.data.Data;
+import fr.upem.net.tcp.nonblocking.data.OpCode;
 
 public class PrivateConnectionReader implements Reader<Data>{
 
@@ -15,6 +16,7 @@ public class PrivateConnectionReader implements Reader<Data>{
 	}
 
 	private Reader<?> reader;
+	private OpCode opCode;
 
 	private State state = State.WAITING_OPCODE;
 	private final ByteReader byteReader = new ByteReader();
@@ -24,9 +26,11 @@ public class PrivateConnectionReader implements Reader<Data>{
 		var sb = new StringBuilder();
 		byte str;
 		char lastchar = 0;
+		System.out.println("avant while "+ buff.position());
 		while (!end) {
 			buff.flip();
 			while (buff.hasRemaining()) {
+				System.out.println("buff hasremaning");
 				str = buff.get();
 				if (str == '\n') {
 					if (lastchar == '\r') {
@@ -35,6 +39,7 @@ public class PrivateConnectionReader implements Reader<Data>{
 					}
 				}
 				sb.append((char) str);
+				//System.out.println(sb.toString());
 				lastchar = (char) str;
 			}
 			buff.compact();
@@ -42,6 +47,7 @@ public class PrivateConnectionReader implements Reader<Data>{
 				HTTPException.ensure(sc.read(buff) != -1, "The connection is closed");
 			}
 		}
+		System.out.println("apres while");
 		return sb.substring(0, sb.length() - 1);
 	}
 
@@ -57,7 +63,8 @@ public class PrivateConnectionReader implements Reader<Data>{
 				if(status!=ProcessStatus.DONE){
 					return status;
 				}
-				var opCode = byteReader.get();
+				opCode = byteReader.get();
+				System.out.println("opcode : "+opCode.getByte());
 				if(opCode.getByte() == (byte) 10){
 					reader = byteReader;
 					state = State.DONE;
@@ -95,6 +102,10 @@ public class PrivateConnectionReader implements Reader<Data>{
 	@Override
 	public void reset() {
 		reader.reset();
-		state = State.WAITING_FIRST_LINE;
+		if(opCode.getByte() == (byte) 10){
+			state=State.WAITING_FIRST_LINE;
+		} else {
+			state = State.WAITING_OPCODE;
+		}
 	}
 }

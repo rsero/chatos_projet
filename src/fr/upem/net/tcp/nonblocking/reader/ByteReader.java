@@ -16,14 +16,13 @@ public class ByteReader implements Reader<OpCode> {
 
     @Override
     public ProcessStatus process(ByteBuffer bb, SelectionKey key) {
-        //System.out.println("process bytereader");
         if (state == State.DONE || state == State.ERROR) {
             throw new IllegalStateException(state.toString());
         }
         bb.flip();
         try {
             if (bb.remaining() >= 1) {
-                value = new OpCode(bb.get());
+                value = new OpCode(bb.get(), key);
                 state = State.DONE;
                 return ProcessStatus.DONE;
             }

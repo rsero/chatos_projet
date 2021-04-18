@@ -28,7 +28,7 @@ public class ClientChatos {
 	private final ArrayBlockingQueue<String> commandQueue = new ArrayBlockingQueue<>(10);
 	private final HashMap<Login, PrivateRequest> hashPrivateRequest = new HashMap<>();// Client qui demande la connexion
 																						// privée
-	private final HashMap<Login, ContextPrivateClient> privateContexts = new HashMap<>();// Client connecté a l'aide
+	private final HashMap<Login, PrivateConnectionClients> privateContexts = new HashMap<>();// Client connecté a l'aide
 																							// d'une connexion privée
 	private ContextPublicClient uniqueContext;
 	private final Object lock = new Object();
@@ -60,10 +60,10 @@ public class ClientChatos {
 	public void privateConnection() {
 		while (!Thread.interrupted()) {
 			synchronized (lock) {
-				for (var login : privateContexts.keySet()) {
-					var files = privateContexts.get(login).getFiles(login);
-					if(files!= null)
-						privateContexts.get(login).sendCommand(login);
+				for (var privateConnection : privateContexts.values()) {
+					if (privateConnection.connectionReady()) {
+						privateConnection.sendRequest();
+					}
 				}
 				selector.wakeup();
 			}
@@ -106,7 +106,11 @@ public class ClientChatos {
 	}
 
 	public void addConnect_id(Long connectId, Login loginTarget) throws IOException {
-		privateContexts.get(loginTarget).setConnect_id(connectId);
+		synchronized (lock) {
+			privateContexts.putIfAbsent(loginTarget, new PrivateConnectionClients(this, directory));
+			privateContexts.get(loginTarget).addConnectId(connectId);
+			privateContexts.get(loginTarget).launch(serverAddress, selector);
+		}
 	}
 
 	public Optional<ByteBuffer> parseInput(String input) throws IOException {
@@ -181,12 +185,22 @@ public class ClientChatos {
 			System.out.println("This is your username");
 			return Optional.empty();
 		}
+		/*
 		var privateRequest = new PrivateRequest(login, targetLogin);
 		var file = elements[1];
 		if(privateContexts.putIfAbsent(targetLogin, new ContextPrivateClient(this, selector, directory, serverAddress, 0))==null){
 			System.out.println("targetlogin after /y login is "+ targetLogin);
 			privateContexts.get(targetLogin).addFileToMap(targetLogin,file);
 			return Optional.of(privateRequest.encodeAskPrivateRequest());
+		}*/
+		var privateRequest = new PrivateRequest(login, targetLogin);
+		synchronized (lock) {
+
+			if (privateContexts.putIfAbsent(targetLogin, new PrivateConnectionClients(this, directory)) == null) {
+				privateContexts.get(targetLogin).addFileToSend(elements[1]);
+				return Optional.of(privateRequest.encodeAskPrivateRequest());
+			}
+			privateContexts.get(targetLogin).addFileToSend(elements[1]);
 		}
 		return Optional.empty();
 	}
@@ -335,19 +349,20 @@ public class ClientChatos {
 			hashPrivateRequest.put(privateRequest.getLoginRequester(), privateRequest);
 		}
 	}
-/*
+
 	public void activePrivateConnection(SelectionKey key) {
 		synchronized (lock) {
-			for (var privateClient : hashLoginFile.values()) {
+			for (var privateClient : privateContexts.values()) {
 				if (privateClient.activeConnection(key)) {
 					return;
 				}
 			}
 		}
 	}
+/*
 	public boolean isConnectionPrivate(SelectionKey key) {
 		synchronized (lock) {
-			for (var privateClient : hashLoginFile.values()) {
+			for (var privateClient : privateContexts.values()) {
 				if (privateClient.containsKey(key)) {
 					if (privateClient.connectionReady())
 						return true;
@@ -366,8 +381,10 @@ public class ClientChatos {
 			privateContexts.remove(loginTarget);
 		}
 	}
-
+/*
 	public void addConnection(Login login) throws IOException {
 		privateContexts.putIfAbsent(login, new ContextPrivateClient(this, selector, directory, serverAddress, 0));
 	}
+
+ */
 }

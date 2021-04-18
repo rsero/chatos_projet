@@ -41,9 +41,9 @@ public class ContextServer implements Context {
 
     public void processIn() throws IOException {
         boolean connectionPrivate = server.isConnectionPrivate(key);
-        for (var cpt =0 ; ; cpt++) {
+        for (;;) {
             ProcessStatus status;
-            if (connectionPrivate && cpt == 0) {
+            if (connectionPrivate) {
                 privateConnexionTransmissionReader.reset();
                 status = privateConnexionTransmissionReader.process(bbin, key);
             } else {
@@ -52,8 +52,9 @@ public class ContextServer implements Context {
             switch (status) {
                 case DONE:
                     Data data;
-                    if (connectionPrivate && cpt == 0) {
+                    if (connectionPrivate) {
                         data = privateConnexionTransmissionReader.get();
+                        System.out.println("j'ai reçu data");
                         privateConnexionTransmissionReader.reset();
                     } else {
                         data = reader.get();
@@ -67,7 +68,6 @@ public class ContextServer implements Context {
                     silentlyClose();
                     return;
             }
-
         }
     }
 

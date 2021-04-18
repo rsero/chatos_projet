@@ -32,7 +32,7 @@ public class ClientDataTreatmentVisitor implements DataVisitor {
                 break;
             case 10:
                 System.out.println("Connexion was established");
-                //client.activePrivateConnection(key);
+                client.activePrivateConnection(opCode.getKey());
                 break;
             default:
                 System.out.println("Operation does not exist");
@@ -119,7 +119,7 @@ public class ClientDataTreatmentVisitor implements DataVisitor {
     @Override
     public void visit(PrivateRequest privateRequest) throws IOException {
         client.addSetPrivateRequest(privateRequest);
-        client.addConnection(new Login(privateRequest.loginRequester()));
+        //client.addConnection(new Login(privateRequest.loginRequester()));
         System.out.println(privateRequest);
     }
 

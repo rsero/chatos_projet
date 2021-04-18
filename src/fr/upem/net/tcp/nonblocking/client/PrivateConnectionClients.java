@@ -25,7 +25,7 @@ public class PrivateConnectionClients {
 	private final ClientChatos clientChatos;
 	private final Charset charsetASCII = Charset.forName("ASCII");
 	private static final Logger logger = Logger.getLogger(PrivateConnectionClients.class.getName());
-	
+
 	public PrivateConnectionClients(ClientChatos clientChatos, String directory) throws IOException {
 		this.files = new ArrayList<>();
 		socketChannel = SocketChannel.open();
@@ -33,29 +33,42 @@ public class PrivateConnectionClients {
 		this.directory = directory;
 	}
 
-	/*
 	public void launch(InetSocketAddress serverAddress, Selector selector) throws IOException {
 		socketChannel.configureBlocking(false);
 		var key = socketChannel.register(selector, SelectionKey.OP_CONNECT);
-		privateContext = new ContextPrivateClient(selector);
+		privateContext = new ContextPrivateClient(key, clientChatos);
 		key.attach(privateContext);
 		socketChannel.connect(serverAddress);
 	}
-	*/
 
+	public long getConnectId(){
+		return connect_id;
+	}
 
-	
+	public void addConnectId(Long connect_id) {
+		this.connect_id = connect_id;
+	}
 
+	public void addFileToSend(String newFile) {
+		files.add(newFile);
+	}
 
-    public void closeConnection(){
+	public void removeFileToSend(String lastFile) {
+		files.remove(lastFile);
+	}
+
+	public boolean correctConnectId(Long id) {
+		return id != null && id.equals(connect_id);
+	}
+
+	public void closeConnection(){
 		privateContext.closeConnection();
 	}
 
-	public void queueMessage(Optional<ByteBuffer> bb) {
-		privateContext.queueMessage(bb.get().flip());
+	public void queueMessage(ByteBuffer bb) {
+		privateContext.queueMessage(bb);
 	}
 
-	/*
 	public boolean activeConnection(SelectionKey key) {
 		if(privateContext.equals(key.attachment())) {
 			connectionReady = true;
@@ -64,15 +77,13 @@ public class PrivateConnectionClients {
 		return false;
 	}
 
-
 	public boolean connectionReady() {
 		return connectionReady;
 	}
 
-
 	public String getURL(String path) throws MalformedURLException {
-        return new File(path).toURI().getPath();
-    }
+		return new File(path).toURI().getPath();
+	}
 
 	public void sendRequest() {
 		while(!files.isEmpty()) {
@@ -80,9 +91,10 @@ public class PrivateConnectionClients {
 			String request;
 			try {
 				request = "GET /"+ file + " HTTP/1.1\r\n"
-                        + "Host: " + getURL(directory) + "\r\n"
-                        + "\r\n";
+						+ "Host: " + getURL(directory) + "\r\n"
+						+ "\r\n";
 				var bb = charsetASCII.encode(request);
+				System.out.println("\n"+request+"\n");
 				privateContext.queueMessage(bb);
 			} catch (MalformedURLException e) {
 				logger.warning(file + "doesn't exist");
@@ -91,8 +103,8 @@ public class PrivateConnectionClients {
 			clientChatos.wakeUp();
 		}
 	}
-*/
-	public boolean containsKey(SelectionKey key) {	
+
+	public boolean containsKey(SelectionKey key) {
 		return privateContext != null && privateContext.equals(key.attachment());
 	}
 }
