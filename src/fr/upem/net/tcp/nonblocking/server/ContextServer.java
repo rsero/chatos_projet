@@ -4,16 +4,16 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Queue;
 
 import fr.upem.net.tcp.nonblocking.client.Context;
-import fr.upem.net.tcp.nonblocking.data.AcceptRequest;
 import fr.upem.net.tcp.nonblocking.data.Data;
 import fr.upem.net.tcp.nonblocking.data.Login;
 import fr.upem.net.tcp.nonblocking.reader.InstructionReader;
-import fr.upem.net.tcp.nonblocking.reader.PrivateConnexionTransmissionReader;
+import fr.upem.net.tcp.nonblocking.reader.PrivateConnectionTransmissionReader;
 import fr.upem.net.tcp.nonblocking.reader.ProcessStatus;
 
 public class ContextServer implements Context {
@@ -23,20 +23,21 @@ public class ContextServer implements Context {
     private final SocketChannel sc;
     private final Queue<ByteBuffer> queue = new LinkedList<>();
     private final InstructionReader reader = new InstructionReader();
-    private final PrivateConnexionTransmissionReader privateConnexionTransmissionReader;
+    private final PrivateConnectionTransmissionReader privateConnectionTransmissionReader;
     private boolean closed = false;
     private final ByteBuffer bbin = ByteBuffer.allocate(BUFFER_SIZE);
     private final ByteBuffer bbout = ByteBuffer.allocate(BUFFER_SIZE);
     private final Object lock = new Object();
     private boolean isPrivate = false;
     private final ServerDataTreatmentVisitor visitor;
+    private Charset UTF8 = StandardCharsets.UTF_8;
 
     public ContextServer(ServerChatos server, SelectionKey key) {
         this.server=server;
         this.key=key;
         this.sc = (SocketChannel) key.channel();
         visitor = new ServerDataTreatmentVisitor(server, this);
-        privateConnexionTransmissionReader = new PrivateConnexionTransmissionReader(key);
+        privateConnectionTransmissionReader = new PrivateConnectionTransmissionReader(key);
     }
 
     public void processIn() throws IOException {
@@ -44,8 +45,8 @@ public class ContextServer implements Context {
         for (;;) {
             ProcessStatus status;
             if (connectionPrivate) {
-                privateConnexionTransmissionReader.reset();
-                status = privateConnexionTransmissionReader.process(bbin, key);
+                status = privateConnectionTransmissionReader.process(bbin, key);
+                System.out.println(status);
             } else {
                 status = reader.process(bbin, key);
             }
@@ -53,9 +54,8 @@ public class ContextServer implements Context {
                 case DONE:
                     Data data;
                     if (connectionPrivate) {
-                        data = privateConnexionTransmissionReader.get();
-                        System.out.println("j'ai reçu data");
-                        privateConnexionTransmissionReader.reset();
+                        data = privateConnectionTransmissionReader.get();
+                        privateConnectionTransmissionReader.reset();
                     } else {
                         data = reader.get();
                         reader.reset();
@@ -74,9 +74,11 @@ public class ContextServer implements Context {
     public void updateInterestOps() {
         int newInterestOps = 0;
         if (!closed && bbin.hasRemaining()) {
+            System.out.println("OPREAD");
             newInterestOps = newInterestOps | SelectionKey.OP_READ;
         }
         if (!closed && bbout.position() > 0) {
+            System.out.println("OPWRITE");
             newInterestOps = newInterestOps | SelectionKey.OP_WRITE;
         }
         if (newInterestOps == 0) {
@@ -96,6 +98,7 @@ public class ContextServer implements Context {
     }
 
     public void doRead() throws IOException {
+        System.out.println("do read");
         if (sc.read(bbin) == -1) {
             closed = true;
         }
@@ -104,6 +107,7 @@ public class ContextServer implements Context {
     }
 
     public void doWrite() throws IOException {
+        System.out.println("do write");
         bbout.flip();
         sc.write(bbout);
         bbout.compact();
@@ -128,6 +132,10 @@ public class ContextServer implements Context {
                if(data.remaining() <= bbout.remaining()){
                    bbout.put(data);
                    queue.remove();
+                   System.out.println(queue.size());
+               }
+               else {
+                   break;
                }
             }
         }
@@ -135,9 +143,12 @@ public class ContextServer implements Context {
 
     public void queueMessage(ByteBuffer data) {
         synchronized (lock){
+            System.out.println("queue message");
             queue.add(data);
+            System.out.println("queue message apres add");
             processOut();
             updateInterestOps();
+            System.out.println("fin queue message");
         }
     }
 

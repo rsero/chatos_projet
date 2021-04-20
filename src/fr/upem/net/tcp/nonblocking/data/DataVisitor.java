@@ -1,7 +1,5 @@
 package fr.upem.net.tcp.nonblocking.data;
 
-import fr.upem.net.tcp.nonblocking.client.Context;
-
 import java.io.IOException;
 
 public interface DataVisitor {
@@ -14,7 +12,7 @@ public interface DataVisitor {
     void visit(HTTPFile httpFile) throws IOException;
     void visit(HTTPRequest httpRequest) throws IOException;
     void visit(MessageGlobal messageGlobal) throws IOException;
-    void visit(PrivateConnexionTransmission privateConnexionTransmission) throws IOException;
+    void visit(PrivateConnectionTransmission privateConnectionTransmission) throws IOException;
     void visit(PrivateLogin privateLogin) throws IOException;
     void visit(PrivateMessage privateMessage) throws IOException;
     void visit(PrivateRequest privateRequest) throws IOException;

@@ -5,9 +5,13 @@ import java.nio.channels.SelectionKey;
 
 import fr.upem.net.tcp.nonblocking.data.AcceptRequest;
 import fr.upem.net.tcp.nonblocking.data.PrivateRequest;
-
+/**
+ * Represents a reader that produces a Accept Request data
+ */
 public class AcceptRequestReader implements Reader<AcceptRequest>{
-
+    /**
+     * Different states the reader can be in
+     */
     private enum State {
         DONE, WAITING_PRIVATE_REQUEST, WAITING_ID, ERROR
     }
@@ -18,6 +22,13 @@ public class AcceptRequestReader implements Reader<AcceptRequest>{
     private final PrivateRequestReader privateRequestReader = new PrivateRequestReader((byte) 5);
     private final LongReader longReader = new LongReader();
 
+    /**
+     * Reads the ByteBuffer bb passed
+     * @param key
+     * @param bb
+     * @return ProcessStatus.REFILL if some content is missing, ProcessStatus.ERROR if an error
+     * occurred and ProcessStatus.DONE if all the content was processed
+     */
 	@Override
     public ProcessStatus process(ByteBuffer bb, SelectionKey key) {
         if (state == State.DONE || state == State.ERROR) {
@@ -56,6 +67,11 @@ public class AcceptRequestReader implements Reader<AcceptRequest>{
         return ProcessStatus.DONE;
     }
 
+    /**
+     * Gets the Data that have been processed previously
+     * @return an AcceptRequest object
+     * @throws IllegalStateException if the state is not DONE
+     */
     @Override
     public AcceptRequest get() {
         if (state != State.DONE) {
@@ -64,6 +80,9 @@ public class AcceptRequestReader implements Reader<AcceptRequest>{
     	return new AcceptRequest(privateRequest.getLoginRequester(), privateRequest.getLoginTarget(), connect_id);       	
     }
 
+    /**
+     * Resets the reader
+     */
     @Override
     public void reset() {
         state = State.WAITING_PRIVATE_REQUEST;

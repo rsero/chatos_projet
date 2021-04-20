@@ -2,7 +2,7 @@ package fr.upem.net.tcp.nonblocking.server;
 
 import fr.upem.net.tcp.nonblocking.client.Context;
 import fr.upem.net.tcp.nonblocking.data.Data;
-import fr.upem.net.tcp.nonblocking.reader.PrivateConnexionTransmissionReader;
+import fr.upem.net.tcp.nonblocking.reader.PrivateConnectionTransmissionReader;
 import fr.upem.net.tcp.nonblocking.reader.ProcessStatus;
 
 import java.io.IOException;
@@ -19,7 +19,7 @@ public class ContextPrivateServer implements Context {
     private final SelectionKey key;
     private final SocketChannel sc;
     private final Queue<ByteBuffer> queue = new LinkedList<>();
-    private final PrivateConnexionTransmissionReader privateConnexionTransmissionReader;
+    private final PrivateConnectionTransmissionReader privateConnectionTransmissionReader;
     private boolean closed = false;
     private final ByteBuffer bbin = ByteBuffer.allocate(BUFFER_SIZE);
     private final ByteBuffer bbout;
@@ -30,7 +30,7 @@ public class ContextPrivateServer implements Context {
         this.key = key;
         this.sc = sc;
         this.bbout = bbout;
-        privateConnexionTransmissionReader = new PrivateConnexionTransmissionReader(key);
+        privateConnectionTransmissionReader = new PrivateConnectionTransmissionReader(key);
     }
 
     @Override
@@ -39,12 +39,12 @@ public class ContextPrivateServer implements Context {
         for (;;) {
             System.out.println("processin private  dans le for");
             ProcessStatus status;
-            privateConnexionTransmissionReader.reset();
-            status = privateConnexionTransmissionReader.process(bbin, key);
+            privateConnectionTransmissionReader.reset();
+            status = privateConnectionTransmissionReader.process(bbin, key);
             switch (status) {
                 case DONE:
-                    Data data = (Data) privateConnexionTransmissionReader.get();
-                    privateConnexionTransmissionReader.reset();
+                    Data data = (Data) privateConnectionTransmissionReader.get();
+                    privateConnectionTransmissionReader.reset();
                     //data.accept(visitor);
                     return;
                 case REFILL:
@@ -60,9 +60,7 @@ public class ContextPrivateServer implements Context {
     public void queueMessage(ByteBuffer bb) {
         System.out.println("queuemessage context prive server");
         synchronized (lock){
-            System.out.println("queuemessage context prive server avant add : "+ queue.size());
             queue.add(bb);
-            System.out.println("queuemessage context prive server apres add : "+ queue.size());
             processOut();
             updateInterestOps();
         }
@@ -70,16 +68,15 @@ public class ContextPrivateServer implements Context {
 
     @Override
     public void processOut() {
-        System.out.println("processout context prive server avant : "+queue.size());
-        synchronized (lock){
+        synchronized (lock) {
             while (!queue.isEmpty()) {
                 var data = queue.peek();
-                if(data.remaining() <= bbout.remaining()){
+                if (data.remaining() <= bbout.remaining()) {
                     bbout.put(data);
                     queue.remove();
                 }
             }
-        }System.out.println("processout context prive server apres : "+queue.size());
+        }
     }
 
     @Override

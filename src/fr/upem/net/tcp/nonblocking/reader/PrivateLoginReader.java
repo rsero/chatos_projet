@@ -5,7 +5,9 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 
 import fr.upem.net.tcp.nonblocking.data.PrivateLogin;
-
+/**
+ * Represents a reader that produces a Private Login Reader data
+ */
 public class PrivateLoginReader implements Reader<PrivateLogin> {
 	
 	private enum State {
@@ -16,6 +18,14 @@ public class PrivateLoginReader implements Reader<PrivateLogin> {
 	private Long connectId;
 	private final LongReader longReader = new LongReader();
 
+	/**
+	 * Reads the ByteBuffer bb passed
+	 * @param key
+	 * @param bb
+	 * @return ProcessStatus.REFILL if some content is missing, ProcessStatus.ERROR if an error
+	 * occurred and ProcessStatus.DONE if all the content was processed
+	 * @throws IllegalStateException if the state is DONE or ERROR at the beginning
+	 */
 	@Override
 	public ProcessStatus process(ByteBuffer bb, SelectionKey key) {
 		if (state == State.DONE || state == State.ERROR) {

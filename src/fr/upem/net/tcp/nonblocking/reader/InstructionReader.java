@@ -7,6 +7,9 @@ import java.nio.channels.SelectionKey;
 import fr.upem.net.tcp.nonblocking.data.Data;
 import fr.upem.net.tcp.nonblocking.data.OpCode;
 
+/**
+ * Represents a reader that contains a data object that is received from a client connected to the server
+ */
 public class InstructionReader implements Reader<Data> {
 	private enum State {
 		DONE, WAITING_OPCODE, WAITING_DATA, ERROR
@@ -18,7 +21,13 @@ public class InstructionReader implements Reader<Data> {
 	private Reader<?> reader;
 	private final ByteReader byteReader = new ByteReader();
 
-	private void definedReader(OpCode opcode, ByteReader byteReader) {
+
+	/**
+	 * Attributes the accurate reader class according to the opCode value
+	 * passed as a parameter
+	 * @param opcode byte value read from the buffer
+	 */
+	private void definedReader(OpCode opcode) {
 		switch (opcode.getByte()) {
 		case 0://Identification
 			reader = new LoginReader();
@@ -43,7 +52,6 @@ public class InstructionReader implements Reader<Data> {
 			state = State.WAITING_DATA;
 			break;
 		case 6://Private connexion accepted
-			System.out.println("instruction reader case 6");
 			reader = new PrivateRequestReader((byte) 6);
 			state = State.WAITING_DATA;
 			break;
@@ -52,12 +60,10 @@ public class InstructionReader implements Reader<Data> {
 			state = State.WAITING_DATA;
 			break;
 		case 8://Accept connection and give connect_id
-			System.out.println("instruction reader case 8");
 			reader = new AcceptRequestReader();
 			state = State.WAITING_DATA;
 			break;
 		case 9://Send private login
-			System.out.println("instruction reader case 9");
 			reader = new PrivateLoginReader();
 			state = State.WAITING_DATA;
 			break;
@@ -74,6 +80,14 @@ public class InstructionReader implements Reader<Data> {
 		}
 	}
 
+	/**
+	 * Reads the ByteBuffer bb passed
+	 * @param key
+	 * @param bb
+	 * @return ProcessStatus.REFILL if the value is not the size of an integer,
+	 * and ProcessStatus.DONE if all the content was processed
+	 * @throws IllegalStateException
+	 */
 	@Override
 	public ProcessStatus process(ByteBuffer bb, SelectionKey key) throws IOException {
 		if (state == State.DONE || state == State.ERROR) {
@@ -85,9 +99,7 @@ public class InstructionReader implements Reader<Data> {
 				return stat;
 			}
 			opCode = byteReader.get();
-			System.out.println(opCode.getByte());
-			definedReader(opCode, byteReader);
-			//byteReader.reset();
+			definedReader(opCode);
 		}
 		if (state == State.WAITING_DATA) {
 			var stateProcess = reader.process(bb, key);
@@ -106,6 +118,11 @@ public class InstructionReader implements Reader<Data> {
 		return ProcessStatus.REFILL;
 	}
 
+	/**
+	 * Gets the Data object that has been processed previously
+	 * @return a Data object
+	 * @throws IllegalStateException if the state is not DONE
+	 */
 	@Override
 	public Data get() {
 		if (state != State.DONE) {
@@ -113,6 +130,10 @@ public class InstructionReader implements Reader<Data> {
 		}
 		return value;
 	}
+
+	/**
+	 * Resets the instruction reader
+	 */
 
 	@Override
 	public void reset() {

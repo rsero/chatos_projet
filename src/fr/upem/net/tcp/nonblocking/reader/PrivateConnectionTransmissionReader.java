@@ -1,12 +1,18 @@
 package fr.upem.net.tcp.nonblocking.reader;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
-/**
- * Represents a reader that produces an integer value
- */
-public class IntReader implements Reader<Integer> {
 
+import fr.upem.net.tcp.nonblocking.data.PrivateConnectionTransmission;
+/**
+ * Represents a reader that produces a Private Connection Transmission data
+ */
+public class PrivateConnectionTransmissionReader implements Reader<PrivateConnectionTransmission>{
+
+    public PrivateConnectionTransmissionReader(SelectionKey key) {
+        this.key=key;
+    }
     /**
      * Different states the reader can be in
      */
@@ -14,22 +20,27 @@ public class IntReader implements Reader<Integer> {
         DONE, WAITING, ERROR
     }
 
+    private static int BUFFER_SIZE = 1024;
     private State state = State.WAITING;
-    private final ByteBuffer internalbb = ByteBuffer.allocate(Integer.BYTES); // write-mode
-    private int value;
+    private ByteBuffer internalbb = ByteBuffer.allocate(BUFFER_SIZE); // write-mode
+    private final SelectionKey key;
+    private PrivateConnectionTransmission value;
 
     /**
      * Reads the ByteBuffer bb passed
      * @param key
      * @param bb
-     * @return ProcessStatus.REFILL if the value is not the size of an integer,
-     * and ProcessStatus.DONE if all the content was processed
+     * @return ProcessStatus.REFILL if some content is missing, ProcessStatus.ERROR if an error
+     * occurred and ProcessStatus.DONE if all the content was processed
      * @throws IllegalStateException if the state is DONE or ERROR at the beginning
      */
     @Override
     public ProcessStatus process(ByteBuffer bb, SelectionKey key) {
         if (state == State.DONE || state == State.ERROR) {
             throw new IllegalStateException();
+        }
+        if(bb.position() == 0){
+            return ProcessStatus.REFILL;
         }
         bb.flip();
         try {
@@ -44,22 +55,20 @@ public class IntReader implements Reader<Integer> {
         } finally {
             bb.compact();
         }
-        if (internalbb.hasRemaining()) {
-            return ProcessStatus.REFILL;
-        }
         state = State.DONE;
         internalbb.flip();
-        value = internalbb.getInt();
+        value = new PrivateConnectionTransmission(internalbb, key);
+        bb.clear();
         return ProcessStatus.DONE;
     }
 
     /**
-     * Gets the integer value that have been processed previously
-     * @return an integer value
+     * Gets the Private Connection Transmission that have been processed previously
+     * @return a PrivateConnectionTransmission object
      * @throws IllegalStateException if the state is not DONE
      */
     @Override
-    public Integer get() {
+    public PrivateConnectionTransmission get() throws IOException {
         if (state != State.DONE) {
             throw new IllegalStateException();
         }
@@ -74,4 +83,5 @@ public class IntReader implements Reader<Integer> {
         state = State.WAITING;
         internalbb.clear();
     }
+
 }

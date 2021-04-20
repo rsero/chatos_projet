@@ -54,6 +54,7 @@ public class PrivateConnectionClients {
 	}
 
 	public void removeFileToSend(String lastFile) {
+		System.out.println("remove file "+files.size());
 		files.remove(lastFile);
 	}
 
@@ -94,13 +95,13 @@ public class PrivateConnectionClients {
 						+ "Host: " + getURL(directory) + "\r\n"
 						+ "\r\n";
 				var bb = charsetASCII.encode(request);
-				System.out.println("\n"+request+"\n");
+				System.out.println("\n"+request);
 				privateContext.queueMessage(bb);
 			} catch (MalformedURLException e) {
 				logger.warning(file + "doesn't exist");
 			}
 			removeFileToSend(file);
-			clientChatos.wakeUp();
+			//clientChatos.wakeUp();
 		}
 	}
 

@@ -16,8 +16,8 @@ public class PrivateLogin implements Data {
 		return connectId;
 	}
 
-	public ByteBuffer encode(ByteBuffer req) throws IOException {
-    	req.clear();
+	public ByteBuffer encode() throws IOException {
+    	var req = ByteBuffer.allocate(BUFFER_SIZE);
         if(req.remaining() < Long.BYTES + 1) {
             return null;
         }

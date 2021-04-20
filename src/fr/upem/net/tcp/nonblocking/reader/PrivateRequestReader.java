@@ -5,7 +5,13 @@ import java.nio.channels.SelectionKey;
 
 import fr.upem.net.tcp.nonblocking.data.*;
 
+/**
+ * Represents a reader that produces a Private Request data
+ */
 public class PrivateRequestReader implements Reader<RequestOperation> {
+    /**
+     * Different states the reader can be in
+     */
     private enum State {
         DONE, WAITING_REQUESTER_LOGIN, WAITING_TARGET_LOGIN, ERROR
     }
@@ -20,6 +26,14 @@ public class PrivateRequestReader implements Reader<RequestOperation> {
 		this.opCode = opCode;
 	}
 
+    /**
+     * Reads the ByteBuffer bb passed
+     * @param key
+     * @param bb
+     * @return ProcessStatus.REFILL if some content is missing, ProcessStatus.ERROR if an error
+     * occurred and ProcessStatus.DONE if all the content was processed
+     * @throws IllegalStateException if the state is DONE or ERROR at the beginning
+     */
 	@Override
     public ProcessStatus process(ByteBuffer bb, SelectionKey key) {
         if (state == State.DONE || state == State.ERROR) {
@@ -58,6 +72,11 @@ public class PrivateRequestReader implements Reader<RequestOperation> {
         return ProcessStatus.DONE;
     }
 
+    /**
+     * Gets the Data that have been processed previously
+     * @return an RequestOperation object
+     * @throws IllegalStateException if the state is not DONE
+     */
     @Override
     public RequestOperation get() {
         if (state != State.DONE) {

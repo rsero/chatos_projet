@@ -7,7 +7,9 @@ import java.nio.channels.SocketChannel;
 
 import fr.upem.net.http.exception.HTTPException;
 import fr.upem.net.tcp.nonblocking.data.HTTPRequest;
-
+/**
+ * Represents a reader that produces an HTTP Request data
+ */
 public class HTTPRequestReader implements Reader<HTTPRequest>{
 
 	private enum State {
@@ -27,6 +29,18 @@ public class HTTPRequestReader implements Reader<HTTPRequest>{
 		state = State.WAITING_SECOND_LINE;
 	}
 
+	/**
+	 * @param buff the bytebuffer to fill with the content
+	 * @param sc the socketchannel to perform the read from
+	 * @return The ASCII string terminated by CRLF without the CRLF
+	 *         <p>
+	 *         The method assume that buff is in write mode and leaves it in
+	 *         write-mode The method does perform a read from the socket if the
+	 *         buffer data. Then will process the data from the buffer if necessary
+	 *         will read from the socket.
+	 * @throws IOException HTTPException if the connection is closed before a line
+	 *                     could be read
+	 */
 	public String readLineCRLF(ByteBuffer buff, SocketChannel sc) throws IOException {
 		var end = false;
 		var sb = new StringBuilder();
@@ -54,16 +68,34 @@ public class HTTPRequestReader implements Reader<HTTPRequest>{
 		return sb.substring(0, sb.length() - 1);
 	}
 
+	/**
+	 * Parses the string value which is a path to set the file variable
+	 * with the name of the file
+	 * @param str the first line of the GET request
+	 */
 	public void parseFirstLine(String str){
 		var firstPart = str.split("/");
 		var secondPart = firstPart[1].split(" ");
 		file = secondPart[0];
 	}
 
+	/**
+	 * Parses the string value which is a path to set the directory variable
+	 * with the path to the directory
+	 * @param str the second line of the GET request
+	 */
 	public void parseSecondLine(String str){
 		directory = str.replaceFirst("Host: ","");
 	}
 
+	/**
+	 * Reads the ByteBuffer bb passed
+	 * @param key
+	 * @param bb
+	 * @return ProcessStatus.REFILL if some content is missing, ProcessStatus.ERROR if an error
+	 * occurred and ProcessStatus.DONE if all the content was processed
+	 * @throws IllegalStateException if the state is DONE or ERROR at the beginning
+	 */
 	@Override
 	public ProcessStatus process(ByteBuffer bb, SelectionKey key) throws IOException {
 		if (state == State.DONE || state == State.ERROR) {
@@ -72,6 +104,7 @@ public class HTTPRequestReader implements Reader<HTTPRequest>{
 		var sc = (SocketChannel) key.channel();
 		switch (state) {
 			case WAITING_SECOND_LINE:
+				System.out.println("debut process HTTPRequestReader");
 				var secondLine = readLineCRLF(bb, sc);
 				parseSecondLine(secondLine);
 				state = State.WAITING_END;
@@ -86,6 +119,11 @@ public class HTTPRequestReader implements Reader<HTTPRequest>{
 		}
 	}
 
+	/**
+	 * Gets the Data that have been processed previously
+	 * @return a HTTP Request object
+	 * @throws IllegalStateException if the state is not DONE
+	 */
 	@Override
 	public HTTPRequest get() throws IOException {
 		if (state != State.DONE) {
@@ -94,6 +132,9 @@ public class HTTPRequestReader implements Reader<HTTPRequest>{
 		return new HTTPRequest(file, key);
 	}
 
+	/**
+	 * Resets the reader
+	 */
 	@Override
 	public void reset() {
 		state = State.WAITING_SECOND_LINE;

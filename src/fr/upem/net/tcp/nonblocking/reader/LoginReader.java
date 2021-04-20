@@ -4,7 +4,9 @@ import fr.upem.net.tcp.nonblocking.data.Login;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
-
+/**
+ * Represents a reader that produces a Login data
+ */
 public class LoginReader implements Reader<Login> {
 
 	private enum State {
@@ -17,6 +19,14 @@ public class LoginReader implements Reader<Login> {
 	private final StringReader stringReader = new StringReader();
 	private Login login;
 
+	/**
+	 * Reads the ByteBuffer bb passed
+	 * @param key
+	 * @param bb
+	 * @return ProcessStatus.REFILL if some content is missing, ProcessStatus.ERROR if an error
+	 * occurred and ProcessStatus.DONE if all the content was processed
+	 * @throws IllegalStateException if the state is DONE or ERROR at the beginning
+	 */
 	public ProcessStatus process(ByteBuffer bb, SelectionKey key) {
 		var processlogin = stringReader.process(bb,key);
 		switch (processlogin) {
@@ -35,6 +45,11 @@ public class LoginReader implements Reader<Login> {
 		return ProcessStatus.DONE;
 	}
 
+	/**
+	 * Gets the Login that have been processed previously
+	 * @return a Login object
+	 * @throws IllegalStateException if the state is not DONE
+	 */
 	@Override
 	public Login get() {
 		if (state != State.DONE) {
@@ -43,6 +58,9 @@ public class LoginReader implements Reader<Login> {
 		return login;
 	}
 
+	/**
+	 * Resets the reader
+	 */
 	@Override
 	public void reset() {
 		state = State.WAITING_STR;

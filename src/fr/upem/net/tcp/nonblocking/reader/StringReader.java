@@ -4,9 +4,14 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-
+/**
+ * Represents a reader that produces a String value
+ */
 public class StringReader implements Reader<String> {
 
+	/**
+	 * Different states the reader can be in
+	 */
 	private enum State {
 		DONE, WAITING_INT, WAITING_STR, ERROR
 	}
@@ -18,6 +23,14 @@ public class StringReader implements Reader<String> {
 	private int size;
 	private final Charset UTF8 = StandardCharsets.UTF_8;
 
+	/**
+	 * Reads the ByteBuffer bb passed
+	 * @param key
+	 * @param bb
+	 * @return ProcessStatus.REFILL if some content is missing, ProcessStatus.ERROR if an error
+	 * occurred and ProcessStatus.DONE if all the content was processed
+	 * @throws IllegalStateException if the state is DONE or ERROR at the beginning
+	 */
 	public ProcessStatus process(ByteBuffer bb, SelectionKey key) {
 		switch (state) {
 			case WAITING_INT:
@@ -66,6 +79,11 @@ public class StringReader implements Reader<String> {
 
 	}
 
+	/**
+	 * Gets the String value that have been processed previously
+	 * @return a String value
+	 * @throws IllegalStateException if the state is not DONE
+	 */
 	@Override
 	public String get() {
 		if (state != State.DONE) {
@@ -74,12 +92,14 @@ public class StringReader implements Reader<String> {
 		return msg;
 	}
 
+	/**
+	 * Resets the reader
+	 */
 	public void reset() {
 		state = State.WAITING_INT;
 		internalbb.clear();
 		intReader.reset();
 		msg = null;
 	}
-
 }
 

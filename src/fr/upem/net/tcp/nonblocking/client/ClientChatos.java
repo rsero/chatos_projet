@@ -58,7 +58,7 @@ public class ClientChatos {
 	}
 
 	public void privateConnection() {
-		while (!Thread.interrupted()) {
+		//while (!Thread.interrupted()) {
 			synchronized (lock) {
 				for (var privateConnection : privateContexts.values()) {
 					if (privateConnection.connectionReady()) {
@@ -67,7 +67,7 @@ public class ClientChatos {
 				}
 				selector.wakeup();
 			}
-		}
+		//}
 	}
 
 	/**
@@ -136,13 +136,13 @@ public class ClientChatos {
 				var data = elements.length == 1 ? "" : elements[1];
 				switch (prefix) {
 				case '@': // message privé
-					bb = parsePrivateMessage(req, content, data);
+					bb = parsePrivateMessage(content, data);
 					break;
 				case '/': // connexion privée
-					bb = parsePrivateConnection(req, content, data, elements);
+					bb = parsePrivateConnection(content, data, elements);
 					break;
 				default: // message global
-					bb = parseMessageGlobal(req, input);
+					bb = parseMessageGlobal(input);
 					break;
 				}
 			}
@@ -150,31 +150,31 @@ public class ClientChatos {
 		return bb;
 	}
 
-	private Optional<ByteBuffer> parsePrivateMessage(ByteBuffer req, String content, String data) throws IOException {
+	private Optional<ByteBuffer> parsePrivateMessage(String content, String data) throws IOException {
 		var msgprive = new PrivateMessage(login, new Login(content), data);
 		return Optional.of(msgprive.encode());
 	}
 
-	private Optional<ByteBuffer> parsePrivateConnection(ByteBuffer req, String content, String data, String[] elements)
+	private Optional<ByteBuffer> parsePrivateConnection( String content, String data, String[] elements)
 			throws IOException {
 		if (content.equals("y") && hashPrivateRequest.containsKey(new Login(data))) {
-			return parseAcceptPrivateConnection(req, data);
+			return parseAcceptPrivateConnection(data);
 		} else if (content.equals("n") && hashPrivateRequest.containsKey(new Login(data))) {
-			return parseRefusePrivateConnection(req, data);
+			return parseRefusePrivateConnection(data);
 		} else if (content.equals("y") || content.equals("n")) {// Accepte une connection privée d'un client qui ne l'a
 																// pas demandé
 			System.out.println("This client doesn't ask the connexion");
 			return Optional.empty();
 		} else if (privateContexts.containsKey(new Login(content)) && data.isEmpty()){
-			return disconnectPrivateClient(req, new Login(content));
+			return disconnectPrivateClient(new Login(content));
 		} else if (content.equals("id")) {
-			return parseConnectId(req, data);
+			return parseConnectId(data);
 		} else {
-			return parseRequestPrivateConnection(req, data, content, elements);
+			return parseRequestPrivateConnection(data, content, elements);
 		}
 	}
 
-	private Optional<ByteBuffer> parseRequestPrivateConnection(ByteBuffer req, String data, String content,
+	private Optional<ByteBuffer> parseRequestPrivateConnection(String data, String content,
 			String[] elements) throws IOException {
 		if (data.isEmpty()) {
 			System.out.println("Usage : /login file");
@@ -185,27 +185,19 @@ public class ClientChatos {
 			System.out.println("This is your username");
 			return Optional.empty();
 		}
-		/*
-		var privateRequest = new PrivateRequest(login, targetLogin);
-		var file = elements[1];
-		if(privateContexts.putIfAbsent(targetLogin, new ContextPrivateClient(this, selector, directory, serverAddress, 0))==null){
-			System.out.println("targetlogin after /y login is "+ targetLogin);
-			privateContexts.get(targetLogin).addFileToMap(targetLogin,file);
-			return Optional.of(privateRequest.encodeAskPrivateRequest());
-		}*/
 		var privateRequest = new PrivateRequest(login, targetLogin);
 		synchronized (lock) {
-
 			if (privateContexts.putIfAbsent(targetLogin, new PrivateConnectionClients(this, directory)) == null) {
 				privateContexts.get(targetLogin).addFileToSend(elements[1]);
 				return Optional.of(privateRequest.encodeAskPrivateRequest());
 			}
 			privateContexts.get(targetLogin).addFileToSend(elements[1]);
+			privateConnection();
 		}
 		return Optional.empty();
 	}
 
-	private Optional<ByteBuffer> parseConnectId(ByteBuffer req, String data) throws IOException {
+	private Optional<ByteBuffer> parseConnectId(String data) throws IOException {
 		Optional<ByteBuffer> bb;
 		if (data.isEmpty()) {
 			System.out.println("Usage : /id connect_id");
@@ -219,7 +211,7 @@ public class ClientChatos {
 					if (value.correctConnectId(connect_id)) {
 						correctId = true;
 						var privateLogin = new PrivateLogin(connect_id);
-						bb = Optional.of(privateLogin.encode(req));
+						bb = Optional.of(privateLogin.encode());
 						if (!bb.isPresent()) {
 							break;
 						}
@@ -238,7 +230,7 @@ public class ClientChatos {
 		}
 	}
 
-	private Optional<ByteBuffer> parseRefusePrivateConnection(ByteBuffer req, String data) {
+	private Optional<ByteBuffer> parseRefusePrivateConnection(String data) {
 		if (data.isEmpty()) {
 			System.out.println("Usage : /n login");
 			return Optional.empty();
@@ -250,7 +242,7 @@ public class ClientChatos {
 		return Optional.of(privateRequest.encodeRefusePrivateRequest());
 	}
 
-	private Optional<ByteBuffer> parseAcceptPrivateConnection(ByteBuffer req, String data){
+	private Optional<ByteBuffer> parseAcceptPrivateConnection(String data){
 		if (data.isEmpty()) {
 			System.out.println("Usage : /y login");
 			return Optional.empty();
@@ -260,18 +252,18 @@ public class ClientChatos {
 		return Optional.of(privateRequest.encodeAcceptPrivateRequest());
 	}
 
-	private Optional<ByteBuffer> parseMessageGlobal(ByteBuffer req, String input) throws IOException {
+	private Optional<ByteBuffer> parseMessageGlobal(String input) throws IOException {
 		var messageGlobal = new MessageGlobal(login, input);
 		return Optional.of(messageGlobal.encode());
 	}
 
-	private Optional<ByteBuffer> disconnectPrivateClient(ByteBuffer req, Login loginTarget) throws IOException {
+	private Optional<ByteBuffer> disconnectPrivateClient(Login loginTarget) throws IOException {
 		synchronized (lock) {
 			var connectId = privateContexts.get(loginTarget).getConnectId();
 			privateContexts.get(loginTarget).closeConnection();
 			privateContexts.remove(loginTarget);
 			var disconnectRequest = new DisconnectRequest(connectId, login, loginTarget);
-			return Optional.of(disconnectRequest.encode(req));
+			return Optional.of(disconnectRequest.encode(null));
 		}
 	}
 
@@ -282,7 +274,7 @@ public class ClientChatos {
 		key.attach(uniqueContext);
 		sc.connect(serverAddress);
 		console.start();
-		privateConnectionThread.start();
+		//privateConnectionThread.start();
 		while (!Thread.interrupted()) {
 			try {
 				selector.select(this::treatKey);
@@ -299,10 +291,11 @@ public class ClientChatos {
 				((Context) key.attachment()).doConnect();
 			}
 			if (key.isValid() && key.isWritable()) {
+				//System.out.println("treat key do write");
 				((Context) key.attachment()).doWrite();
-
 			}
 			if (key.isValid() && key.isReadable()) {
+				//System.out.println("treat key do read");
 				((Context) key.attachment()).doRead();
 			}
 		} catch (IOException ioe) {

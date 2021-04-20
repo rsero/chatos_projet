@@ -15,6 +15,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -43,16 +44,12 @@ public class ContextPrivateClient implements Context {
 
     @Override
     public void processIn() throws IOException {
-        for(;;) {
-            System.out.println("processin contextprive");
             ProcessStatus status = connectionReader.process(bbin, key);
-            System.out.println("sort processin contextprive");
-            System.out.println(status);
             switch (status) {
                 case DONE:
                     Data value = connectionReader.get();
-                    connectionReader.reset();
                     value.accept(visitor);
+                    connectionReader.reset();
                     break;
                 case REFILL:
                     return;
@@ -60,12 +57,11 @@ public class ContextPrivateClient implements Context {
                     silentlyClose();
                     return;
             }
-        }
     }
 
     @Override
     public void queueMessage(ByteBuffer bb) {
-        System.out.println("queuemessage private client");
+        System.out.println("queuemessage context prive");
         queue.add(bb);
         processOut();
         updateInterestOps();
@@ -73,13 +69,14 @@ public class ContextPrivateClient implements Context {
 
     @Override
     public void processOut() {
-        System.out.println("processoutcontextprivateclient");
         synchronized (lock) {
             while (!queue.isEmpty()) {
                 var bb = queue.peek();
                 if (bb.remaining() <= bbout.remaining()) {
                     queue.remove();
                     bbout.put(bb);
+                } else {
+                    break;
                 }
             }
         }
@@ -122,6 +119,7 @@ public class ContextPrivateClient implements Context {
 
     @Override
     public void doWrite() throws IOException {
+        System.out.println("do write prive");
         bbout.flip();
         sc.write(bbout);
         bbout.compact();

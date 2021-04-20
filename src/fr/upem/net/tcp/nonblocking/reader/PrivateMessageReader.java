@@ -5,8 +5,13 @@ import java.nio.channels.SelectionKey;
 
 import fr.upem.net.tcp.nonblocking.data.Login;
 import fr.upem.net.tcp.nonblocking.data.PrivateMessage;
-
+/**
+ * Represents a reader that produces a Private Message data
+ */
 public class PrivateMessageReader implements Reader<PrivateMessage> {
+    /**
+     * Different states the reader can be in
+     */
     private enum State {
         DONE, WAITING_SENDER_LOGIN, WAITING_TARGET_LOGIN , WAITING_MSG, ERROR
     }
@@ -18,6 +23,14 @@ public class PrivateMessageReader implements Reader<PrivateMessage> {
     private final LoginReader loginReader = new LoginReader();
     private final StringReader messageReader = new StringReader();
 
+    /**
+     * Reads the ByteBuffer bb passed
+     * @param key
+     * @param bb
+     * @return ProcessStatus.REFILL if some content is missing, ProcessStatus.ERROR if an error
+     * occurred and ProcessStatus.DONE if all the content was processed
+     * @throws IllegalStateException if the state is DONE or ERROR at the beginning
+     */
     @Override
     public ProcessStatus process(ByteBuffer bb, SelectionKey key) {
         if (state == State.DONE || state == State.ERROR) {
@@ -71,6 +84,11 @@ public class PrivateMessageReader implements Reader<PrivateMessage> {
 
     }
 
+    /**
+     * Gets the Data that have been processed previously
+     * @return a Private Message object
+     * @throws IllegalStateException if the state is not DONE
+     */
     @Override
     public PrivateMessage get() {
         if (state != State.DONE) {
@@ -79,6 +97,9 @@ public class PrivateMessageReader implements Reader<PrivateMessage> {
         return new PrivateMessage(senderLogin, targetLogin, msg);
     }
 
+    /**
+     * Resets the reader
+     */
     @Override
     public void reset() {
         state = State.WAITING_SENDER_LOGIN;

@@ -86,20 +86,18 @@ public class ServerDataTreatmentVisitor implements DataVisitor {
     }
 
     @Override
-    public void visit(PrivateConnexionTransmission privateConnexionTransmission) throws IOException {
+    public void visit(PrivateConnectionTransmission privateConnectionTransmission) throws IOException {
         ContextServer contextServer = (ContextServer) context;
-        var keyTarget = contextServer.getKey();
-        ((ContextServer) keyTarget.attachment()).queueMessage(privateConnexionTransmission.encode());
+        var keyTarget = server.findKeyTarget(contextServer.getKey());
+        ((ContextServer) keyTarget.attachment()).queueMessage(privateConnectionTransmission.encode());
     }
 
     @Override
     public void visit(PrivateLogin privateLogin) throws IOException {
         ContextServer contextServer = (ContextServer) context;
-        //var newContext = contextServer.contextToPrivateContext();
         contextServer.setPrivate();
         server.updatePrivateConnexion(privateLogin.getConnectId(), contextServer.getKey());
         if(!contextServer.connectionReady(privateLogin.getConnectId())) {
-            System.out.println("première clée enregistrée ");
             return;
         }
         var contexts = server.findContext(privateLogin.getConnectId());
@@ -107,9 +105,6 @@ public class ServerDataTreatmentVisitor implements DataVisitor {
         var response2 = privateLogin.encodeResponse();
         ((Context) contexts.get(0).attachment()).queueMessage(response.flip());
         ((Context) contexts.get(1).attachment()).queueMessage(response2.flip());
-        server.printKeys();
-        System.out.println("visit private login : ");
-        System.out.println("visit private login : ");
     }
 
     @Override

@@ -26,11 +26,9 @@ public class PrivateConnectionReader implements Reader<Data>{
 		var sb = new StringBuilder();
 		byte str;
 		char lastchar = 0;
-		System.out.println("avant while "+ buff.position());
 		while (!end) {
 			buff.flip();
 			while (buff.hasRemaining()) {
-				System.out.println("buff hasremaning");
 				str = buff.get();
 				if (str == '\n') {
 					if (lastchar == '\r') {
@@ -39,7 +37,6 @@ public class PrivateConnectionReader implements Reader<Data>{
 					}
 				}
 				sb.append((char) str);
-				//System.out.println(sb.toString());
 				lastchar = (char) str;
 			}
 			buff.compact();
@@ -47,7 +44,6 @@ public class PrivateConnectionReader implements Reader<Data>{
 				HTTPException.ensure(sc.read(buff) != -1, "The connection is closed");
 			}
 		}
-		System.out.println("apres while");
 		return sb.substring(0, sb.length() - 1);
 	}
 
@@ -73,15 +69,17 @@ public class PrivateConnectionReader implements Reader<Data>{
 				state = State.WAITING_FIRST_LINE;
 			case WAITING_FIRST_LINE:
 				var firstLine = readLineCRLF(bb, sc);
+				System.out.println("firstline : "+firstLine);
 				if(firstLine.startsWith("GET")) {
 					reader = new HTTPRequestReader(firstLine, key);
 				}
 				else if(firstLine.startsWith("HTTP/1.1 200")) {
-					reader = new HTTPFileReader(firstLine);
+					reader = new HTTPFileReader();
 				}
 				else {
 					reader = new HTTPErrorReader(firstLine);
 				}
+				System.out.println("reader : "+reader.getClass());
 				reader.process(bb, key);
 				bb.clear();
 				state = State.DONE;

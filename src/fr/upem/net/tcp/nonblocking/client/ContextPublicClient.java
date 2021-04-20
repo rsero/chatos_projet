@@ -169,9 +169,4 @@ public class ContextPublicClient implements Context {
 			// ignore exception
 		}
 	}
-
-	//@Override
-	public void sendCommand(String msg) {
-		//
-	}
 }

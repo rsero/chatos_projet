@@ -4,17 +4,18 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 
-public class PrivateConnexionTransmission implements Data  {
+public class PrivateConnectionTransmission implements Data  {
 
 	private final ByteBuffer bbin;
 	private final SelectionKey key;
 
-	public PrivateConnexionTransmission(ByteBuffer bbin, SelectionKey key) {
+	public PrivateConnectionTransmission(ByteBuffer bbin, SelectionKey key) {
 		this.bbin = bbin;
 		this.key=key;
 	}
 
 	public ByteBuffer encode(){
+		System.out.println(" encode privateconnexiontransmission : "+bbin);
 		return bbin;
 	}
 
@@ -23,6 +24,10 @@ public class PrivateConnexionTransmission implements Data  {
 
 	public SelectionKey getKey(){
 		return key;
+	}
+
+	public ByteBuffer get(){
+		return bbin;
 	}
 
 }

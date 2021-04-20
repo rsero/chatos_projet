@@ -7,23 +7,40 @@ import java.nio.channels.SocketChannel;
 
 import fr.upem.net.http.exception.HTTPException;
 import fr.upem.net.tcp.nonblocking.data.HTTPError;
-
+/**
+ * Represents a reader that produces an HTTP Error data
+ */
 public class HTTPErrorReader  implements Reader<HTTPError> {
-
+	/**
+	 * Different states the reader can be in
+	 */
 	private enum State {
 		DONE, WAITING_FILENAME, ERROR
-	};
+	}
 
 	private State state = State.WAITING_FILENAME;
 	private int errorNumber = 0;
 	private String file;
-	//"HTTP/1.1 404 Not Found\r\nErrorDocument 404 /"+file+"\r\n\r\n";
 
+	/**
+	 * Constructor for the reader that parses the error number
+	 * @param firstLine to parse
+	 */
 	public HTTPErrorReader(String firstLine) {
 		var elements = firstLine.split(" ");
 		errorNumber = Integer.parseInt(elements[1]);
 	}
 
+	/**
+	 * @param buff the bytebuffer to fill with the content
+	 * @param sc the socketchannel to perform the read from
+	 * The method assume that buff is in write mode and leaves it in
+	 * write-mode The method does perform a read from the socket if the
+	 * buffer data. The will process the data from the buffer if
+	 * necessary will read from the socket.
+	 * @throws IOException HTTPException is the connection is closed before all
+	 *                     bytes could be read
+	 */
 	public String readLineCRLF(ByteBuffer buff, SocketChannel sc) throws IOException {
 		var end = false;
 		var sb = new StringBuilder();
@@ -50,11 +67,23 @@ public class HTTPErrorReader  implements Reader<HTTPError> {
 		return sb.substring(0, sb.length() - 1);
 	}
 
+	/**
+	 * Parses the filename passed to remove the '/' before the name of the file
+	 * @param str
+	 */
 	public void parseFileName(String str){
 		var firstPart = str.split("/");
 		file = firstPart[1];
 	}
 
+	/**
+	 * Reads the ByteBuffer bb passed
+	 * @param key
+	 * @param bb
+	 * @return ProcessStatus.REFILL if the value is not the size of an integer,
+	 * and ProcessStatus.DONE if all the content was processed
+	 * @throws IllegalStateException if the state is DONE or ERROR at the beginning
+	 */
 	@Override
 	public ProcessStatus process(ByteBuffer bb, SelectionKey key) throws IOException {
 		if (state == State.DONE || state == State.ERROR) {
@@ -73,6 +102,11 @@ public class HTTPErrorReader  implements Reader<HTTPError> {
 		}
 	}
 
+	/**
+	 * Gets the Data that have been processed previously
+	 * @return a HTTPError object
+	 * @throws IllegalStateException if the state is not DONE
+	 */
 	@Override
 	public HTTPError get() throws IOException {
 		if (state != State.DONE) {
@@ -81,6 +115,9 @@ public class HTTPErrorReader  implements Reader<HTTPError> {
 		return new HTTPError(file);
 	}
 
+	/**
+	 * Resets the reader
+	 */
 	@Override
 	public void reset() {
 		state = State.WAITING_FILENAME;

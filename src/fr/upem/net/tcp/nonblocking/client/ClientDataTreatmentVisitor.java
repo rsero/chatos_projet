@@ -5,11 +5,13 @@ import fr.upem.net.tcp.nonblocking.data.*;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 public class ClientDataTreatmentVisitor implements DataVisitor {
 
     private final ClientChatos client;
     private final Charset charsetASCII = Charset.forName("ASCII");
+    private final Object lock = new Object();
 
     public ClientDataTreatmentVisitor(ClientChatos client){
         this.client=client;
@@ -33,6 +35,7 @@ public class ClientDataTreatmentVisitor implements DataVisitor {
             case 10:
                 System.out.println("Connexion was established");
                 client.activePrivateConnection(opCode.getKey());
+                client.privateConnection();
                 break;
             default:
                 System.out.println("Operation does not exist");
@@ -75,7 +78,7 @@ public class ClientDataTreatmentVisitor implements DataVisitor {
         var buffRead = httpFile.getBuffRead();
         if (httpFile.isTextFile()) {
             buffRead.flip();
-            System.out.println("File received : \n" + charsetASCII.decode(buffRead).toString());
+            System.out.println("File received : \n" + StandardCharsets.UTF_8.decode(buffRead).toString());
         } else {
             var shortPath = client.getDirectory()+"/"+ httpFile.getNameFile();
             var path = new File(shortPath).toURI().getPath();
@@ -102,7 +105,7 @@ public class ClientDataTreatmentVisitor implements DataVisitor {
     }
 
     @Override
-    public void visit(PrivateConnexionTransmission privateConnexionTransmission) {
+    public void visit(PrivateConnectionTransmission privateConnectionTransmission) {
         //pas de decode
     }
 
