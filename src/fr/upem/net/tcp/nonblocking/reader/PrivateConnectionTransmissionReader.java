@@ -3,6 +3,7 @@ package fr.upem.net.tcp.nonblocking.reader;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
+import java.nio.charset.StandardCharsets;
 
 import fr.upem.net.tcp.nonblocking.data.PrivateConnectionTransmission;
 /**
@@ -57,7 +58,8 @@ public class PrivateConnectionTransmissionReader implements Reader<PrivateConnec
         }
         state = State.DONE;
         internalbb.flip();
-        value = new PrivateConnectionTransmission(internalbb, key);
+        System.out.println(">>>>>>>>processin"+StandardCharsets.UTF_8.decode(internalbb));
+        value = new PrivateConnectionTransmission(internalbb.flip(), key);
         bb.clear();
         return ProcessStatus.DONE;
     }
@@ -81,7 +83,7 @@ public class PrivateConnectionTransmissionReader implements Reader<PrivateConnec
     @Override
     public void reset() {
         state = State.WAITING;
-        internalbb.clear();
+        internalbb = ByteBuffer.allocate(BUFFER_SIZE);
     }
 
 }

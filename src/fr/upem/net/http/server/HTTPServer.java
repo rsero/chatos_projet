@@ -44,8 +44,8 @@ public class HTTPServer {
 					+ contentType + "\r\nName-File: " + file + "\r\n\r\n";
 			var bbHeader = charsetASCII.encode(header);
 			ctx.queueMessage(bbHeader);
-			var contentb = StandardCharsets.UTF_8.encode(content);
-			textFile(ctx, contentb);
+			var fileContent = StandardCharsets.UTF_8.encode(content);
+			ctx.queueMessage(fileContent);
 		} else {
 			InputStream in = new FileInputStream(initialFile);
 			String header = "HTTP/1.1 200 OK\r\nContent-Length: " + in.available() + "\r\nContent-Type: " + contentType
@@ -84,7 +84,7 @@ public class HTTPServer {
 
 	private void textFile(ContextPrivateClient ctx, ByteBuffer file) {
 		var bool = true;
-		while(!Thread.interrupted() && bool) {
+		while(bool) {
 			ctx.queueMessage(file);
 			bool = false;
 		}

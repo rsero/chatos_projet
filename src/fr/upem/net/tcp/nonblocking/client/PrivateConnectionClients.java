@@ -54,7 +54,6 @@ public class PrivateConnectionClients {
 	}
 
 	public void removeFileToSend(String lastFile) {
-		System.out.println("remove file "+files.size());
 		files.remove(lastFile);
 	}
 

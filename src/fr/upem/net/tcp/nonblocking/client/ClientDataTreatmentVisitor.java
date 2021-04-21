@@ -95,6 +95,7 @@ public class ClientDataTreatmentVisitor implements DataVisitor {
 
     @Override
     public void visit(HTTPRequest httpRequest) throws IOException {
+        System.out.println("\nNew HTTP Server\n");
         new HTTPServer(httpRequest.getFile(), httpRequest.getKey(), client.getDirectory()).serve();
     }
 

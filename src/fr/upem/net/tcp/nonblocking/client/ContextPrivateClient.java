@@ -31,7 +31,6 @@ public class ContextPrivateClient implements Context {
     private Object lock = new Object();
     private static final Logger logger = Logger.getLogger(ContextPrivateClient.class.getName());
     private final ClientChatos client;
-    private final Charset charsetASCII = Charset.forName("ASCII");
     private final HashMap<Login, List<String>> mapFiles = new HashMap<>();
     private final ClientDataTreatmentVisitor visitor;
 
@@ -48,6 +47,7 @@ public class ContextPrivateClient implements Context {
             switch (status) {
                 case DONE:
                     Data value = connectionReader.get();
+                    System.out.println("\nRECEIVED : " + value.getClass() + "\n");
                     value.accept(visitor);
                     connectionReader.reset();
                     break;
@@ -144,26 +144,6 @@ public class ContextPrivateClient implements Context {
         }
     }
 
-    /*
-    public void sendCommand(Login login) {
-        var files = mapFiles.get(login);
-        while(!files.isEmpty()) {
-            System.out.println("Un fichier est envoyé");
-            var file = files.get(0);
-            String request;
-            try {
-                request = "GET /" + file + " HTTP/1.1\r\n"
-                        + "Host: " + getURL(directory) + "\r\n"
-                        + "\r\n";
-                var bb = charsetASCII.encode(request);
-                queueMessage(bb);
-            } catch (MalformedURLException e) {
-                logger.warning(file + "doesn't exist");
-            }
-            removeFileToSend(file,files);
-        }
-    }
-*/
     public void addFileToMap(Login login, String file){
         if(mapFiles.putIfAbsent(login, new ArrayList<String>(Collections.singleton(file))) !=null) {
             System.out.println("la map avait déja le login vide");

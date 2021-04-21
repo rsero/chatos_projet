@@ -38,6 +38,8 @@ public class AcceptRequest extends RequestOperation{
 		}
 		keyClientTwo = keyClient;
 		clientTwoConnect = true;
+		System.out.println("Client 1 : "+keyClientOne);
+		System.out.println("Client 2 : "+keyClientTwo);
 	}
 
 	public boolean connexionReady() {

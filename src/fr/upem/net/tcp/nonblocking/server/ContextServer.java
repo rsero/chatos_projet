@@ -23,21 +23,19 @@ public class ContextServer implements Context {
     private final SocketChannel sc;
     private final Queue<ByteBuffer> queue = new LinkedList<>();
     private final InstructionReader reader = new InstructionReader();
-    private final PrivateConnectionTransmissionReader privateConnectionTransmissionReader;
+    private final PrivateConnectionTransmissionReader privateReader;
     private boolean closed = false;
     private final ByteBuffer bbin = ByteBuffer.allocate(BUFFER_SIZE);
     private final ByteBuffer bbout = ByteBuffer.allocate(BUFFER_SIZE);
     private final Object lock = new Object();
-    private boolean isPrivate = false;
     private final ServerDataTreatmentVisitor visitor;
-    private Charset UTF8 = StandardCharsets.UTF_8;
 
     public ContextServer(ServerChatos server, SelectionKey key) {
         this.server=server;
         this.key=key;
         this.sc = (SocketChannel) key.channel();
         visitor = new ServerDataTreatmentVisitor(server, this);
-        privateConnectionTransmissionReader = new PrivateConnectionTransmissionReader(key);
+        privateReader = new PrivateConnectionTransmissionReader(key);
     }
 
     public void processIn() throws IOException {
@@ -45,8 +43,7 @@ public class ContextServer implements Context {
         for (;;) {
             ProcessStatus status;
             if (connectionPrivate) {
-                status = privateConnectionTransmissionReader.process(bbin, key);
-                System.out.println(status);
+                status = privateReader.process(bbin, key);
             } else {
                 status = reader.process(bbin, key);
             }
@@ -54,8 +51,8 @@ public class ContextServer implements Context {
                 case DONE:
                     Data data;
                     if (connectionPrivate) {
-                        data = privateConnectionTransmissionReader.get();
-                        privateConnectionTransmissionReader.reset();
+                        data = privateReader.get();
+                        privateReader.reset();
                     } else {
                         data = reader.get();
                         reader.reset();
@@ -172,9 +169,5 @@ public class ContextServer implements Context {
 
     public boolean connectionReady(Long connectId) {
         return server.connectionReady(connectId);
-    }
-
-    public void setPrivate(){
-        isPrivate = true;
     }
 }

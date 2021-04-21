@@ -11,11 +11,10 @@ public class PrivateConnectionTransmission implements Data  {
 
 	public PrivateConnectionTransmission(ByteBuffer bbin, SelectionKey key) {
 		this.bbin = bbin;
-		this.key=key;
+		this.key = key;
 	}
 
 	public ByteBuffer encode(){
-		System.out.println(" encode privateconnexiontransmission : "+bbin);
 		return bbin;
 	}
 
@@ -24,10 +23,6 @@ public class PrivateConnectionTransmission implements Data  {
 
 	public SelectionKey getKey(){
 		return key;
-	}
-
-	public ByteBuffer get(){
-		return bbin;
 	}
 
 }

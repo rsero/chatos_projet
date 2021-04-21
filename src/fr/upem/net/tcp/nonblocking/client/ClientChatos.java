@@ -191,6 +191,7 @@ public class ClientChatos {
 				privateContexts.get(targetLogin).addFileToSend(elements[1]);
 				return Optional.of(privateRequest.encodeAskPrivateRequest());
 			}
+
 			privateContexts.get(targetLogin).addFileToSend(elements[1]);
 			privateConnection();
 		}

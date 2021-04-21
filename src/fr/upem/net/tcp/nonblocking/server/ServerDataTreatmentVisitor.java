@@ -89,13 +89,14 @@ public class ServerDataTreatmentVisitor implements DataVisitor {
     public void visit(PrivateConnectionTransmission privateConnectionTransmission) throws IOException {
         ContextServer contextServer = (ContextServer) context;
         var keyTarget = server.findKeyTarget(contextServer.getKey());
+        System.out.println("From : "+contextServer.getKey());
+        System.out.println("To : "+keyTarget);
         ((ContextServer) keyTarget.attachment()).queueMessage(privateConnectionTransmission.encode());
     }
 
     @Override
     public void visit(PrivateLogin privateLogin) throws IOException {
         ContextServer contextServer = (ContextServer) context;
-        contextServer.setPrivate();
         server.updatePrivateConnexion(privateLogin.getConnectId(), contextServer.getKey());
         if(!contextServer.connectionReady(privateLogin.getConnectId())) {
             return;
