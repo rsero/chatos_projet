@@ -58,8 +58,7 @@ public class PrivateConnectionTransmissionReader implements Reader<PrivateConnec
         }
         state = State.DONE;
         internalbb.flip();
-        System.out.println(">>>>>>>>processin"+StandardCharsets.UTF_8.decode(internalbb));
-        value = new PrivateConnectionTransmission(internalbb.flip(), key);
+        value = new PrivateConnectionTransmission(internalbb, key);
         bb.clear();
         return ProcessStatus.DONE;
     }

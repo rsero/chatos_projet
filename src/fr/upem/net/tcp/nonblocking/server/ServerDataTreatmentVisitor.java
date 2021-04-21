@@ -26,8 +26,7 @@ public class ServerDataTreatmentVisitor implements DataVisitor {
 
     @Override
     public void visit(OpCode opCode) throws IOException {
-        //pas utile ici
-        //context.queueMessage(opCode);
+        //do nothing
     }
 
     @Override
@@ -45,13 +44,6 @@ public class ServerDataTreatmentVisitor implements DataVisitor {
         ContextServer contextServer = (ContextServer) context;
         contextServer.disconnectClient(disconnectRequest.getConnectId());
         var ctx = server.findContext(disconnectRequest.getLoginTarget());
-        System.out.println(ctx);
-        System.out.println(context);
-        /*if(ctx != null)
-            ctx.queueMessage(new DisconnectRequestConnection(getLoginRequester()));
-        else
-            logger.info("This client is not connected to the server");
-*/
     }
 
     @Override
@@ -89,8 +81,6 @@ public class ServerDataTreatmentVisitor implements DataVisitor {
     public void visit(PrivateConnectionTransmission privateConnectionTransmission) throws IOException {
         ContextServer contextServer = (ContextServer) context;
         var keyTarget = server.findKeyTarget(contextServer.getKey());
-        System.out.println("From : "+contextServer.getKey());
-        System.out.println("To : "+keyTarget);
         ((ContextServer) keyTarget.attachment()).queueMessage(privateConnectionTransmission.encode());
     }
 
@@ -103,9 +93,8 @@ public class ServerDataTreatmentVisitor implements DataVisitor {
         }
         var contexts = server.findContext(privateLogin.getConnectId());
         var response = privateLogin.encodeResponse();
-        var response2 = privateLogin.encodeResponse();
         ((Context) contexts.get(0).attachment()).queueMessage(response.flip());
-        ((Context) contexts.get(1).attachment()).queueMessage(response2.flip());
+        ((Context) contexts.get(1).attachment()).queueMessage(response.flip());
     }
 
     @Override

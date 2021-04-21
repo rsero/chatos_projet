@@ -32,7 +32,6 @@ public class ClientChatos {
 																							// d'une connexion privée
 	private ContextPublicClient uniqueContext;
 	private final Object lock = new Object();
-	private final Thread privateConnectionThread;
 
 	public ClientChatos(InetSocketAddress serverAddress, String directory) throws IOException {
 		this.serverAddress = serverAddress;
@@ -41,7 +40,6 @@ public class ClientChatos {
 		this.sc = SocketChannel.open();
 		this.selector = Selector.open();
 		this.console = new Thread(this::consoleRun);
-		this.privateConnectionThread = new Thread(this::privateConnection);
 	}
 
 	private void consoleRun() {
@@ -58,7 +56,6 @@ public class ClientChatos {
 	}
 
 	public void privateConnection() {
-		//while (!Thread.interrupted()) {
 			synchronized (lock) {
 				for (var privateConnection : privateContexts.values()) {
 					if (privateConnection.connectionReady()) {
@@ -67,7 +64,6 @@ public class ClientChatos {
 				}
 				selector.wakeup();
 			}
-		//}
 	}
 
 	/**
@@ -275,7 +271,6 @@ public class ClientChatos {
 		key.attach(uniqueContext);
 		sc.connect(serverAddress);
 		console.start();
-		//privateConnectionThread.start();
 		while (!Thread.interrupted()) {
 			try {
 				selector.select(this::treatKey);
@@ -292,11 +287,9 @@ public class ClientChatos {
 				((Context) key.attachment()).doConnect();
 			}
 			if (key.isValid() && key.isWritable()) {
-				//System.out.println("treat key do write");
 				((Context) key.attachment()).doWrite();
 			}
 			if (key.isValid() && key.isReadable()) {
-				//System.out.println("treat key do read");
 				((Context) key.attachment()).doRead();
 			}
 		} catch (IOException ioe) {
@@ -353,19 +346,7 @@ public class ClientChatos {
 			}
 		}
 	}
-/*
-	public boolean isConnectionPrivate(SelectionKey key) {
-		synchronized (lock) {
-			for (var privateClient : privateContexts.values()) {
-				if (privateClient.containsKey(key)) {
-					if (privateClient.connectionReady())
-						return true;
-				}
-			}
-		}
-		return false;
-	}
-*/
+
 	public String getDirectory(){
 		return directory;
 	}
@@ -375,10 +356,4 @@ public class ClientChatos {
 			privateContexts.remove(loginTarget);
 		}
 	}
-/*
-	public void addConnection(Login login) throws IOException {
-		privateContexts.putIfAbsent(login, new ContextPrivateClient(this, selector, directory, serverAddress, 0));
-	}
-
- */
 }

@@ -17,7 +17,6 @@ public class PrivateConnectionReader implements Reader<Data>{
 
 	private Reader<?> reader;
 	private OpCode opCode;
-
 	private State state = State.WAITING_OPCODE;
 	private final ByteReader byteReader = new ByteReader();
 
@@ -68,17 +67,13 @@ public class PrivateConnectionReader implements Reader<Data>{
 				state = State.WAITING_FIRST_LINE;
 			case WAITING_FIRST_LINE:
 				var firstLine = readLineCRLF(bb, sc);
-				System.out.println("FirstLine : "+firstLine);
 				if(firstLine.startsWith("GET")) {
-					System.out.println("\n>>>> J'AI RECU REQUETE GET\n");
 					reader = new HTTPRequestReader(firstLine, key);
 				}
 				else if(firstLine.startsWith("HTTP/1.1 200")) {
-					System.out.println("\n>>>> J'AI RECU REQUETE HTTP/1.1\n");
 					reader = new HTTPFileReader();
 				}
 				else {
-					System.out.println("\n>>>> J'AI RECU REQUETE ERROR\n");
 					reader = new HTTPErrorReader(firstLine);
 				}
 				reader.process(bb, key);

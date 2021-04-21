@@ -104,7 +104,6 @@ public class HTTPRequestReader implements Reader<HTTPRequest>{
 		var sc = (SocketChannel) key.channel();
 		switch (state) {
 			case WAITING_SECOND_LINE:
-				System.out.println("debut process HTTPRequestReader");
 				var secondLine = readLineCRLF(bb, sc);
 				parseSecondLine(secondLine);
 				state = State.WAITING_END;

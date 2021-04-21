@@ -71,11 +71,9 @@ public class ContextServer implements Context {
     public void updateInterestOps() {
         int newInterestOps = 0;
         if (!closed && bbin.hasRemaining()) {
-            System.out.println("OPREAD");
             newInterestOps = newInterestOps | SelectionKey.OP_READ;
         }
         if (!closed && bbout.position() > 0) {
-            System.out.println("OPWRITE");
             newInterestOps = newInterestOps | SelectionKey.OP_WRITE;
         }
         if (newInterestOps == 0) {
@@ -95,7 +93,6 @@ public class ContextServer implements Context {
     }
 
     public void doRead() throws IOException {
-        System.out.println("do read");
         if (sc.read(bbin) == -1) {
             closed = true;
         }
@@ -104,7 +101,6 @@ public class ContextServer implements Context {
     }
 
     public void doWrite() throws IOException {
-        System.out.println("do write");
         bbout.flip();
         sc.write(bbout);
         bbout.compact();
@@ -129,7 +125,6 @@ public class ContextServer implements Context {
                if(data.remaining() <= bbout.remaining()){
                    bbout.put(data);
                    queue.remove();
-                   System.out.println(queue.size());
                }
                else {
                    break;
@@ -140,12 +135,9 @@ public class ContextServer implements Context {
 
     public void queueMessage(ByteBuffer data) {
         synchronized (lock){
-            System.out.println("queue message");
             queue.add(data);
-            System.out.println("queue message apres add");
             processOut();
             updateInterestOps();
-            System.out.println("fin queue message");
         }
     }
 
@@ -159,12 +151,6 @@ public class ContextServer implements Context {
 
     public SelectionKey getKey(){
         return key;
-    }
-
-    public ContextPrivateServer contextToPrivateContext(){
-        var context = new ContextPrivateServer(server, key, sc, bbout);
-        key.attach(context);
-        return context;
     }
 
     public boolean connectionReady(Long connectId) {
