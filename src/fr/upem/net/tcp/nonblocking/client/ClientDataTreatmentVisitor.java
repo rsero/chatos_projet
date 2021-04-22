@@ -52,7 +52,6 @@ public class ClientDataTreatmentVisitor implements DataVisitor {
         else {
             login = acceptRequest.getLoginRequester();
         }
-        System.out.println("targetlogin after acceptrequest is : "+ login);
         client.addConnect_id(acceptRequest.getConnect_id(), login);
         System.out.println("Connection " + acceptRequest.loginRequester() + " : " + acceptRequest.loginTarget() + " is established with id : "+ acceptRequest.getConnect_id()
                 + "\n \"/id "+ acceptRequest.getConnect_id() +"\" to accept");
@@ -95,8 +94,7 @@ public class ClientDataTreatmentVisitor implements DataVisitor {
 
     @Override
     public void visit(HTTPRequest httpRequest) throws IOException {
-        System.out.println("\nNew HTTP Server\n");
-        new HTTPServer(httpRequest.getFile(), httpRequest.getKey(), client.getDirectory()).serve();
+        new HTTPServer(httpRequest.getFile(), httpRequest.getKey(), client.getDirectory());
     }
 
     @Override
@@ -123,7 +121,6 @@ public class ClientDataTreatmentVisitor implements DataVisitor {
     @Override
     public void visit(PrivateRequest privateRequest) throws IOException {
         client.addSetPrivateRequest(privateRequest);
-        //client.addConnection(new Login(privateRequest.loginRequester()));
         System.out.println(privateRequest);
     }
 

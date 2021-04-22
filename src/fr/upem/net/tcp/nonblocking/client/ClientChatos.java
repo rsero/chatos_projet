@@ -161,7 +161,8 @@ public class ClientChatos {
 																// pas demandé
 			System.out.println("This client doesn't ask the connexion");
 			return Optional.empty();
-		} else if (privateContexts.containsKey(new Login(content)) && data.isEmpty()){
+		} else if (data.isEmpty() && privateContexts.containsKey(new Login(content))){
+			System.out.println("Disconnect is asked");
 			return disconnectPrivateClient(new Login(content));
 		} else if (content.equals("id")) {
 			return parseConnectId(data);
@@ -260,7 +261,7 @@ public class ClientChatos {
 			privateContexts.get(loginTarget).closeConnection();
 			privateContexts.remove(loginTarget);
 			var disconnectRequest = new DisconnectRequest(connectId, login, loginTarget);
-			return Optional.of(disconnectRequest.encode(null));
+			return Optional.of(disconnectRequest.encode());
 		}
 	}
 

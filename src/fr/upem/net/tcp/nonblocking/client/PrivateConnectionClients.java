@@ -94,17 +94,11 @@ public class PrivateConnectionClients {
 						+ "Host: " + getURL(directory) + "\r\n"
 						+ "\r\n";
 				var bb = charsetASCII.encode(request);
-				System.out.println("\n"+request);
 				privateContext.queueMessage(bb);
 			} catch (MalformedURLException e) {
 				logger.warning(file + "doesn't exist");
 			}
 			removeFileToSend(file);
-			//clientChatos.wakeUp();
 		}
-	}
-
-	public boolean containsKey(SelectionKey key) {
-		return privateContext != null && privateContext.equals(key.attachment());
 	}
 }

@@ -47,7 +47,6 @@ public class ContextPrivateClient implements Context {
             switch (status) {
                 case DONE:
                     Data value = connectionReader.get();
-                    System.out.println("\nRECEIVED : " + value.getClass() + "\n");
                     value.accept(visitor);
                     connectionReader.reset();
                     break;
@@ -61,7 +60,6 @@ public class ContextPrivateClient implements Context {
 
     @Override
     public void queueMessage(ByteBuffer bb) {
-        System.out.println("queuemessage context prive");
         queue.add(bb);
         processOut();
         updateInterestOps();
@@ -119,7 +117,6 @@ public class ContextPrivateClient implements Context {
 
     @Override
     public void doWrite() throws IOException {
-        System.out.println("do write prive");
         bbout.flip();
         sc.write(bbout);
         bbout.compact();
@@ -154,25 +151,4 @@ public class ContextPrivateClient implements Context {
     public List<String> getFiles(Login login){
         return mapFiles.get(login);
     }
-/*
-    public boolean correctConnectId(Long id) {
-        return id != null && id.equals(connect_id);
-    }
-
-    public long getConnectId(){
-        return connect_id;
-    }
-
-    public void setConnect_id(long id){
-        this.connect_id=id;
-    }
-
-    private String getURL(String path) throws MalformedURLException {
-        return new File(path).toURI().getPath();
-    }
-
-    public void removeFileToSend(String lastFile,List<String> files) {
-        files.remove(lastFile);
-    }
-*/
 }

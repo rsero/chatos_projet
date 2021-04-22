@@ -8,9 +8,13 @@ import java.nio.channels.SocketChannel;
 import fr.upem.net.http.exception.HTTPException;
 import fr.upem.net.tcp.nonblocking.data.Data;
 import fr.upem.net.tcp.nonblocking.data.OpCode;
-
+/**
+ * Represents a reader that produces a Data object
+ */
 public class PrivateConnectionReader implements Reader<Data>{
-
+	/**
+	 * Different states the reader can be in
+	 */
 	private enum State {
 		DONE, WAITING_OPCODE, WAITING_FIRST_LINE, ERROR
 	}
@@ -20,6 +24,16 @@ public class PrivateConnectionReader implements Reader<Data>{
 	private State state = State.WAITING_OPCODE;
 	private final ByteReader byteReader = new ByteReader();
 
+	/**
+	 * @return The ASCII string terminated by CRLF without the CRLF
+	 *         <p>
+	 *         The method assume that buff is in write mode and leaves it in
+	 *         write-mode The method does perform a read from the socket if the
+	 *         buffer data. Then will process the data from the buffer if necessary
+	 *         will read from the socket.
+	 * @throws IOException HTTPException if the connection is closed before a line
+	 *                     could be read
+	 */
 	public String readLineCRLF(ByteBuffer buff, SocketChannel sc) throws IOException {
 		var end = false;
 		var sb = new StringBuilder();
@@ -46,6 +60,14 @@ public class PrivateConnectionReader implements Reader<Data>{
 		return sb.substring(0, sb.length() - 1);
 	}
 
+	/**
+	 * Reads the ByteBuffer bb passed and assigns the right HTTP reader according to the first line read
+	 * @param key
+	 * @param bb
+	 * @return ProcessStatus.REFILL if some content is missing, ProcessStatus.ERROR if an error
+	 * occurred and ProcessStatus.DONE if all the content was processed
+	 * @throws IllegalStateException if the state is DONE or ERROR at the beginning
+	 */
 	@Override
 	public ProcessStatus process(ByteBuffer bb, SelectionKey key) throws IOException {
 		if (state == State.DONE || state == State.ERROR) {
@@ -85,6 +107,11 @@ public class PrivateConnectionReader implements Reader<Data>{
 		}
 	}
 
+	/**
+	 * Gets the Data that have been processed previously
+	 * @return a Data object
+	 * @throws IllegalStateException if the state is not DONE
+	 */
 	@Override
 	public Data get() throws IOException {
 		if (state != State.DONE) {
@@ -93,6 +120,9 @@ public class PrivateConnectionReader implements Reader<Data>{
 		return (Data) reader.get();
 	}
 
+	/**
+	 * Resets the reader
+	 */
 	@Override
 	public void reset() {
 		reader.reset();

@@ -6,12 +6,32 @@ import java.nio.charset.Charset;
 
 public class MessageGlobal implements Data{
 
+	/**
+	 * Login of the person sending the global message
+	 */
     private final Login login;
+    /**
+     * Global message to send
+     */
     private final String msg;
+    /**
+	 * Charset of the encoding
+	 */
     private static final Charset UTF8 = Charset.forName("UTF-8");
+    /**
+	 * Maximum buffer capacity
+	 */
     private static int BUFFER_SIZE = 1024;
+    /**
+     * Buffer in which the request is encoded
+     */
     private ByteBuffer req = ByteBuffer.allocate(BUFFER_SIZE);
 
+    /**
+     * Create the object containing the global message
+     * @param login Login of the person sending the global message
+     * @param msg Global message to send
+     */
     public MessageGlobal(Login login, String msg) {
         this.login=login;
         this.msg=msg;
@@ -26,6 +46,11 @@ public class MessageGlobal implements Data{
     	return true;
     }
     */
+    /**
+     * Encodes the frame allowing the sending of a global message
+     * @return The frame allowing the sending of a global message
+     * @throws IOException
+     */
     public ByteBuffer encode() throws IOException {
         var req = ByteBuffer.allocate(BUFFER_SIZE);
         var loginbuff = UTF8.encode(login.getLogin());
@@ -40,10 +65,18 @@ public class MessageGlobal implements Data{
         return req;
     }
 
+    /**
+     * Give the login of the person sending the global message
+     * @return Login of the person sending the global message
+     */
     public Login getLogin(){
         return login;
     }
 
+    /**
+     * Give the global message to send
+     * @return Global message to send
+     */
     public String getMsg(){
         return msg;
     }
