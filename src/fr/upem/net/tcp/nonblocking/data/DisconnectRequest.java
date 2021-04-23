@@ -38,9 +38,8 @@ public class DisconnectRequest extends RequestOperation{
     /**
      * Returns the frame that informs about the disconnection
      * @return Byte buffer containing the encoded frame
-     * @throws IOException
      */
-    public ByteBuffer encode() throws IOException {
+    public ByteBuffer encode() {
         var req = ByteBuffer.allocate(BUFFER_SIZE);
         var loginRequester = UTF8.encode(loginRequester());
         int lenRequester = loginRequester.remaining();

@@ -11,7 +11,7 @@ public class HTTPError implements Data{
 
     /**
      * Construct the HTTPError
-     * @param Name of the file that is not found
+     * @param file name of the file that is not found
      */
     public HTTPError(String file) {
         this.file = file;

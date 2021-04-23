@@ -44,11 +44,14 @@ public class ServerDataTreatmentVisitor implements DataVisitor {
         ContextServer contextServer = (ContextServer) context;
         contextServer.disconnectClient(disconnectRequest.getConnectId());
         var ctx = server.findContext(disconnectRequest.getLoginTarget());
+        //ctx.queueMessage(disconnectRequest.encode().flip());
     }
 
     @Override
     public void visit(DisconnectRequestConnection disconnectRequestConnection) {
-        //pas de broadcast
+        ContextServer contextServer = (ContextServer) context;
+        //var ctx = disconnectRequestConnection.findContextRequester(contextServer);
+        //ctx.queueMessage(disconnectRequestConnection.encode().flip());
     }
 
     @Override

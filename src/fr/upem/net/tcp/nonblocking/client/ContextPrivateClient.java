@@ -1,43 +1,35 @@
 package fr.upem.net.tcp.nonblocking.client;
 
 import fr.upem.net.tcp.nonblocking.data.Data;
-import fr.upem.net.tcp.nonblocking.data.Login;
 import fr.upem.net.tcp.nonblocking.reader.PrivateConnectionReader;
 import fr.upem.net.tcp.nonblocking.reader.ProcessStatus;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.MalformedURLException;
 import java.nio.ByteBuffer;
-import java.nio.channels.Channel;
 import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.logging.Logger;
 
+/**
+ * Context of a private connection
+ */
 public class ContextPrivateClient implements Context {
+    private final static int BUFFER_SIZE = 1024;
+    private final static Logger logger = Logger.getLogger(ContextPrivateClient.class.getName());
     private final SelectionKey key;
     private final SocketChannel sc;
-    private static int BUFFER_SIZE = 1024;
     private final ByteBuffer bbin = ByteBuffer.allocate(BUFFER_SIZE);
     private final ByteBuffer bbout = ByteBuffer.allocate(BUFFER_SIZE);
     private final Queue<ByteBuffer> queue = new LinkedList<>(); // buffers read-mode
-    private PrivateConnectionReader connectionReader = new PrivateConnectionReader();
-    private boolean closed = false;
-    private Object lock = new Object();
-    private static final Logger logger = Logger.getLogger(ContextPrivateClient.class.getName());
-    private final ClientChatos client;
-    private final HashMap<Login, List<String>> mapFiles = new HashMap<>();
     private final ClientDataTreatmentVisitor visitor;
+    private final PrivateConnectionReader connectionReader = new PrivateConnectionReader();
+    private final Object lock = new Object();
+    private boolean closed = false;
 
     public ContextPrivateClient(SelectionKey key, ClientChatos client) {
         this.key = key;
         this.sc = (SocketChannel) key.channel();
-        this.client=client;
         visitor = new ClientDataTreatmentVisitor(client);
     }
 
@@ -54,7 +46,6 @@ public class ContextPrivateClient implements Context {
                     return;
                 case ERROR:
                     silentlyClose();
-                    return;
             }
     }
 
@@ -129,26 +120,5 @@ public class ContextPrivateClient implements Context {
         if (!sc.finishConnect())
             return; // the selector gave a bad hint
         key.interestOps(SelectionKey.OP_READ);
-    }
-
-    @Override
-    public void closeConnection() {
-        Channel sc = (Channel) key.channel();
-        try {
-            sc.close();
-        } catch (IOException e) {
-            // ignore exception
-        }
-    }
-
-    public void addFileToMap(Login login, String file){
-        if(mapFiles.putIfAbsent(login, new ArrayList<String>(Collections.singleton(file))) !=null) {
-            System.out.println("la map avait déja le login vide");
-            //mapFiles.get(login).add(file);
-        }
-    }
-
-    public List<String> getFiles(Login login){
-        return mapFiles.get(login);
     }
 }

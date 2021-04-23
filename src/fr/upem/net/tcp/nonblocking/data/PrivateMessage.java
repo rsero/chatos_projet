@@ -18,7 +18,7 @@ public class PrivateMessage implements Data {
         this.msg=msg;
     }
 
-    public ByteBuffer encode() throws IOException {
+    public ByteBuffer encode() {
         var req = ByteBuffer.allocate(BUFFER_SIZE);
         var senderbuff = UTF8.encode(loginSender.getLogin());
         var targetbuff = UTF8.encode(loginTarget.getLogin());

@@ -16,7 +16,7 @@ public class PrivateConnectionTransmission implements Data  {
 	private final SelectionKey key;
 
 	/**
-	 * Create an object that allows the frame to be transmitted without looking at it
+	 * Creates an object that allows the frame to be transmitted without looking at it
 	 * @param bbin Buffer containing the data frame of a private connection
 	 * @param key Key of the person who sent the buffer
 	 */

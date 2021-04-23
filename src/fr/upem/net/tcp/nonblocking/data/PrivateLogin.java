@@ -33,9 +33,8 @@ public class PrivateLogin implements Data {
 	/**
 	 * Encodes the frame allowing the client to connect with the sent password
 	 * @return The frame allowing the client to connect with the sent password
-	 * @throws IOException
 	 */
-	public ByteBuffer encode() throws IOException {
+	public ByteBuffer encode() {
     	var req = ByteBuffer.allocate(BUFFER_SIZE);
         if(req.remaining() < Long.BYTES + 1) {
             return null;

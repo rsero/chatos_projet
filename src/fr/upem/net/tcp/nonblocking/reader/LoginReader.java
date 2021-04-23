@@ -9,6 +9,9 @@ import java.nio.channels.SelectionKey;
  */
 public class LoginReader implements Reader<Login> {
 
+	/**
+	 * Different states the reader can be in
+	 */
 	private enum State {
 		DONE, WAITING_STR, ERROR
 	}

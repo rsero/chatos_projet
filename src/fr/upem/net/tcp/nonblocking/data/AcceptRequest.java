@@ -5,7 +5,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.Channel;
 import java.nio.channels.SelectionKey;
 import java.nio.charset.Charset;
-import java.util.Objects;
 
 public class AcceptRequest extends RequestOperation{
 
@@ -46,7 +45,7 @@ public class AcceptRequest extends RequestOperation{
 	 */
 	public AcceptRequest(Login loginRequester, Login loginTarget, long connect_id) {
 		super(loginRequester, loginTarget);
-		this.connect_id = Objects.requireNonNull(connect_id);
+		this.connect_id = connect_id;
 	}
 
 	/**
@@ -91,9 +90,8 @@ public class AcceptRequest extends RequestOperation{
 	/**
 	 * Returns the frame informing that the connection can be established with the password
 	 * @return Byte buffer containing the encoded frame
-	 * @throws IOException
 	 */
-	public ByteBuffer encode() throws IOException {
+	public ByteBuffer encode(){
 		var req = ByteBuffer.allocate(BUFFER_SIZE);
 		var senderbuff = UTF8.encode(loginRequester());
 		var targetbuff = UTF8.encode(loginTarget());

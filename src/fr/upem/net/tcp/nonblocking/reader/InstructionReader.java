@@ -11,6 +11,10 @@ import fr.upem.net.tcp.nonblocking.data.OpCode;
  * Represents a reader that contains a data object that is received from a client connected to the server
  */
 public class InstructionReader implements Reader<Data> {
+
+	/**
+	 * Different states the reader can be in
+	 */
 	private enum State {
 		DONE, WAITING_OPCODE, WAITING_DATA, ERROR
 	}

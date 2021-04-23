@@ -18,10 +18,6 @@ public class HTTPFile implements Data {
      * Name of file received
      */
     private final String nameFile;
-    /**
-     * Charset of the encoding
-     */
-    private final Charset charsetASCII = Charset.forName("ASCII");
 
     /**
      * Builds an object containing the information of a received file

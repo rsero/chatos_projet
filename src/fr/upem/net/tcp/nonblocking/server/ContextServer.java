@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -109,13 +107,8 @@ public class ContextServer implements Context {
     }
 
     @Override
-    public void doConnect() throws IOException {
+    public void doConnect() {
         // do nothing
-    }
-
-    @Override
-    public void closeConnection() {
-        //do nothing
     }
 
     public void processOut() {

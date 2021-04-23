@@ -51,7 +51,7 @@ public class MessageGlobal implements Data{
      * @return The frame allowing the sending of a global message
      * @throws IOException
      */
-    public ByteBuffer encode() throws IOException {
+    public ByteBuffer encode() {
         var req = ByteBuffer.allocate(BUFFER_SIZE);
         var loginbuff = UTF8.encode(login.getLogin());
         var msgbuff = UTF8.encode(msg);

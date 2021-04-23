@@ -14,7 +14,10 @@ public class DisconnectRequestConnection implements Data{
      * Charset of the encoding
      */
     private static final Charset UTF8 = Charset.forName("UTF-8");
-
+    /**
+     * Maximum buffer capacity
+     */
+    private static int BUFFER_SIZE = 1024;
     /**
      * Create an object to request the disconnection
      * @param login Login of the client requesting the disconnection
@@ -25,11 +28,10 @@ public class DisconnectRequestConnection implements Data{
 
     /**
      * Returns the frame containing the disconnection information
-     * @param req Buffer in which the frame is added
      * @return Encoded disconnection frame
      */
-    private ByteBuffer encode(ByteBuffer req){
-        req.clear();
+    public ByteBuffer encode(){
+        var req = ByteBuffer.allocate(BUFFER_SIZE);
         var loginRequester = UTF8.encode(login.getLogin());
         var lenRequester = loginRequester.remaining();
         if(req.remaining() < Integer.BYTES + lenRequester + 1)

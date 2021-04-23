@@ -2,7 +2,6 @@ package fr.upem.net.tcp.nonblocking.client;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.Channel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.LinkedList;
@@ -13,37 +12,29 @@ import fr.upem.net.tcp.nonblocking.data.Data;
 import fr.upem.net.tcp.nonblocking.reader.InstructionReader;
 import fr.upem.net.tcp.nonblocking.reader.ProcessStatus;
 
+/**
+ * Context of a public connection
+ */
 public class ContextPublicClient implements Context {
 
+	private final static int BUFFER_SIZE = 1024;
+	private final static Logger logger = Logger.getLogger(ContextPublicClient.class.getName());
 	private final SelectionKey key;
 	private final SocketChannel sc;
-	private final ClientChatos client;
-	private static int BUFFER_SIZE = 1024;
-	final private ByteBuffer bbin = ByteBuffer.allocate(BUFFER_SIZE);
-	final private ByteBuffer bbout = ByteBuffer.allocate(BUFFER_SIZE);
-	final private Queue<ByteBuffer> queue = new LinkedList<>(); // buffers read-mode
-	private InstructionReader reader = new InstructionReader();
+	private final ByteBuffer bbin = ByteBuffer.allocate(BUFFER_SIZE);
+	private final ByteBuffer bbout = ByteBuffer.allocate(BUFFER_SIZE);
+	private final Queue<ByteBuffer> queue = new LinkedList<>(); // buffers read-mode
+	private final InstructionReader reader = new InstructionReader();
+	private final ClientDataTreatmentVisitor visitor;
+	private final Object lock = new Object();
 	private boolean closed = false;
-	private static final Logger logger = Logger.getLogger(ContextPublicClient.class.getName());
-	private Object lock = new Object();
-	private ClientDataTreatmentVisitor visitor;
 
 	public ContextPublicClient(SelectionKey key, ClientChatos client) {
 		this.key = key;
 		this.sc = (SocketChannel) key.channel();
-		this.client=client;
 		visitor = new ClientDataTreatmentVisitor(client);
 	}
 
-	/**
-	 * Process the content of bbin
-	 *
-	 * The convention is that bbin is in write-mode before the call to process and
-	 * after the call
-	 * 
-	 * @throws IOException
-	 *
-	 */
 	public void processIn() throws IOException {
 		for (;;) {
 			ProcessStatus status = reader.process(bbin, key);
@@ -62,21 +53,12 @@ public class ContextPublicClient implements Context {
 		}
 	}
 
-	/**
-	 * Add a message to the message queue, tries to fill bbOut and updateInterestOps
-	 *
-	 * @param bb
-	 */
 	public void queueMessage(ByteBuffer bb) {
 		queue.add(bb);
 		processOut();
 		updateInterestOps();
 	}
 
-	/**
-	 * Try to fill bbout from the message queue
-	 *
-	 */
 	public void processOut() {
 		synchronized (lock){
 			while (!queue.isEmpty()) {
@@ -88,15 +70,6 @@ public class ContextPublicClient implements Context {
 			}
 		}
 	}
-
-	/**
-	 * Update the interestOps of the key looking only at values of the boolean
-	 * closed and of both ByteBuffers.
-	 *
-	 * The convention is that both buffers are in write-mode before the call to
-	 * updateInterestOps and after the call. Also it is assumed that process has
-	 * been be called just before updateInterestOps.
-	 */
 
 	public void updateInterestOps() {
 		var interestOps = 0;
@@ -121,14 +94,6 @@ public class ContextPublicClient implements Context {
 		}
 	}
 
-	/**
-	 * Performs the read action on sc
-	 *
-	 * The convention is that both buffers are in write-mode before the call to
-	 * doRead and after the call
-	 *
-	 * @throws IOException
-	 */
 	public void doRead() throws IOException {
 		if (sc.read(bbin) == -1) {
 			logger.info("read raté");
@@ -137,15 +102,6 @@ public class ContextPublicClient implements Context {
 		processIn();
 		updateInterestOps();
 	}
-
-	/**
-	 * Performs the write action on sc
-	 *
-	 * The convention is that both buffers are in write-mode before the call to
-	 * doWrite and after the call
-	 *
-	 * @throws IOException
-	 */
 
 	public void doWrite() throws IOException {
 		bbout.flip();
@@ -159,14 +115,5 @@ public class ContextPublicClient implements Context {
 		if (!sc.finishConnect())
 			return; // the selector gave a bad hint
 		key.interestOps(SelectionKey.OP_READ);
-	}
-
-	public void closeConnection(){
-		Channel sc = (Channel) key.channel();
-		try {
-			sc.close();
-		} catch (IOException e) {
-			// ignore exception
-		}
 	}
 }
